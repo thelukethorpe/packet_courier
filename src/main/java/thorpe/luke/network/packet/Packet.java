@@ -6,4 +6,8 @@ public class Packet {
   public Packet(byte[] data) {
     this.data = data;
   }
+
+  public byte[] getData() {
+    return data;
+  }
 }
