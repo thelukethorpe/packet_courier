@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import thorpe.luke.network.packet.Packet;
 import thorpe.luke.network.packet.PacketPipeline;
-import thorpe.luke.network.packet.UniformDropPacketFilter;
+import thorpe.luke.network.packet.SimulatedDropPacketFilter;
 import thorpe.luke.network.simulator.DistributedNetworkSimulator;
 import thorpe.luke.network.simulator.DistributedNetworkSimulator.InvalidSimulatorConfigurationException;
 import thorpe.luke.network.simulator.NodeManager;
@@ -52,7 +52,7 @@ public class SimpleExample1 {
 
   public static void main(String[] args) {
     // Packet pipeline drops half of the packets that travel through it.
-    PacketPipeline packetPipeline = new PacketPipeline(new UniformDropPacketFilter(0.5));
+    PacketPipeline packetPipeline = new PacketPipeline(new SimulatedDropPacketFilter(0.5));
     DistributedNetworkSimulator distributedNetworkSimulator;
     try {
       distributedNetworkSimulator =
