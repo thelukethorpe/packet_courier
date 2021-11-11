@@ -2,6 +2,7 @@ package thorpe.luke.network.simulator;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
@@ -10,11 +11,15 @@ import thorpe.luke.network.packet.PacketPipeline;
 public class DistributedNetworkSimulator {
 
   private final Map<String, RunnableNode> nodes;
+  private final Map<String, Collection<String>> topology;
   private final NetworkSimulatorPostalService postalService;
 
   private DistributedNetworkSimulator(
-      Map<String, RunnableNode> nodes, NetworkSimulatorPostalService postalService) {
+      Map<String, RunnableNode> nodes,
+      Map<String, Collection<String>> topology,
+      NetworkSimulatorPostalService postalService) {
     this.nodes = nodes;
+    this.topology = topology;
     this.postalService = postalService;
   }
 
@@ -26,7 +31,12 @@ public class DistributedNetworkSimulator {
     AtomicBoolean simulationComplete = new AtomicBoolean(false);
     Collection<Thread> nodeThreads =
         nodes.values().stream()
-            .map(runnableNode -> new Thread(() -> runnableNode.run(postalService)))
+            .map(
+                runnableNode -> {
+                  String nodeName = runnableNode.getNode().getName();
+                  Collection<String> neighbours = topology.get(nodeName);
+                  return new Thread(() -> runnableNode.run(neighbours, postalService));
+                })
             .collect(Collectors.toList());
     Thread networkThread =
         new Thread(
@@ -61,8 +71,8 @@ public class DistributedNetworkSimulator {
       this.nodeScript = nodeScript;
     }
 
-    public void run(PostalService postalService) {
-      node.run(nodeScript, postalService);
+    public void run(Collection<String> neighbours, PostalService postalService) {
+      node.run(nodeScript, neighbours, postalService);
     }
 
     public Node getNode() {
@@ -130,11 +140,18 @@ public class DistributedNetworkSimulator {
     }
 
     public DistributedNetworkSimulator build() {
+      Map<String, Collection<String>> topology = new HashMap<>();
+      nodes.keySet().forEach(name -> topology.put(name, new HashSet<>()));
+      for (Connection connection : networkConditions.keySet()) {
+        String sourceName = connection.getSource().getName();
+        String destinationName = connection.getDestination().getName();
+        topology.get(sourceName).add(destinationName);
+      }
       NetworkSimulatorPostalService postalService =
           new NetworkSimulatorPostalService(
               nodes.values().stream().map(RunnableNode::getNode).collect(Collectors.toList()),
               networkConditions);
-      return new DistributedNetworkSimulator(nodes, postalService);
+      return new DistributedNetworkSimulator(nodes, topology, postalService);
     }
   }
 

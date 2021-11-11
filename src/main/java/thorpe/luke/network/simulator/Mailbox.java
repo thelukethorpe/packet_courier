@@ -6,17 +6,17 @@ import thorpe.luke.network.packet.Packet;
 
 public class Mailbox {
 
-  private final BlockingQueue<Packet> messages;
+  private final BlockingQueue<Packet> packets;
 
   public Mailbox() {
-    this.messages = new LinkedBlockingQueue<>();
+    this.packets = new LinkedBlockingQueue<>();
   }
 
   public void post(Packet packet) {
-    messages.offer(packet);
+    packets.offer(packet);
   }
 
   public Packet waitForMail() throws InterruptedException {
-    return messages.take();
+    return packets.take();
   }
 }

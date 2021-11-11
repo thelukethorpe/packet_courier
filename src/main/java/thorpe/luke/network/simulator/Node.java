@@ -1,5 +1,6 @@
 package thorpe.luke.network.simulator;
 
+import java.util.Collection;
 import thorpe.luke.network.packet.Packet;
 
 public class Node {
@@ -19,8 +20,9 @@ public class Node {
     mailbox.post(packet);
   }
 
-  public void run(NodeScript nodeScript, PostalService postalService) {
-    nodeScript.run(new NodeState(name, mailbox, postalService));
+  public void run(
+      NodeScript nodeScript, Collection<String> neighbours, PostalService postalService) {
+    nodeScript.run(new NodeManager(name, neighbours, mailbox, postalService));
   }
 
   @Override
