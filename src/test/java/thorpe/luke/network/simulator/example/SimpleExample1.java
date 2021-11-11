@@ -1,14 +1,18 @@
 package thorpe.luke.network.simulator.example;
 
+import java.time.temporal.ChronoUnit;
+import java.util.Random;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import thorpe.luke.distribution.UniformDistribution;
 import thorpe.luke.network.packet.Packet;
 import thorpe.luke.network.packet.PacketPipeline;
 import thorpe.luke.network.packet.SimulatedDropPacketFilter;
+import thorpe.luke.network.packet.SimulatedLatencyPacketFilter;
 import thorpe.luke.network.simulator.DistributedNetworkSimulator;
 import thorpe.luke.network.simulator.DistributedNetworkSimulator.InvalidSimulatorConfigurationException;
 import thorpe.luke.network.simulator.NodeManager;
@@ -52,7 +56,14 @@ public class SimpleExample1 {
 
   public static void main(String[] args) {
     // Packet pipeline drops half of the packets that travel through it.
-    PacketPipeline packetPipeline = new PacketPipeline(new SimulatedDropPacketFilter(0.5));
+    Random random = new Random();
+    SimulatedDropPacketFilter simulatedDropPacketFilter =
+        new SimulatedDropPacketFilter(0.5, random);
+    SimulatedLatencyPacketFilter simulatedLatencyPacketFilter =
+        new SimulatedLatencyPacketFilter(
+            new UniformDistribution(35.0, 50.0, random), ChronoUnit.MILLIS);
+    PacketPipeline packetPipeline =
+        new PacketPipeline(simulatedDropPacketFilter, simulatedLatencyPacketFilter);
     DistributedNetworkSimulator distributedNetworkSimulator;
     try {
       distributedNetworkSimulator =
