@@ -2,30 +2,25 @@ package thorpe.luke.network.packet;
 
 import java.util.Optional;
 import java.util.Random;
+import thorpe.luke.distribution.BernoulliDistribution;
+import thorpe.luke.distribution.Distribution;
 
 public class UniformDropPacketFilter implements PacketFilter {
 
   private final NeutralPacketFilter neutralPacketFilter = new NeutralPacketFilter();
-  private final double dropProbability;
-  private final Random random;
+  private final Distribution<Boolean> dropDistribution;
 
   public UniformDropPacketFilter(double dropProbability) {
     this(dropProbability, new Random());
   }
 
-  public UniformDropPacketFilter(double dropProbability, long seed) {
-    this(dropProbability, new Random(seed));
-  }
-
-  private UniformDropPacketFilter(double dropProbability, Random random) {
-    assert (0.0 <= dropProbability && dropProbability <= 1.0);
-    this.dropProbability = dropProbability;
-    this.random = random;
+  public UniformDropPacketFilter(double dropProbability, Random random) {
+    this.dropDistribution = new BernoulliDistribution(dropProbability, random);
   }
 
   @Override
   public void enqueue(Packet packet) {
-    if (dropProbability <= random.nextDouble()) {
+    if (!dropDistribution.sample()) {
       neutralPacketFilter.enqueue(packet);
     }
   }
