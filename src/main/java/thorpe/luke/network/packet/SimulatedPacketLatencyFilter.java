@@ -7,13 +7,13 @@ import java.util.Optional;
 import java.util.PriorityQueue;
 import thorpe.luke.distribution.Distribution;
 
-public class SimulatedLatencyPacketFilter implements PacketFilter {
+public class SimulatedPacketLatencyFilter implements PacketFilter {
 
   private final PriorityQueue<ScheduledPacket> packetQueue = new PriorityQueue<>();
   private final Distribution<Double> latencyDistribution;
   private final ChronoUnit timeUnit;
 
-  public SimulatedLatencyPacketFilter(
+  public SimulatedPacketLatencyFilter(
       Distribution<Double> latencyDistribution, ChronoUnit timeUnit) {
     this.latencyDistribution = latencyDistribution;
     this.timeUnit = timeUnit;

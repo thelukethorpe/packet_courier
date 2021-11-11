@@ -5,16 +5,16 @@ import java.util.Random;
 import thorpe.luke.distribution.BernoulliDistribution;
 import thorpe.luke.distribution.Distribution;
 
-public class SimulatedDropPacketFilter implements PacketFilter {
+public class SimulatedPacketDropFilter implements PacketFilter {
 
   private final NeutralPacketFilter neutralPacketFilter = new NeutralPacketFilter();
   private final Distribution<Boolean> dropDistribution;
 
-  public SimulatedDropPacketFilter(double dropProbability) {
+  public SimulatedPacketDropFilter(double dropProbability) {
     this(dropProbability, new Random());
   }
 
-  public SimulatedDropPacketFilter(double dropProbability, Random random) {
+  public SimulatedPacketDropFilter(double dropProbability, Random random) {
     this.dropDistribution = new BernoulliDistribution(dropProbability, random);
   }
 
