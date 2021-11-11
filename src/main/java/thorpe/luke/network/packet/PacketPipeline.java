@@ -1,11 +1,16 @@
 package thorpe.luke.network.packet;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 public class PacketPipeline implements PacketFilter {
   private final ArrayList<PacketFilter> packetFilters;
+
+  public PacketPipeline(PacketFilter... packetFilters) {
+    this(Arrays.asList(packetFilters));
+  }
 
   public PacketPipeline(List<PacketFilter> packetFilters) {
     this.packetFilters = new ArrayList<>(packetFilters);

@@ -1,6 +1,5 @@
 package thorpe.luke.network.simulator.example;
 
-import java.util.Collections;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -53,8 +52,7 @@ public class SimpleExample1 {
 
   public static void main(String[] args) {
     // Packet pipeline drops half of the packets that travel through it.
-    PacketPipeline packetPipeline =
-        new PacketPipeline(Collections.singletonList(new UniformDropPacketFilter(0.5)));
+    PacketPipeline packetPipeline = new PacketPipeline(new UniformDropPacketFilter(0.5));
     DistributedNetworkSimulator distributedNetworkSimulator;
     try {
       distributedNetworkSimulator =
