@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
+import thorpe.luke.network.packet.PacketFilter;
 import thorpe.luke.network.packet.PacketPipeline;
 
 public class DistributedNetworkSimulator {
@@ -107,7 +108,7 @@ public class DistributedNetworkSimulator {
     }
 
     public Builder addConnection(
-        String sourceName, String destinationName, PacketPipeline packetPipeline)
+        String sourceName, String destinationName, PacketFilter... packetFilters)
         throws InvalidSimulatorConfigurationException {
       if (sourceName == null) {
         throw new InvalidSimulatorConfigurationException("Source node name cannot be null.");
@@ -123,8 +124,6 @@ public class DistributedNetworkSimulator {
       } else if (!nodes.containsKey(destinationName)) {
         throw new InvalidSimulatorConfigurationException(
             "Node with name \"" + destinationName + "\" has not been added yet.");
-      } else if (packetPipeline == null) {
-        throw new InvalidSimulatorConfigurationException("Packet pipeline cannot be null.");
       }
 
       Node sourceNode = nodes.get(sourceName).getNode();
@@ -135,7 +134,7 @@ public class DistributedNetworkSimulator {
         throw new InvalidSimulatorConfigurationException("Connection has already been added.");
       }
 
-      networkConditions.put(connection, packetPipeline);
+      networkConditions.put(connection, new PacketPipeline(packetFilters));
       return this;
     }
 

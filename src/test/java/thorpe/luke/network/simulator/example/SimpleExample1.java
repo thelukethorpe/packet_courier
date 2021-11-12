@@ -10,7 +10,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import thorpe.luke.distribution.UniformDistribution;
 import thorpe.luke.network.packet.Packet;
-import thorpe.luke.network.packet.PacketPipeline;
 import thorpe.luke.network.packet.SimulatedPacketDropFilter;
 import thorpe.luke.network.packet.SimulatedPacketLatencyFilter;
 import thorpe.luke.network.simulator.DistributedNetworkSimulator;
@@ -62,15 +61,14 @@ public class SimpleExample1 {
     SimulatedPacketLatencyFilter simulatedPacketLatencyFilter =
         new SimulatedPacketLatencyFilter(
             new UniformDistribution(35.0, 50.0, random), ChronoUnit.MILLIS);
-    PacketPipeline packetPipeline =
-        new PacketPipeline(simulatedPacketDropFilter, simulatedPacketLatencyFilter);
     DistributedNetworkSimulator distributedNetworkSimulator;
     try {
       distributedNetworkSimulator =
           DistributedNetworkSimulator.builder()
               .addNode(NODE_A_NAME, SimpleExample1::runNodeA)
               .addNode(NODE_B_NAME, SimpleExample1::runNodeB)
-              .addConnection(NODE_A_NAME, NODE_B_NAME, packetPipeline)
+              .addConnection(
+                  NODE_A_NAME, NODE_B_NAME, simulatedPacketDropFilter, simulatedPacketLatencyFilter)
               .build();
     } catch (InvalidSimulatorConfigurationException e) {
       e.printStackTrace();

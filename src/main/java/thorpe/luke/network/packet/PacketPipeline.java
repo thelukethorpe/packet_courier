@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-public class PacketPipeline implements PacketFilter {
+public class PacketPipeline {
   private final ArrayList<PacketFilter> packetFilters;
 
   public PacketPipeline(PacketFilter... packetFilters) {
@@ -17,7 +17,6 @@ public class PacketPipeline implements PacketFilter {
     this.packetFilters.add(new NeutralPacketFilter());
   }
 
-  @Override
   public void enqueue(Packet packet) {
     packetFilters.get(0).enqueue(packet);
   }
@@ -30,7 +29,6 @@ public class PacketPipeline implements PacketFilter {
     }
   }
 
-  @Override
   public Optional<Packet> tryDequeue() {
     PacketFilter lastFilter = packetFilters.get(packetFilters.size() - 1);
     return lastFilter.tryDequeue();
