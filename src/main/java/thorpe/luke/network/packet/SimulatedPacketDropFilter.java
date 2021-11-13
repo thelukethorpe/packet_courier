@@ -1,8 +1,6 @@
 package thorpe.luke.network.packet;
 
 import java.util.Optional;
-import java.util.Random;
-import thorpe.luke.distribution.BernoulliDistribution;
 import thorpe.luke.distribution.Distribution;
 
 public class SimulatedPacketDropFilter implements PacketFilter {
@@ -10,12 +8,8 @@ public class SimulatedPacketDropFilter implements PacketFilter {
   private final NeutralPacketFilter neutralPacketFilter = new NeutralPacketFilter();
   private final Distribution<Boolean> dropDistribution;
 
-  public SimulatedPacketDropFilter(double dropProbability) {
-    this(dropProbability, new Random());
-  }
-
-  public SimulatedPacketDropFilter(double dropProbability, Random random) {
-    this.dropDistribution = new BernoulliDistribution(dropProbability, random);
+  public SimulatedPacketDropFilter(Distribution<Boolean> dropDistribution) {
+    this.dropDistribution = dropDistribution;
   }
 
   @Override

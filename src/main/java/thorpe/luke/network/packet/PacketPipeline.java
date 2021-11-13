@@ -4,17 +4,25 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class PacketPipeline {
   private final ArrayList<PacketFilter> packetFilters;
 
-  public PacketPipeline(PacketFilter... packetFilters) {
-    this(Arrays.asList(packetFilters));
+  public PacketPipeline(Parameters packetPipelineParameters) {
+    this(
+        packetPipelineParameters.getNetworkConditions().stream()
+            .map(NetworkConditions::asPacketFilter)
+            .collect(Collectors.toList()));
   }
 
-  public PacketPipeline(List<PacketFilter> packetFilters) {
+  private PacketPipeline(List<PacketFilter> packetFilters) {
     this.packetFilters = new ArrayList<>(packetFilters);
     this.packetFilters.add(new NeutralPacketFilter());
+  }
+
+  public static Parameters parameters(NetworkConditions... networkConditions) {
+    return new Parameters(networkConditions);
   }
 
   public void enqueue(Packet packet) {
@@ -32,5 +40,17 @@ public class PacketPipeline {
   public Optional<Packet> tryDequeue() {
     PacketFilter lastFilter = packetFilters.get(packetFilters.size() - 1);
     return lastFilter.tryDequeue();
+  }
+
+  public static class Parameters {
+    private final List<NetworkConditions> networkConditions;
+
+    private Parameters(NetworkConditions... networkConditions) {
+      this.networkConditions = Arrays.asList(networkConditions);
+    }
+
+    public List<NetworkConditions> getNetworkConditions() {
+      return networkConditions;
+    }
   }
 }

@@ -8,10 +8,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import thorpe.luke.distribution.UniformDistribution;
+import thorpe.luke.network.packet.NetworkConditions;
+import thorpe.luke.network.packet.NetworkConditions.InvalidNetworkConditionsException;
 import thorpe.luke.network.packet.Packet;
-import thorpe.luke.network.packet.SimulatedPacketDropFilter;
-import thorpe.luke.network.packet.SimulatedPacketLatencyFilter;
+import thorpe.luke.network.packet.PacketPipeline;
 import thorpe.luke.network.simulator.DistributedNetworkSimulator;
 import thorpe.luke.network.simulator.DistributedNetworkSimulator.InvalidSimulatorConfigurationException;
 import thorpe.luke.network.simulator.NodeManager;
@@ -56,11 +56,6 @@ public class SimpleExample1 {
   public static void main(String[] args) {
     // Packet pipeline drops half of the packets that travel through it.
     Random random = new Random();
-    SimulatedPacketDropFilter simulatedPacketDropFilter =
-        new SimulatedPacketDropFilter(0.5, random);
-    SimulatedPacketLatencyFilter simulatedPacketLatencyFilter =
-        new SimulatedPacketLatencyFilter(
-            new UniformDistribution(35.0, 50.0, random), ChronoUnit.MILLIS);
     DistributedNetworkSimulator distributedNetworkSimulator;
     try {
       distributedNetworkSimulator =
@@ -68,9 +63,14 @@ public class SimpleExample1 {
               .addNode(NODE_A_NAME, SimpleExample1::runNodeA)
               .addNode(NODE_B_NAME, SimpleExample1::runNodeB)
               .addConnection(
-                  NODE_A_NAME, NODE_B_NAME, simulatedPacketDropFilter, simulatedPacketLatencyFilter)
+                  NODE_A_NAME,
+                  NODE_B_NAME,
+                  PacketPipeline.parameters(
+                      NetworkConditions.uniformPacketDrop(0.5, random),
+                      NetworkConditions.uniformPacketLatency(
+                          35.0, 50.0, ChronoUnit.MILLIS, random)))
               .build();
-    } catch (InvalidSimulatorConfigurationException e) {
+    } catch (InvalidSimulatorConfigurationException | InvalidNetworkConditionsException e) {
       e.printStackTrace();
       System.exit(1);
       return;
