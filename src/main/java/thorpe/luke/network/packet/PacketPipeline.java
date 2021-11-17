@@ -12,7 +12,7 @@ public class PacketPipeline {
   public PacketPipeline(Parameters packetPipelineParameters) {
     this(
         packetPipelineParameters.getNetworkConditions().stream()
-            .map(NetworkConditions::asPacketFilter)
+            .map(NetworkCondition::asPacketFilter)
             .collect(Collectors.toList()));
   }
 
@@ -21,7 +21,7 @@ public class PacketPipeline {
     this.packetFilters.add(new NeutralPacketFilter());
   }
 
-  public static Parameters parameters(NetworkConditions... networkConditions) {
+  public static Parameters parameters(NetworkCondition... networkConditions) {
     return new Parameters(networkConditions);
   }
 
@@ -43,13 +43,13 @@ public class PacketPipeline {
   }
 
   public static class Parameters {
-    private final List<NetworkConditions> networkConditions;
+    private final List<NetworkCondition> networkConditions;
 
-    private Parameters(NetworkConditions... networkConditions) {
+    private Parameters(NetworkCondition... networkConditions) {
       this.networkConditions = Arrays.asList(networkConditions);
     }
 
-    public List<NetworkConditions> getNetworkConditions() {
+    public List<NetworkCondition> getNetworkConditions() {
       return networkConditions;
     }
   }

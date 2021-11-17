@@ -7,8 +7,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import thorpe.luke.network.packet.NetworkConditions;
-import thorpe.luke.network.packet.NetworkConditions.InvalidNetworkConditionsException;
+import thorpe.luke.network.packet.NetworkCondition;
+import thorpe.luke.network.packet.NetworkCondition.InvalidNetworkConditionException;
 import thorpe.luke.network.packet.Packet;
 import thorpe.luke.network.packet.PacketPipeline;
 import thorpe.luke.network.simulator.DistributedNetworkSimulator;
@@ -61,7 +61,7 @@ public class SimpleExample2 {
     try {
       Random random = new Random();
       PacketPipeline.Parameters lossyNetworkParameters =
-          PacketPipeline.parameters(NetworkConditions.uniformPacketDrop(1.0 / N, random));
+          PacketPipeline.parameters(NetworkCondition.uniformPacketDrop(1.0 / N, random));
 
       DistributedNetworkSimulator.Builder distributedNetworkSimulatorBuilder =
           DistributedNetworkSimulator.builder();
@@ -81,7 +81,7 @@ public class SimpleExample2 {
       }
 
       distributedNetworkSimulator = distributedNetworkSimulatorBuilder.build();
-    } catch (InvalidSimulatorConfigurationException | InvalidNetworkConditionsException e) {
+    } catch (InvalidSimulatorConfigurationException | InvalidNetworkConditionException e) {
       e.printStackTrace();
       System.exit(1);
       return;

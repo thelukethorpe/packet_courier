@@ -6,21 +6,21 @@ import thorpe.luke.distribution.BernoulliDistribution;
 import thorpe.luke.distribution.UniformDistribution;
 
 @FunctionalInterface
-public interface NetworkConditions {
-  static NetworkConditions uniformPacketDrop(double dropProbability, Random random)
-      throws InvalidNetworkConditionsException {
+public interface NetworkCondition {
+  static NetworkCondition uniformPacketDrop(double dropProbability, Random random)
+      throws InvalidNetworkConditionException {
     if (dropProbability < 0.0 || 1.0 < dropProbability) {
-      throw new InvalidNetworkConditionsException(
+      throw new InvalidNetworkConditionException(
           "Packet drop probability should be between 0 and 1.");
     }
     return () -> new SimulatedPacketDropFilter(new BernoulliDistribution(dropProbability, random));
   }
 
-  static NetworkConditions uniformPacketLatency(
+  static NetworkCondition uniformPacketLatency(
       double minLatency, double maxLatency, ChronoUnit timeUnit, Random random)
-      throws InvalidNetworkConditionsException {
+      throws InvalidNetworkConditionException {
     if (maxLatency < minLatency) {
-      throw new InvalidNetworkConditionsException(
+      throw new InvalidNetworkConditionException(
           "Minimum latency should be less than or equal to maximum latency.");
     }
     return () ->
@@ -30,8 +30,8 @@ public interface NetworkConditions {
 
   PacketFilter asPacketFilter();
 
-  class InvalidNetworkConditionsException extends Exception {
-    public InvalidNetworkConditionsException(String message) {
+  class InvalidNetworkConditionException extends Exception {
+    public InvalidNetworkConditionException(String message) {
       super(message);
     }
   }
