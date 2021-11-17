@@ -13,7 +13,7 @@ public interface NetworkCondition {
       throw new InvalidNetworkConditionException(
           "Packet drop probability should be between 0 and 1.");
     }
-    return () -> new SimulatedPacketDropFilter(new BernoulliDistribution(dropProbability, random));
+    return () -> new SimulatedPacketDropFilter(new BernoulliDistribution(dropProbability), random);
   }
 
   static NetworkCondition uniformPacketLatency(
@@ -25,7 +25,7 @@ public interface NetworkCondition {
     }
     return () ->
         new SimulatedPacketLatencyFilter(
-            new UniformDistribution(minLatency, maxLatency, random), timeUnit);
+            new UniformDistribution(minLatency, maxLatency), timeUnit, random);
   }
 
   PacketFilter asPacketFilter();
