@@ -1,5 +1,7 @@
 package thorpe.luke.network.simulator.example;
 
+import java.util.Random;
+import java.util.concurrent.*;
 import thorpe.luke.network.packet.NetworkCondition;
 import thorpe.luke.network.packet.NetworkCondition.InvalidNetworkConditionException;
 import thorpe.luke.network.packet.Packet;
@@ -7,9 +9,6 @@ import thorpe.luke.network.packet.PacketPipeline;
 import thorpe.luke.network.simulator.DistributedNetworkSimulator;
 import thorpe.luke.network.simulator.DistributedNetworkSimulator.InvalidSimulatorConfigurationException;
 import thorpe.luke.network.simulator.NodeManager;
-
-import java.util.Random;
-import java.util.concurrent.*;
 
 public class SimpleExample2 {
 
