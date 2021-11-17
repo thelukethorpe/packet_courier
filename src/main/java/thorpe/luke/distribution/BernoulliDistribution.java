@@ -17,4 +17,14 @@ public class BernoulliDistribution implements Distribution<Boolean> {
   public Boolean sample() {
     return random.nextDouble() < probability;
   }
+
+  @Override
+  public Double mean() {
+    return probability;
+  }
+
+  @Override
+  public Double variance() {
+    return probability * (1.0 - probability);
+  }
 }

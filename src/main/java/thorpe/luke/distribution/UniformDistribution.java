@@ -19,4 +19,14 @@ public class UniformDistribution implements Distribution<Double> {
   public Double sample() {
     return (max - min) * random.nextDouble() + min;
   }
+
+  @Override
+  public Double mean() {
+    return (min + max) / 2;
+  }
+
+  @Override
+  public Double variance() {
+    return (max - min) * (max - min) / 12;
+  }
 }
