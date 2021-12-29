@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.PriorityQueue;
+import java.util.Random;
 import thorpe.luke.distribution.Distribution;
 
 public class SimulatedPacketLatencyFilter implements PacketFilter {
@@ -12,17 +13,19 @@ public class SimulatedPacketLatencyFilter implements PacketFilter {
   private final PriorityQueue<ScheduledPacket> packetQueue = new PriorityQueue<>();
   private final Distribution<Double> latencyDistribution;
   private final ChronoUnit timeUnit;
+  private final Random random;
 
   public SimulatedPacketLatencyFilter(
-      Distribution<Double> latencyDistribution, ChronoUnit timeUnit) {
+      Distribution<Double> latencyDistribution, ChronoUnit timeUnit, Random random) {
     this.latencyDistribution = latencyDistribution;
     this.timeUnit = timeUnit;
+    this.random = random;
   }
 
   @Override
   public void enqueue(Packet packet) {
     LocalDateTime now = LocalDateTime.now();
-    long latency = Math.round(latencyDistribution.sample());
+    long latency = Math.round(latencyDistribution.sample(random));
     LocalDateTime scheduledDequeueTime = now.plus(Duration.of(latency, timeUnit));
     packetQueue.offer(new ScheduledPacket(scheduledDequeueTime, packet));
   }

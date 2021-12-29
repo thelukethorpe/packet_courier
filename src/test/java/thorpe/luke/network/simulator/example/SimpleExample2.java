@@ -1,12 +1,5 @@
 package thorpe.luke.network.simulator.example;
 
-import java.util.Random;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import thorpe.luke.network.packet.NetworkCondition;
 import thorpe.luke.network.packet.NetworkCondition.InvalidNetworkConditionException;
 import thorpe.luke.network.packet.Packet;
@@ -14,6 +7,9 @@ import thorpe.luke.network.packet.PacketPipeline;
 import thorpe.luke.network.simulator.DistributedNetworkSimulator;
 import thorpe.luke.network.simulator.DistributedNetworkSimulator.InvalidSimulatorConfigurationException;
 import thorpe.luke.network.simulator.NodeManager;
+
+import java.util.Random;
+import java.util.concurrent.*;
 
 public class SimpleExample2 {
 
@@ -29,16 +25,16 @@ public class SimpleExample2 {
               for (String neighbour : nodeManager.getNeighbours()) {
                 for (int i = 1; i <= N; i++) {
                   String message = nodeManager.getName() + "(" + i + ")";
-                  Packet messageAsPacket = new Packet(message.getBytes());
+                  Packet messageAsPacket = Packet.of(message);
                   nodeManager.sendMail(neighbour, messageAsPacket);
                 }
               }
 
               do {
                 Packet packet = nodeManager.waitForMail();
-                String message = new String(packet.getData());
+                String message = packet.asString();
                 String newMessage = message + " -> " + nodeManager.getName();
-                Packet newMessageAsPacket = new Packet(newMessage.getBytes());
+                Packet newMessageAsPacket = Packet.of(newMessage);
                 System.out.println(newMessage);
                 nodeManager
                     .getNeighbours()
