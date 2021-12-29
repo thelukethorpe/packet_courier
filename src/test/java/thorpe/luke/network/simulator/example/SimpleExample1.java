@@ -1,13 +1,5 @@
 package thorpe.luke.network.simulator.example;
 
-import java.time.temporal.ChronoUnit;
-import java.util.Random;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import thorpe.luke.network.packet.NetworkCondition;
 import thorpe.luke.network.packet.NetworkCondition.InvalidNetworkConditionException;
 import thorpe.luke.network.packet.Packet;
@@ -15,6 +7,10 @@ import thorpe.luke.network.packet.PacketPipeline;
 import thorpe.luke.network.simulator.DistributedNetworkSimulator;
 import thorpe.luke.network.simulator.DistributedNetworkSimulator.InvalidSimulatorConfigurationException;
 import thorpe.luke.network.simulator.NodeManager;
+
+import java.time.temporal.ChronoUnit;
+import java.util.Random;
+import java.util.concurrent.*;
 
 public class SimpleExample1 {
 
@@ -26,7 +22,7 @@ public class SimpleExample1 {
     for (int i = 1; i <= 10; i++) {
       String message =
           "Hello " + NODE_B_NAME + ", please print this message containing the number " + i + ".";
-      Packet messageAsPacket = new Packet(message.getBytes());
+      Packet messageAsPacket = Packet.of(message);
       nodeManager.sendMail(NODE_B_NAME, messageAsPacket);
     }
   }
@@ -39,7 +35,7 @@ public class SimpleExample1 {
             () -> {
               do {
                 Packet packet = nodeManager.waitForMail();
-                String message = new String(packet.getData());
+                String message = packet.asString();
                 System.out.println("Node B has received the following message: " + message);
               } while (true);
             });
@@ -67,8 +63,7 @@ public class SimpleExample1 {
                   NODE_B_NAME,
                   PacketPipeline.parameters(
                       NetworkCondition.uniformPacketDrop(0.5, random),
-                      NetworkCondition.uniformPacketLatency(
-                          35.0, 50.0, ChronoUnit.MILLIS, random)))
+                      NetworkCondition.uniformPacketLatency(35.0, 50.0, ChronoUnit.MILLIS, random)))
               .build();
     } catch (InvalidSimulatorConfigurationException | InvalidNetworkConditionException e) {
       e.printStackTrace();
