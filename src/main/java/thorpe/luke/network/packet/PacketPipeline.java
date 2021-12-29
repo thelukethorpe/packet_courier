@@ -11,7 +11,9 @@ public class PacketPipeline {
 
   public PacketPipeline(Parameters packetPipelineParameters) {
     this(
-        packetPipelineParameters.getNetworkConditions().stream()
+        packetPipelineParameters
+            .getNetworkConditions()
+            .stream()
             .map(NetworkCondition::asPacketFilter)
             .collect(Collectors.toList()));
   }

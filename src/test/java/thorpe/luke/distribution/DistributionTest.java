@@ -11,7 +11,6 @@ import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
-
 import org.junit.Test;
 
 public abstract class DistributionTest<T> {

@@ -31,7 +31,9 @@ public class DistributedNetworkSimulator {
   public void start() {
     AtomicBoolean simulationComplete = new AtomicBoolean(false);
     Collection<Thread> nodeThreads =
-        nodes.values().stream()
+        nodes
+            .values()
+            .stream()
             .map(
                 runnableNode -> {
                   String nodeName = runnableNode.getNode().getName();
