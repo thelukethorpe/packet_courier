@@ -6,8 +6,8 @@ import thorpe.luke.network.packet.NetworkCondition;
 import thorpe.luke.network.packet.NetworkCondition.InvalidNetworkConditionException;
 import thorpe.luke.network.packet.Packet;
 import thorpe.luke.network.packet.PacketPipeline;
-import thorpe.luke.network.simulator.DistributedNetworkSimulator;
-import thorpe.luke.network.simulator.DistributedNetworkSimulator.InvalidSimulatorConfigurationException;
+import thorpe.luke.network.simulator.DistributedNetworkSimulation;
+import thorpe.luke.network.simulator.DistributedNetworkSimulation.InvalidSimulationConfigurationException;
 import thorpe.luke.network.simulator.NodeManager;
 
 public class SimpleExample2 {
@@ -52,36 +52,42 @@ public class SimpleExample2 {
 
   public static void main(String[] args) {
     // Nodes are connected in a simple ring topology and forward messages around the ring.
-    DistributedNetworkSimulator distributedNetworkSimulator;
+    DistributedNetworkSimulation distributedNetworkSimulation;
     try {
       Random random = new Random();
       PacketPipeline.Parameters lossyNetworkParameters =
           PacketPipeline.parameters(NetworkCondition.uniformPacketDrop(1.0 / N, random));
 
-      DistributedNetworkSimulator.Builder distributedNetworkSimulatorBuilder =
-          DistributedNetworkSimulator.builder();
+      DistributedNetworkSimulation.Configuration distributedNetworkSimulationConfiguration =
+          DistributedNetworkSimulation.configuration();
 
       String[] nodeNames = new String[N];
       for (int i = 0; i < N; i++) {
         String nodeName = "Node " + (char) ('A' + i);
         nodeNames[i] = nodeName;
-        distributedNetworkSimulatorBuilder.addNode(nodeName, SimpleExample2::runNode);
+        distributedNetworkSimulationConfiguration.addNode(nodeName, SimpleExample2::runNode);
       }
 
       for (int i = 0; i < N; i++) {
         String currentNodeName = nodeNames[i];
         String nextNodeName = nodeNames[(i + 1) % N];
-        distributedNetworkSimulatorBuilder.addConnection(
+        distributedNetworkSimulationConfiguration.addConnection(
             currentNodeName, nextNodeName, lossyNetworkParameters);
       }
 
-      distributedNetworkSimulator = distributedNetworkSimulatorBuilder.build();
-    } catch (InvalidSimulatorConfigurationException | InvalidNetworkConditionException e) {
+      distributedNetworkSimulation = distributedNetworkSimulationConfiguration.start();
+    } catch (InvalidSimulationConfigurationException | InvalidNetworkConditionException e) {
       e.printStackTrace();
       System.exit(1);
       return;
     }
-    distributedNetworkSimulator.start();
+    try {
+      distributedNetworkSimulation.join();
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+      System.exit(1);
+      return;
+    }
     System.out.println("Simulation complete. Exiting elegantly...");
   }
 }
