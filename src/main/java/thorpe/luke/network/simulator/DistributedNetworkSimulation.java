@@ -1,12 +1,10 @@
 package thorpe.luke.network.simulator;
 
 import java.time.temporal.ChronoUnit;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
+import thorpe.luke.log.Logger;
 import thorpe.luke.network.packet.PacketPipeline;
 import thorpe.luke.network.packet.PacketPipeline.Parameters;
 import thorpe.luke.time.Clock;
@@ -20,7 +18,8 @@ public class DistributedNetworkSimulation {
       Map<String, RunnableNode> nodes,
       Map<String, Collection<String>> topology,
       NetworkSimulatorPostalService postalService,
-      Clock clock) {
+      Clock clock,
+      Collection<Logger> loggers) {
     this.simulator =
         new Thread(
             () -> {
@@ -34,7 +33,7 @@ public class DistributedNetworkSimulation {
                             String nodeName = runnableNode.getNode().getName();
                             Collection<String> neighbours = topology.get(nodeName);
                             return new Thread(
-                                () -> runnableNode.run(neighbours, postalService, clock));
+                                () -> runnableNode.run(neighbours, postalService, clock, loggers));
                           })
                       .collect(Collectors.toList());
               Thread networkThread =
@@ -84,8 +83,12 @@ public class DistributedNetworkSimulation {
       this.nodeScript = nodeScript;
     }
 
-    public void run(Collection<String> neighbours, PostalService postalService, Clock clock) {
-      node.run(nodeScript, neighbours, postalService, clock);
+    public void run(
+        Collection<String> neighbours,
+        PostalService postalService,
+        Clock clock,
+        Collection<Logger> loggers) {
+      node.run(nodeScript, neighbours, postalService, clock, loggers);
     }
 
     public Node getNode() {
@@ -97,6 +100,7 @@ public class DistributedNetworkSimulation {
     private final Map<String, RunnableNode> nodes = new HashMap<>();
     private final Map<Connection, PacketPipeline> networkConditions = new HashMap<>();
     private final Clock clock = new VirtualClock(ChronoUnit.MILLIS);
+    private final Collection<Logger> loggers = new LinkedList<>();
 
     private static boolean isBlank(String string) {
       return string.trim().isEmpty();
@@ -152,6 +156,11 @@ public class DistributedNetworkSimulation {
       return this;
     }
 
+    public Configuration addLogger(Logger logger) {
+      loggers.add(logger);
+      return this;
+    }
+
     public DistributedNetworkSimulation start() {
       Map<String, Collection<String>> topology = new HashMap<>();
       nodes.keySet().forEach(name -> topology.put(name, new HashSet<>()));
@@ -165,7 +174,7 @@ public class DistributedNetworkSimulation {
               nodes.values().stream().map(RunnableNode::getNode).collect(Collectors.toList()),
               networkConditions);
       DistributedNetworkSimulation distributedNetworkSimulation =
-          new DistributedNetworkSimulation(nodes, topology, postalService, clock);
+          new DistributedNetworkSimulation(nodes, topology, postalService, clock, loggers);
       distributedNetworkSimulation.start();
       return distributedNetworkSimulation;
     }
