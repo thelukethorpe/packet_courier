@@ -1,6 +1,6 @@
 package thorpe.luke.network.simulator;
 
 @FunctionalInterface
-public interface NodeScript {
-  void run(NodeManager nodeManager);
+public interface NodeScript<NodeInfo> {
+  void run(NodeManager<NodeInfo> nodeManager);
 }

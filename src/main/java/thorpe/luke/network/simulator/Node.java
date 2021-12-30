@@ -3,9 +3,8 @@ package thorpe.luke.network.simulator;
 import java.util.Collection;
 import thorpe.luke.log.Logger;
 import thorpe.luke.network.packet.Packet;
-import thorpe.luke.time.Clock;
 
-public class Node {
+public class Node<NodeInfo> {
   private final String name;
   private final Mailbox mailbox;
 
@@ -23,12 +22,11 @@ public class Node {
   }
 
   public void run(
-      NodeScript nodeScript,
-      Collection<String> neighbours,
+      NodeScript<NodeInfo> nodeScript,
+      NodeInfo nodeInfo,
       PostalService postalService,
-      Clock clock,
       Collection<Logger> loggers) {
-    nodeScript.run(new NodeManager(name, neighbours, mailbox, postalService, clock, loggers));
+    nodeScript.run(new NodeManager<>(nodeInfo, name, mailbox, postalService, loggers));
   }
 
   @Override
