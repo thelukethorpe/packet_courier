@@ -10,12 +10,12 @@ import thorpe.luke.network.packet.PacketPipeline.Parameters;
 import thorpe.luke.time.Clock;
 import thorpe.luke.time.VirtualClock;
 
-public class DistributedNetworkSimulation {
+public class DistributedNetworkSimulation<NodeInfo> {
 
   private final Thread simulator;
 
   private DistributedNetworkSimulation(
-      Map<String, RunnableNode> nodes,
+      Map<String, RunnableNode<NodeInfo>> nodes,
       Map<String, Collection<String>> topology,
       NetworkSimulatorPostalService postalService,
       Clock clock,
@@ -29,14 +29,11 @@ public class DistributedNetworkSimulation {
                       .values()
                       .stream()
                       .map(
-                          runnableNode -> {
-                            String nodeName = runnableNode.getNode().getName();
-                            Collection<String> neighbours = topology.get(nodeName);
-                            return new Thread(
-                                () -> runnableNode.run(neighbours, postalService, clock, loggers));
-                          })
+                          runnableNode ->
+                              new Thread(
+                                  () -> runnableNode.run(topology, postalService, clock, loggers)))
                       .collect(Collectors.toList());
-              Thread networkThread =
+              Thread simulationManagerThread =
                   new Thread(
                       () -> {
                         while (!simulationComplete.get()) {
@@ -45,7 +42,7 @@ public class DistributedNetworkSimulation {
                         }
                       });
               nodeThreads.forEach(Thread::start);
-              networkThread.start();
+              simulationManagerThread.start();
               for (Thread nodeThread : nodeThreads) {
                 try {
                   nodeThread.join();
@@ -55,15 +52,21 @@ public class DistributedNetworkSimulation {
               }
               simulationComplete.set(true);
               try {
-                networkThread.join();
+                simulationManagerThread.join();
               } catch (InterruptedException e) {
                 e.printStackTrace();
               }
             });
   }
 
-  public static Configuration configuration() {
-    return new Configuration();
+  public static <NodeInfo> Configuration<NodeInfo> configuration(
+      NodeInfoGenerator<NodeInfo> nodeInfoGenerator) {
+    return new Configuration<>(nodeInfoGenerator);
+  }
+
+  public static Configuration<DefaultNodeInfo> configuration() {
+    return new Configuration<>(
+        (name, topology, clock) -> new DefaultNodeInfo(name, topology.get(name), clock));
   }
 
   private void start() {
@@ -74,39 +77,53 @@ public class DistributedNetworkSimulation {
     simulator.join();
   }
 
-  private static class RunnableNode {
-    private final Node node;
-    private final NodeScript nodeScript;
+  private static class RunnableNode<NodeInfo> {
+    private final Node<NodeInfo> node;
+    private final NodeScript<NodeInfo> nodeScript;
+    private final NodeInfoGenerator<NodeInfo> nodeInfoGenerator;
 
-    private RunnableNode(Node node, NodeScript nodeScript) {
+    private RunnableNode(
+        Node<NodeInfo> node,
+        NodeScript<NodeInfo> nodeScript,
+        NodeInfoGenerator<NodeInfo> nodeInfoGenerator) {
       this.node = node;
       this.nodeScript = nodeScript;
+      this.nodeInfoGenerator = nodeInfoGenerator;
     }
 
     public void run(
-        Collection<String> neighbours,
+        Map<String, Collection<String>> topology,
         PostalService postalService,
         Clock clock,
         Collection<Logger> loggers) {
-      node.run(nodeScript, neighbours, postalService, clock, loggers);
+      node.run(
+          nodeScript,
+          nodeInfoGenerator.generateInfo(node.getName(), topology, clock),
+          postalService,
+          loggers);
     }
 
-    public Node getNode() {
+    public Node<NodeInfo> getNode() {
       return node;
     }
   }
 
-  public static class Configuration {
-    private final Map<String, RunnableNode> nodes = new HashMap<>();
+  public static class Configuration<NodeInfo> {
+    private final Map<String, RunnableNode<NodeInfo>> nodes = new HashMap<>();
     private final Map<Connection, PacketPipeline> networkConditions = new HashMap<>();
     private final Clock clock = new VirtualClock(ChronoUnit.MILLIS);
     private final Collection<Logger> loggers = new LinkedList<>();
+    private final NodeInfoGenerator<NodeInfo> nodeInfoGenerator;
+
+    public Configuration(NodeInfoGenerator<NodeInfo> nodeInfoGenerator) {
+      this.nodeInfoGenerator = nodeInfoGenerator;
+    }
 
     private static boolean isBlank(String string) {
       return string.trim().isEmpty();
     }
 
-    public Configuration addNode(String name, NodeScript nodeScript)
+    public Configuration<NodeInfo> addNode(String name, NodeScript<NodeInfo> nodeScript)
         throws InvalidSimulationConfigurationException {
       if (name == null) {
         throw new InvalidSimulationConfigurationException("Node name cannot be null.");
@@ -119,12 +136,12 @@ public class DistributedNetworkSimulation {
         throw new InvalidSimulationConfigurationException("Node script cannot be null.");
       }
 
-      Node node = new Node(name);
-      nodes.put(name, new RunnableNode(node, nodeScript));
+      Node<NodeInfo> node = new Node<>(name);
+      nodes.put(name, new RunnableNode<>(node, nodeScript, nodeInfoGenerator));
       return this;
     }
 
-    public Configuration addConnection(
+    public Configuration<NodeInfo> addConnection(
         String sourceName, String destinationName, Parameters packetPipelineParameters)
         throws InvalidSimulationConfigurationException {
       if (sourceName == null) {
@@ -143,8 +160,8 @@ public class DistributedNetworkSimulation {
             "Node with name \"" + destinationName + "\" has not been added yet.");
       }
 
-      Node sourceNode = nodes.get(sourceName).getNode();
-      Node destinationNode = nodes.get(destinationName).getNode();
+      Node<NodeInfo> sourceNode = nodes.get(sourceName).getNode();
+      Node<NodeInfo> destinationNode = nodes.get(destinationName).getNode();
       Connection connection = new Connection(sourceNode, destinationNode);
 
       if (this.networkConditions.containsKey(connection)) {
@@ -156,12 +173,12 @@ public class DistributedNetworkSimulation {
       return this;
     }
 
-    public Configuration addLogger(Logger logger) {
+    public Configuration<NodeInfo> addLogger(Logger logger) {
       loggers.add(logger);
       return this;
     }
 
-    public DistributedNetworkSimulation start() {
+    public DistributedNetworkSimulation<NodeInfo> start() {
       Map<String, Collection<String>> topology = new HashMap<>();
       nodes.keySet().forEach(name -> topology.put(name, new HashSet<>()));
       for (Connection connection : networkConditions.keySet()) {
@@ -173,8 +190,8 @@ public class DistributedNetworkSimulation {
           new NetworkSimulatorPostalService(
               nodes.values().stream().map(RunnableNode::getNode).collect(Collectors.toList()),
               networkConditions);
-      DistributedNetworkSimulation distributedNetworkSimulation =
-          new DistributedNetworkSimulation(nodes, topology, postalService, clock, loggers);
+      DistributedNetworkSimulation<NodeInfo> distributedNetworkSimulation =
+          new DistributedNetworkSimulation<>(nodes, topology, postalService, clock, loggers);
       distributedNetworkSimulation.start();
       return distributedNetworkSimulation;
     }

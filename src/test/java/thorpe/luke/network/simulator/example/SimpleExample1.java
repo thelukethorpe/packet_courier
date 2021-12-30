@@ -8,6 +8,7 @@ import thorpe.luke.network.packet.NetworkCondition;
 import thorpe.luke.network.packet.NetworkCondition.InvalidNetworkConditionException;
 import thorpe.luke.network.packet.Packet;
 import thorpe.luke.network.packet.PacketPipeline;
+import thorpe.luke.network.simulator.DefaultNodeInfo;
 import thorpe.luke.network.simulator.DistributedNetworkSimulation;
 import thorpe.luke.network.simulator.DistributedNetworkSimulation.InvalidSimulationConfigurationException;
 import thorpe.luke.network.simulator.NodeManager;
@@ -17,7 +18,7 @@ public class SimpleExample1 {
   public static final String NODE_A_NAME = "Node A";
   public static final String NODE_B_NAME = "Node B";
 
-  public static void runNodeA(NodeManager nodeManager) {
+  public static void runNodeA(NodeManager<DefaultNodeInfo> nodeManager) {
     // Node A sends the numbers 1 to 10 to node B.
     for (int i = 1; i <= 10; i++) {
       String message =
@@ -27,7 +28,7 @@ public class SimpleExample1 {
     }
   }
 
-  public static void runNodeB(NodeManager nodeManager) {
+  public static void runNodeB(NodeManager<DefaultNodeInfo> nodeManager) {
     // Node B waits for messages from node A and automatically shuts down after 5 seconds.
     ExecutorService executorService = Executors.newSingleThreadExecutor();
     Future<Void> result =
@@ -52,7 +53,7 @@ public class SimpleExample1 {
   public static void main(String[] args) {
     // Packet pipeline drops half of the packets that travel through it.
     Random random = new Random();
-    DistributedNetworkSimulation distributedNetworkSimulation;
+    DistributedNetworkSimulation<DefaultNodeInfo> distributedNetworkSimulation;
     try {
       distributedNetworkSimulation =
           DistributedNetworkSimulation.configuration()
