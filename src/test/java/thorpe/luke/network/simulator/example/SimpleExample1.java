@@ -7,8 +7,8 @@ import thorpe.luke.network.packet.NetworkCondition;
 import thorpe.luke.network.packet.NetworkCondition.InvalidNetworkConditionException;
 import thorpe.luke.network.packet.Packet;
 import thorpe.luke.network.packet.PacketPipeline;
-import thorpe.luke.network.simulator.DistributedNetworkSimulator;
-import thorpe.luke.network.simulator.DistributedNetworkSimulator.InvalidSimulatorConfigurationException;
+import thorpe.luke.network.simulator.DistributedNetworkSimulation;
+import thorpe.luke.network.simulator.DistributedNetworkSimulation.InvalidSimulationConfigurationException;
 import thorpe.luke.network.simulator.NodeManager;
 
 public class SimpleExample1 {
@@ -51,10 +51,10 @@ public class SimpleExample1 {
   public static void main(String[] args) {
     // Packet pipeline drops half of the packets that travel through it.
     Random random = new Random();
-    DistributedNetworkSimulator distributedNetworkSimulator;
+    DistributedNetworkSimulation distributedNetworkSimulation;
     try {
-      distributedNetworkSimulator =
-          DistributedNetworkSimulator.builder()
+      distributedNetworkSimulation =
+          DistributedNetworkSimulation.configuration()
               .addNode(NODE_A_NAME, SimpleExample1::runNodeA)
               .addNode(NODE_B_NAME, SimpleExample1::runNodeB)
               .addConnection(
@@ -63,13 +63,19 @@ public class SimpleExample1 {
                   PacketPipeline.parameters(
                       NetworkCondition.uniformPacketDrop(0.5, random),
                       NetworkCondition.uniformPacketLatency(35.0, 50.0, ChronoUnit.MILLIS, random)))
-              .build();
-    } catch (InvalidSimulatorConfigurationException | InvalidNetworkConditionException e) {
+              .start();
+    } catch (InvalidSimulationConfigurationException | InvalidNetworkConditionException e) {
       e.printStackTrace();
       System.exit(1);
       return;
     }
-    distributedNetworkSimulator.start();
+    try {
+      distributedNetworkSimulation.join();
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+      System.exit(1);
+      return;
+    }
     System.out.println("Simulation complete. Exiting elegantly...");
   }
 }
