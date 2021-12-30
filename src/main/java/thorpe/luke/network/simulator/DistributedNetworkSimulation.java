@@ -33,7 +33,8 @@ public class DistributedNetworkSimulation {
                           runnableNode -> {
                             String nodeName = runnableNode.getNode().getName();
                             Collection<String> neighbours = topology.get(nodeName);
-                            return new Thread(() -> runnableNode.run(neighbours, postalService));
+                            return new Thread(
+                                () -> runnableNode.run(neighbours, postalService, clock));
                           })
                       .collect(Collectors.toList());
               Thread networkThread =
@@ -83,8 +84,8 @@ public class DistributedNetworkSimulation {
       this.nodeScript = nodeScript;
     }
 
-    public void run(Collection<String> neighbours, PostalService postalService) {
-      node.run(nodeScript, neighbours, postalService);
+    public void run(Collection<String> neighbours, PostalService postalService, Clock clock) {
+      node.run(nodeScript, neighbours, postalService, clock);
     }
 
     public Node getNode() {
