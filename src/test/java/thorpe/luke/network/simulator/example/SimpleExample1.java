@@ -3,6 +3,7 @@ package thorpe.luke.network.simulator.example;
 import java.time.temporal.ChronoUnit;
 import java.util.Random;
 import java.util.concurrent.*;
+import thorpe.luke.log.ConsoleLogger;
 import thorpe.luke.network.packet.NetworkCondition;
 import thorpe.luke.network.packet.NetworkCondition.InvalidNetworkConditionException;
 import thorpe.luke.network.packet.Packet;
@@ -35,7 +36,7 @@ public class SimpleExample1 {
               do {
                 Packet packet = nodeManager.waitForMail();
                 String message = packet.asString();
-                System.out.println("Node B has received the following message: " + message);
+                nodeManager.log("Node B has received the following message: " + message);
               } while (true);
             });
     try {
@@ -63,6 +64,7 @@ public class SimpleExample1 {
                   PacketPipeline.parameters(
                       NetworkCondition.uniformPacketDrop(0.5, random),
                       NetworkCondition.uniformPacketLatency(35.0, 50.0, ChronoUnit.MILLIS, random)))
+              .addLogger(new ConsoleLogger())
               .start();
     } catch (InvalidSimulationConfigurationException | InvalidNetworkConditionException e) {
       e.printStackTrace();

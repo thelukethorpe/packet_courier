@@ -3,6 +3,7 @@ package thorpe.luke.network.simulator.example;
 import java.time.temporal.ChronoField;
 import java.util.Random;
 import java.util.concurrent.*;
+import thorpe.luke.log.ConsoleLogger;
 import thorpe.luke.network.packet.NetworkCondition;
 import thorpe.luke.network.packet.NetworkCondition.InvalidNetworkConditionException;
 import thorpe.luke.network.packet.Packet;
@@ -41,7 +42,7 @@ public class SimpleExample2 {
                         + nodeManager.getCurrentTime().get(ChronoField.MILLI_OF_SECOND)
                         + "ms";
                 Packet newMessageAsPacket = Packet.of(newMessage);
-                System.out.println(newMessage);
+                nodeManager.log(newMessage);
                 nodeManager
                     .getNeighbours()
                     .forEach(neighbour -> nodeManager.sendMail(neighbour, newMessageAsPacket));
@@ -82,7 +83,8 @@ public class SimpleExample2 {
             currentNodeName, nextNodeName, lossyNetworkParameters);
       }
 
-      distributedNetworkSimulation = distributedNetworkSimulationConfiguration.start();
+      distributedNetworkSimulation =
+          distributedNetworkSimulationConfiguration.addLogger(new ConsoleLogger()).start();
     } catch (InvalidSimulationConfigurationException | InvalidNetworkConditionException e) {
       e.printStackTrace();
       System.exit(1);

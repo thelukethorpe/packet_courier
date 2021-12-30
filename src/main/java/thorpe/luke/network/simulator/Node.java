@@ -1,6 +1,7 @@
 package thorpe.luke.network.simulator;
 
 import java.util.Collection;
+import thorpe.luke.log.Logger;
 import thorpe.luke.network.packet.Packet;
 import thorpe.luke.time.Clock;
 
@@ -25,8 +26,9 @@ public class Node {
       NodeScript nodeScript,
       Collection<String> neighbours,
       PostalService postalService,
-      Clock clock) {
-    nodeScript.run(new NodeManager(name, neighbours, mailbox, postalService, clock));
+      Clock clock,
+      Collection<Logger> loggers) {
+    nodeScript.run(new NodeManager(name, neighbours, mailbox, postalService, clock, loggers));
   }
 
   @Override
