@@ -1,5 +1,6 @@
 package thorpe.luke.network.simulator.example;
 
+import java.time.temporal.ChronoField;
 import java.util.Random;
 import java.util.concurrent.*;
 import thorpe.luke.network.packet.NetworkCondition;
@@ -32,7 +33,13 @@ public class SimpleExample2 {
               do {
                 Packet packet = nodeManager.waitForMail();
                 String message = packet.asString();
-                String newMessage = message + " -> " + nodeManager.getName();
+                String newMessage =
+                    message
+                        + " -> "
+                        + nodeManager.getName()
+                        + ", received at t = "
+                        + nodeManager.getCurrentTime().get(ChronoField.MILLI_OF_SECOND)
+                        + "ms";
                 Packet newMessageAsPacket = Packet.of(newMessage);
                 System.out.println(newMessage);
                 nodeManager

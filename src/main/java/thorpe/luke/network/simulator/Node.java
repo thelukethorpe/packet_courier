@@ -2,6 +2,7 @@ package thorpe.luke.network.simulator;
 
 import java.util.Collection;
 import thorpe.luke.network.packet.Packet;
+import thorpe.luke.time.Clock;
 
 public class Node {
   private final String name;
@@ -21,8 +22,11 @@ public class Node {
   }
 
   public void run(
-      NodeScript nodeScript, Collection<String> neighbours, PostalService postalService) {
-    nodeScript.run(new NodeManager(name, neighbours, mailbox, postalService));
+      NodeScript nodeScript,
+      Collection<String> neighbours,
+      PostalService postalService,
+      Clock clock) {
+    nodeScript.run(new NodeManager(name, neighbours, mailbox, postalService, clock));
   }
 
   @Override
