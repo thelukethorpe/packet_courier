@@ -1,5 +1,6 @@
 package thorpe.luke.network.simulator;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -21,11 +22,11 @@ public class NetworkSimulatorPostalService implements PostalService {
     this.networkConditions = new ConcurrentHashMap<>(networkConditions);
   }
 
-  public void tick() {
+  public void tick(LocalDateTime now) {
     for (Entry<Connection, PacketPipeline> networkConditionEntry : networkConditions.entrySet()) {
       Connection connection = networkConditionEntry.getKey();
       PacketPipeline packetPipeline = networkConditionEntry.getValue();
-      packetPipeline.tick();
+      packetPipeline.tick(now);
       packetPipeline.tryDequeue().ifPresent(packet -> connection.getDestination().deliver(packet));
     }
   }

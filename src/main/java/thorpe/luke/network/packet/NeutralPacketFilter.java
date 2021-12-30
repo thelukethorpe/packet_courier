@@ -1,5 +1,6 @@
 package thorpe.luke.network.packet;
 
+import java.time.LocalDateTime;
 import java.util.LinkedList;
 import java.util.Optional;
 import java.util.Queue;
@@ -7,6 +8,11 @@ import java.util.Queue;
 public class NeutralPacketFilter implements PacketFilter {
 
   private final Queue<Packet> packets = new LinkedList<>();
+
+  @Override
+  public void tick(LocalDateTime now) {
+    // Do nothing.
+  }
 
   @Override
   public void enqueue(Packet packet) {

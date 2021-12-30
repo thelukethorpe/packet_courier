@@ -1,5 +1,6 @@
 package thorpe.luke.network.packet;
 
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Random;
 import thorpe.luke.distribution.BernoulliDistribution;
@@ -13,7 +14,8 @@ public interface NetworkCondition {
       throw new InvalidNetworkConditionException(
           "Packet drop probability should be between 0 and 1.");
     }
-    return () -> new SimulatedPacketDropFilter(new BernoulliDistribution(dropProbability), random);
+    return (LocalDateTime startTime) ->
+        new SimulatedPacketDropFilter(new BernoulliDistribution(dropProbability), random);
   }
 
   static NetworkCondition uniformPacketLatency(
@@ -23,12 +25,12 @@ public interface NetworkCondition {
       throw new InvalidNetworkConditionException(
           "Minimum latency should be less than or equal to maximum latency.");
     }
-    return () ->
+    return (LocalDateTime startTime) ->
         new SimulatedPacketLatencyFilter(
-            new UniformDistribution(minLatency, maxLatency), timeUnit, random);
+            new UniformDistribution(minLatency, maxLatency), timeUnit, startTime, random);
   }
 
-  PacketFilter asPacketFilter();
+  PacketFilter asPacketFilterStartingAt(LocalDateTime startTime);
 
   class InvalidNetworkConditionException extends Exception {
     public InvalidNetworkConditionException(String message) {

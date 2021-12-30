@@ -14,17 +14,26 @@ public class SimulatedPacketLatencyFilter implements PacketFilter {
   private final Distribution<Double> latencyDistribution;
   private final ChronoUnit timeUnit;
   private final Random random;
+  private LocalDateTime now;
 
   public SimulatedPacketLatencyFilter(
-      Distribution<Double> latencyDistribution, ChronoUnit timeUnit, Random random) {
+      Distribution<Double> latencyDistribution,
+      ChronoUnit timeUnit,
+      LocalDateTime startTime,
+      Random random) {
     this.latencyDistribution = latencyDistribution;
     this.timeUnit = timeUnit;
     this.random = random;
+    this.now = startTime;
+  }
+
+  @Override
+  public void tick(LocalDateTime now) {
+    this.now = now;
   }
 
   @Override
   public void enqueue(Packet packet) {
-    LocalDateTime now = LocalDateTime.now();
     long latency = Math.round(latencyDistribution.sample(random));
     LocalDateTime scheduledDequeueTime = now.plus(Duration.of(latency, timeUnit));
     packetQueue.offer(new ScheduledPacket(scheduledDequeueTime, packet));
@@ -32,7 +41,6 @@ public class SimulatedPacketLatencyFilter implements PacketFilter {
 
   @Override
   public Optional<Packet> tryDequeue() {
-    LocalDateTime now = LocalDateTime.now();
     if (packetQueue.isEmpty() || packetQueue.peek().getScheduledDequeueTime().isAfter(now)) {
       return Optional.empty();
     }

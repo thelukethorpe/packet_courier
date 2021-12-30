@@ -1,5 +1,6 @@
 package thorpe.luke.network.simulator;
 
+import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -8,6 +9,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import thorpe.luke.network.packet.PacketPipeline;
 import thorpe.luke.network.packet.PacketPipeline.Parameters;
+import thorpe.luke.time.Clock;
+import thorpe.luke.time.VirtualClock;
 
 public class DistributedNetworkSimulation {
 
@@ -16,7 +19,8 @@ public class DistributedNetworkSimulation {
   private DistributedNetworkSimulation(
       Map<String, RunnableNode> nodes,
       Map<String, Collection<String>> topology,
-      NetworkSimulatorPostalService postalService) {
+      NetworkSimulatorPostalService postalService,
+      Clock clock) {
     this.simulator =
         new Thread(
             () -> {
@@ -36,7 +40,8 @@ public class DistributedNetworkSimulation {
                   new Thread(
                       () -> {
                         while (!simulationComplete.get()) {
-                          postalService.tick();
+                          clock.tick();
+                          postalService.tick(clock.now());
                         }
                       });
               nodeThreads.forEach(Thread::start);
@@ -90,6 +95,7 @@ public class DistributedNetworkSimulation {
   public static class Configuration {
     private final Map<String, RunnableNode> nodes = new HashMap<>();
     private final Map<Connection, PacketPipeline> networkConditions = new HashMap<>();
+    private final Clock clock = new VirtualClock(ChronoUnit.MILLIS);
 
     private static boolean isBlank(String string) {
       return string.trim().isEmpty();
@@ -140,7 +146,8 @@ public class DistributedNetworkSimulation {
         throw new InvalidSimulationConfigurationException("Connection has already been added.");
       }
 
-      this.networkConditions.put(connection, new PacketPipeline(packetPipelineParameters));
+      this.networkConditions.put(
+          connection, new PacketPipeline(packetPipelineParameters, clock.now()));
       return this;
     }
 
@@ -157,7 +164,7 @@ public class DistributedNetworkSimulation {
               nodes.values().stream().map(RunnableNode::getNode).collect(Collectors.toList()),
               networkConditions);
       DistributedNetworkSimulation distributedNetworkSimulation =
-          new DistributedNetworkSimulation(nodes, topology, postalService);
+          new DistributedNetworkSimulation(nodes, topology, postalService, clock);
       distributedNetworkSimulation.start();
       return distributedNetworkSimulation;
     }

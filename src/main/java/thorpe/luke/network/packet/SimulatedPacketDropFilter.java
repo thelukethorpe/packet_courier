@@ -1,5 +1,6 @@
 package thorpe.luke.network.packet;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.Random;
 import thorpe.luke.distribution.Distribution;
@@ -13,6 +14,11 @@ public class SimulatedPacketDropFilter implements PacketFilter {
   public SimulatedPacketDropFilter(Distribution<Boolean> dropDistribution, Random random) {
     this.dropDistribution = dropDistribution;
     this.random = random;
+  }
+
+  @Override
+  public void tick(LocalDateTime now) {
+    // Do nothing.
   }
 
   @Override
