@@ -5,12 +5,10 @@ import java.util.Random;
 import java.util.concurrent.*;
 import thorpe.luke.log.ConsoleLogger;
 import thorpe.luke.network.packet.NetworkCondition;
-import thorpe.luke.network.packet.NetworkCondition.InvalidNetworkConditionException;
 import thorpe.luke.network.packet.Packet;
 import thorpe.luke.network.packet.PacketPipeline;
 import thorpe.luke.network.simulator.DefaultNodeInfo;
 import thorpe.luke.network.simulator.DistributedNetworkSimulation;
-import thorpe.luke.network.simulator.DistributedNetworkSimulation.InvalidSimulationConfigurationException;
 import thorpe.luke.network.simulator.NodeManager;
 
 public class SimpleExample2 {
@@ -62,36 +60,29 @@ public class SimpleExample2 {
 
   public static void main(String[] args) {
     // Nodes are connected in a simple ring topology and forward messages around the ring.
-    DistributedNetworkSimulation<DefaultNodeInfo> distributedNetworkSimulation;
-    try {
-      Random random = new Random();
-      PacketPipeline.Parameters lossyNetworkParameters =
-          PacketPipeline.parameters(NetworkCondition.uniformPacketDrop(1.0 / N, random));
+    Random random = new Random();
+    PacketPipeline.Parameters lossyNetworkParameters =
+        PacketPipeline.parameters(NetworkCondition.uniformPacketDrop(1.0 / N, random));
+    DistributedNetworkSimulation.Configuration<DefaultNodeInfo>
+        distributedNetworkSimulationConfiguration =
+            DistributedNetworkSimulation.configuration().addLogger(new ConsoleLogger());
 
-      DistributedNetworkSimulation.Configuration<DefaultNodeInfo>
-          distributedNetworkSimulationConfiguration = DistributedNetworkSimulation.configuration();
-
-      String[] nodeNames = new String[N];
-      for (int i = 0; i < N; i++) {
-        String nodeName = "Node " + (char) ('A' + i);
-        nodeNames[i] = nodeName;
-        distributedNetworkSimulationConfiguration.addNode(nodeName, SimpleExample2::runNode);
-      }
-
-      for (int i = 0; i < N; i++) {
-        String currentNodeName = nodeNames[i];
-        String nextNodeName = nodeNames[(i + 1) % N];
-        distributedNetworkSimulationConfiguration.addConnection(
-            currentNodeName, nextNodeName, lossyNetworkParameters);
-      }
-
-      distributedNetworkSimulation =
-          distributedNetworkSimulationConfiguration.addLogger(new ConsoleLogger()).start();
-    } catch (InvalidSimulationConfigurationException | InvalidNetworkConditionException e) {
-      e.printStackTrace();
-      System.exit(1);
-      return;
+    String[] nodeNames = new String[N];
+    for (int i = 0; i < N; i++) {
+      String nodeName = "Node " + (char) ('A' + i);
+      nodeNames[i] = nodeName;
+      distributedNetworkSimulationConfiguration.addNode(nodeName, SimpleExample2::runNode);
     }
+
+    for (int i = 0; i < N; i++) {
+      String currentNodeName = nodeNames[i];
+      String nextNodeName = nodeNames[(i + 1) % N];
+      distributedNetworkSimulationConfiguration.addConnection(
+          currentNodeName, nextNodeName, lossyNetworkParameters);
+    }
+
+    DistributedNetworkSimulation<DefaultNodeInfo> distributedNetworkSimulation =
+        distributedNetworkSimulationConfiguration.start();
     try {
       distributedNetworkSimulation.join();
     } catch (InterruptedException e) {
