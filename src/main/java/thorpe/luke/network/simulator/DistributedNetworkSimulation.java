@@ -123,8 +123,7 @@ public class DistributedNetworkSimulation<NodeInfo> {
       return string.trim().isEmpty();
     }
 
-    public Configuration<NodeInfo> addNode(String name, NodeScript<NodeInfo> nodeScript)
-        throws InvalidSimulationConfigurationException {
+    public Configuration<NodeInfo> addNode(String name, NodeScript<NodeInfo> nodeScript) {
       if (name == null) {
         throw new InvalidSimulationConfigurationException("Node name cannot be null.");
       } else if (isBlank(name)) {
@@ -142,8 +141,7 @@ public class DistributedNetworkSimulation<NodeInfo> {
     }
 
     public Configuration<NodeInfo> addConnection(
-        String sourceName, String destinationName, Parameters packetPipelineParameters)
-        throws InvalidSimulationConfigurationException {
+        String sourceName, String destinationName, Parameters packetPipelineParameters) {
       if (sourceName == null) {
         throw new InvalidSimulationConfigurationException("Source node name cannot be null.");
       } else if (isBlank(sourceName)) {
@@ -197,7 +195,7 @@ public class DistributedNetworkSimulation<NodeInfo> {
     }
   }
 
-  public static class InvalidSimulationConfigurationException extends Exception {
+  public static class InvalidSimulationConfigurationException extends RuntimeException {
     public InvalidSimulationConfigurationException(String message) {
       super(message);
     }
