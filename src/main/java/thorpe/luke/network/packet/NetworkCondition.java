@@ -8,8 +8,7 @@ import thorpe.luke.distribution.UniformDistribution;
 
 @FunctionalInterface
 public interface NetworkCondition {
-  static NetworkCondition uniformPacketDrop(double dropProbability, Random random)
-      throws InvalidNetworkConditionException {
+  static NetworkCondition uniformPacketDrop(double dropProbability, Random random) {
     if (dropProbability < 0.0 || 1.0 < dropProbability) {
       throw new InvalidNetworkConditionException(
           "Packet drop probability should be between 0 and 1.");
@@ -19,8 +18,7 @@ public interface NetworkCondition {
   }
 
   static NetworkCondition uniformPacketLatency(
-      double minLatency, double maxLatency, ChronoUnit timeUnit, Random random)
-      throws InvalidNetworkConditionException {
+      double minLatency, double maxLatency, ChronoUnit timeUnit, Random random) {
     if (maxLatency < minLatency) {
       throw new InvalidNetworkConditionException(
           "Minimum latency should be less than or equal to maximum latency.");
@@ -32,7 +30,7 @@ public interface NetworkCondition {
 
   PacketFilter asPacketFilterStartingAt(LocalDateTime startTime);
 
-  class InvalidNetworkConditionException extends Exception {
+  class InvalidNetworkConditionException extends RuntimeException {
     public InvalidNetworkConditionException(String message) {
       super(message);
     }

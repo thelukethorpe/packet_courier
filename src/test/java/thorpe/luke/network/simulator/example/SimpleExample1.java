@@ -5,11 +5,9 @@ import java.util.Random;
 import java.util.concurrent.*;
 import thorpe.luke.log.ConsoleLogger;
 import thorpe.luke.network.packet.NetworkCondition;
-import thorpe.luke.network.packet.NetworkCondition.InvalidNetworkConditionException;
 import thorpe.luke.network.packet.Packet;
 import thorpe.luke.network.packet.PacketPipeline;
 import thorpe.luke.network.simulator.DistributedNetworkSimulation;
-import thorpe.luke.network.simulator.DistributedNetworkSimulation.InvalidSimulationConfigurationException;
 import thorpe.luke.network.simulator.NodeManager;
 
 public class SimpleExample1 {
@@ -65,26 +63,19 @@ public class SimpleExample1 {
   public static void main(String[] args) {
     // Packet pipeline drops half of the packets that travel through it.
     Random random = new Random();
-    DistributedNetworkSimulation<SimpleExample1NodeInfo> distributedNetworkSimulation;
-    try {
-      distributedNetworkSimulation =
-          DistributedNetworkSimulation.configuration(
-                  (name, topology, clock) -> new SimpleExample1NodeInfo())
-              .addNode(NODE_A_NAME, SimpleExample1::runNodeA)
-              .addNode(NODE_B_NAME, SimpleExample1::runNodeB)
-              .addConnection(
-                  NODE_A_NAME,
-                  NODE_B_NAME,
-                  PacketPipeline.parameters(
-                      NetworkCondition.uniformPacketDrop(0.5, random),
-                      NetworkCondition.uniformPacketLatency(35.0, 50.0, ChronoUnit.MILLIS, random)))
-              .addLogger(new ConsoleLogger())
-              .start();
-    } catch (InvalidSimulationConfigurationException | InvalidNetworkConditionException e) {
-      e.printStackTrace();
-      System.exit(1);
-      return;
-    }
+    DistributedNetworkSimulation<SimpleExample1NodeInfo> distributedNetworkSimulation =
+        DistributedNetworkSimulation.configuration(
+                (name, topology, clock) -> new SimpleExample1NodeInfo())
+            .addNode(NODE_A_NAME, SimpleExample1::runNodeA)
+            .addNode(NODE_B_NAME, SimpleExample1::runNodeB)
+            .addConnection(
+                NODE_A_NAME,
+                NODE_B_NAME,
+                PacketPipeline.parameters(
+                    NetworkCondition.uniformPacketDrop(0.5, random),
+                    NetworkCondition.uniformPacketLatency(35.0, 50.0, ChronoUnit.MILLIS, random)))
+            .addLogger(new ConsoleLogger())
+            .start();
     try {
       distributedNetworkSimulation.join();
     } catch (InterruptedException e) {
