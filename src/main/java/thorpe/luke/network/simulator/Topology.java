@@ -11,6 +11,10 @@ public class Topology {
     this.nodeToNeighboursMap = nodeToNeighboursMap;
   }
 
+  public Collection<String> getNodes() {
+    return Collections.unmodifiableCollection(nodeToNeighboursMap.keySet());
+  }
+
   public Collection<String> getNeighboursOf(String node) {
     return Collections.unmodifiableCollection(nodeToNeighboursMap.get(node));
   }
