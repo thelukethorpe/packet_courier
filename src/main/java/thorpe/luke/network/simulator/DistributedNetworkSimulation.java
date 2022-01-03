@@ -16,7 +16,7 @@ public class DistributedNetworkSimulation<NodeInfo> {
 
   private DistributedNetworkSimulation(
       Map<String, RunnableNode<NodeInfo>> nodes,
-      Map<String, Collection<String>> topology,
+      Topology topology,
       NetworkSimulatorPostalService postalService,
       Clock clock,
       Collection<Logger> loggers) {
@@ -66,7 +66,8 @@ public class DistributedNetworkSimulation<NodeInfo> {
 
   public static Configuration<DefaultNodeInfo> configuration() {
     return new Configuration<>(
-        (name, topology, clock) -> new DefaultNodeInfo(name, topology.get(name), clock));
+        (name, topology, clock) ->
+            new DefaultNodeInfo(name, topology.getNeighboursOf(name), clock));
   }
 
   private void start() {
@@ -92,10 +93,7 @@ public class DistributedNetworkSimulation<NodeInfo> {
     }
 
     public void run(
-        Map<String, Collection<String>> topology,
-        PostalService postalService,
-        Clock clock,
-        Collection<Logger> loggers) {
+        Topology topology, PostalService postalService, Clock clock, Collection<Logger> loggers) {
       node.run(
           nodeScript,
           nodeInfoGenerator.generateInfo(node.getName(), topology, clock),
@@ -177,19 +175,20 @@ public class DistributedNetworkSimulation<NodeInfo> {
     }
 
     public DistributedNetworkSimulation<NodeInfo> start() {
-      Map<String, Collection<String>> topology = new HashMap<>();
-      nodes.keySet().forEach(name -> topology.put(name, new HashSet<>()));
+      Map<String, Collection<String>> nodeToNeighboursMap = new HashMap<>();
+      nodes.keySet().forEach(name -> nodeToNeighboursMap.put(name, new HashSet<>()));
       for (Connection connection : networkConditions.keySet()) {
         String sourceName = connection.getSource().getName();
         String destinationName = connection.getDestination().getName();
-        topology.get(sourceName).add(destinationName);
+        nodeToNeighboursMap.get(sourceName).add(destinationName);
       }
       NetworkSimulatorPostalService postalService =
           new NetworkSimulatorPostalService(
               nodes.values().stream().map(RunnableNode::getNode).collect(Collectors.toList()),
               networkConditions);
       DistributedNetworkSimulation<NodeInfo> distributedNetworkSimulation =
-          new DistributedNetworkSimulation<>(nodes, topology, postalService, clock, loggers);
+          new DistributedNetworkSimulation<>(
+              nodes, new Topology(nodeToNeighboursMap), postalService, clock, loggers);
       distributedNetworkSimulation.start();
       return distributedNetworkSimulation;
     }
