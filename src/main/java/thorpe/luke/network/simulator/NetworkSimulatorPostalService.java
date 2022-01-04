@@ -11,20 +11,22 @@ import java.util.stream.Collectors;
 import thorpe.luke.network.packet.Packet;
 import thorpe.luke.network.packet.PacketPipeline;
 
-public class NetworkSimulatorPostalService implements PostalService {
-  private final Map<String, Node> addressToNode;
-  private final ConcurrentMap<Connection, PacketPipeline> networkConditions;
+public class NetworkSimulatorPostalService<NodeInfo> implements PostalService {
+  private final Map<String, Node<NodeInfo>> addressToNode;
+  private final ConcurrentMap<Connection<NodeInfo>, PacketPipeline> networkConditions;
 
   NetworkSimulatorPostalService(
-      Collection<Node> nodes, Map<Connection, PacketPipeline> networkConditions) {
+      Collection<Node<NodeInfo>> nodes,
+      Map<Connection<NodeInfo>, PacketPipeline> networkConditions) {
     this.addressToNode =
         nodes.stream().collect(Collectors.toMap(Node::getName, Function.identity()));
     this.networkConditions = new ConcurrentHashMap<>(networkConditions);
   }
 
   public void tick(LocalDateTime now) {
-    for (Entry<Connection, PacketPipeline> networkConditionEntry : networkConditions.entrySet()) {
-      Connection connection = networkConditionEntry.getKey();
+    for (Entry<Connection<NodeInfo>, PacketPipeline> networkConditionEntry :
+        networkConditions.entrySet()) {
+      Connection<NodeInfo> connection = networkConditionEntry.getKey();
       PacketPipeline packetPipeline = networkConditionEntry.getValue();
       packetPipeline.tick(now);
       packetPipeline.tryDequeue().ifPresent(packet -> connection.getDestination().deliver(packet));
@@ -33,12 +35,12 @@ public class NetworkSimulatorPostalService implements PostalService {
 
   @Override
   public boolean mail(String sourceAddress, String destinationAddress, Packet packet) {
-    Node source = addressToNode.get(sourceAddress);
-    Node destination = addressToNode.get(destinationAddress);
+    Node<NodeInfo> source = addressToNode.get(sourceAddress);
+    Node<NodeInfo> destination = addressToNode.get(destinationAddress);
     if (source == null || destination == null) {
       return false;
     }
-    PacketPipeline packetPipeline = networkConditions.get(new Connection(source, destination));
+    PacketPipeline packetPipeline = networkConditions.get(new Connection<>(source, destination));
     if (packetPipeline == null) {
       return false;
     }
