@@ -17,7 +17,7 @@ public class DistributedNetworkSimulation<NodeInfo> {
   private DistributedNetworkSimulation(
       Map<String, RunnableNode<NodeInfo>> nodes,
       Topology topology,
-      NetworkSimulatorPostalService postalService,
+      NetworkSimulatorPostalService<NodeInfo> postalService,
       Clock clock,
       Collection<Logger> loggers) {
     this.simulator =
@@ -108,7 +108,7 @@ public class DistributedNetworkSimulation<NodeInfo> {
 
   public static class Configuration<NodeInfo> {
     private final Map<String, RunnableNode<NodeInfo>> nodes = new HashMap<>();
-    private final Map<Connection, PacketPipeline> networkConditions = new HashMap<>();
+    private final Map<Connection<NodeInfo>, PacketPipeline> networkConditions = new HashMap<>();
     private final Clock clock = new VirtualClock(ChronoUnit.MILLIS);
     private final Collection<Logger> loggers = new LinkedList<>();
     private final NodeInfoGenerator<NodeInfo> nodeInfoGenerator;
@@ -158,7 +158,7 @@ public class DistributedNetworkSimulation<NodeInfo> {
 
       Node<NodeInfo> sourceNode = nodes.get(sourceName).getNode();
       Node<NodeInfo> destinationNode = nodes.get(destinationName).getNode();
-      Connection connection = new Connection(sourceNode, destinationNode);
+      Connection<NodeInfo> connection = new Connection<>(sourceNode, destinationNode);
 
       if (this.networkConditions.containsKey(connection)) {
         throw new InvalidSimulationConfigurationException("Connection has already been added.");
@@ -177,13 +177,13 @@ public class DistributedNetworkSimulation<NodeInfo> {
     public DistributedNetworkSimulation<NodeInfo> start() {
       Map<String, Collection<String>> nodeToNeighboursMap = new HashMap<>();
       nodes.keySet().forEach(name -> nodeToNeighboursMap.put(name, new HashSet<>()));
-      for (Connection connection : networkConditions.keySet()) {
+      for (Connection<NodeInfo> connection : networkConditions.keySet()) {
         String sourceName = connection.getSource().getName();
         String destinationName = connection.getDestination().getName();
         nodeToNeighboursMap.get(sourceName).add(destinationName);
       }
-      NetworkSimulatorPostalService postalService =
-          new NetworkSimulatorPostalService(
+      NetworkSimulatorPostalService<NodeInfo> postalService =
+          new NetworkSimulatorPostalService<>(
               nodes.values().stream().map(RunnableNode::getNode).collect(Collectors.toList()),
               networkConditions);
       DistributedNetworkSimulation<NodeInfo> distributedNetworkSimulation =
