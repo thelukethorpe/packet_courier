@@ -25,12 +25,18 @@ public class Topology {
     Collection<String> visited = new HashSet<>();
     visited.add(source);
     for (int i = 0; i < distance; i++) {
-      visited.addAll(
+      if (!visited.addAll(
           visited
               .stream()
               .flatMap(node -> getNeighboursOf(node).stream())
-              .collect(Collectors.toList()));
+              .collect(Collectors.toList()))) {
+        return visited;
+      }
     }
     return visited;
+  }
+
+  public Collection<String> performFloodSearch(String source) {
+    return performRadialSearch(source, nodeToNeighboursMap.size());
   }
 }
