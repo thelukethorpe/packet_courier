@@ -188,7 +188,7 @@ public class DistributedNetworkSimulation<NodeInfo> {
               networkConditions);
       DistributedNetworkSimulation<NodeInfo> distributedNetworkSimulation =
           new DistributedNetworkSimulation<>(
-              nodes, new Topology(nodeToNeighboursMap), postalService, clock, loggers);
+              nodes, Topology.of(nodeToNeighboursMap), postalService, clock, loggers);
       distributedNetworkSimulation.start();
       return distributedNetworkSimulation;
     }
