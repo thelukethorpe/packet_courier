@@ -30,7 +30,7 @@ public class Topology {
   }
 
   public Collection<String> getNeighboursOf(String node) {
-    return new HashSet<>(nodeToNeighboursMap.get(node));
+    return new HashSet<>(nodeToNeighboursMap.getOrDefault(node, Collections.emptySet()));
   }
 
   public Collection<String> performRadialSearch(String source, int distance) {
