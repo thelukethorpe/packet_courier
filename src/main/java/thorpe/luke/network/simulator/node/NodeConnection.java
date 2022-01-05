@@ -1,12 +1,12 @@
-package thorpe.luke.network.simulator;
+package thorpe.luke.network.simulator.node;
 
 import java.util.Objects;
 
-public class Connection<NodeInfo> {
+public class NodeConnection<NodeInfo> {
   private final Node<NodeInfo> source;
   private final Node<NodeInfo> destination;
 
-  public Connection(Node<NodeInfo> source, Node<NodeInfo> destination) {
+  public NodeConnection(Node<NodeInfo> source, Node<NodeInfo> destination) {
     this.source = source;
     this.destination = destination;
   }
@@ -28,8 +28,8 @@ public class Connection<NodeInfo> {
   public boolean equals(Object obj) {
     if (obj == this) {
       return true;
-    } else if (obj instanceof Connection) {
-      Connection that = (Connection) obj;
+    } else if (obj instanceof NodeConnection) {
+      NodeConnection that = (NodeConnection) obj;
       return this.source.equals(that.source) && this.destination.equals(that.destination);
     }
     return false;

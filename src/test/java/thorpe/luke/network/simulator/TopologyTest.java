@@ -6,7 +6,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.stream.Collectors;
 import org.junit.Test;
+import thorpe.luke.network.simulator.node.NodeAddress;
 
 public class TopologyTest {
   public static final Topology EMPTY_TOPOLOGY = Topology.of(Collections.emptyMap());
@@ -72,18 +74,24 @@ public class TopologyTest {
             }
           });
 
+  public Collection<String> namesOf(Collection<NodeAddress> nodeAddresses) {
+    return nodeAddresses.stream().map(NodeAddress::getName).collect(Collectors.toList());
+  }
+
   @Test
   public void testGetNodes() {
-    assertThat(EMPTY_TOPOLOGY.getNodes()).isEmpty();
-    assertThat(SINGLETON_TOPOLOGY.getNodes()).containsExactlyInAnyOrder("a");
-    assertThat(TRIANGLE_TOPOLOGY.getNodes()).containsExactlyInAnyOrder("a", "b", "c");
-    assertThat(BI_DIRECTIONAL_TRIANGLE_TOPOLOGY.getNodes())
+    assertThat(EMPTY_TOPOLOGY.getNodesAddresses()).isEmpty();
+    assertThat(namesOf(SINGLETON_TOPOLOGY.getNodesAddresses())).containsExactlyInAnyOrder("a");
+    assertThat(namesOf(TRIANGLE_TOPOLOGY.getNodesAddresses()))
         .containsExactlyInAnyOrder("a", "b", "c");
-    assertThat(TWO_ISLAND_TRIANGLE_TOPOLOGY.getNodes())
+    assertThat(namesOf(BI_DIRECTIONAL_TRIANGLE_TOPOLOGY.getNodesAddresses()))
+        .containsExactlyInAnyOrder("a", "b", "c");
+    assertThat(namesOf(TWO_ISLAND_TRIANGLE_TOPOLOGY.getNodesAddresses()))
         .containsExactlyInAnyOrder("a", "b", "c", "x", "y", "z");
-    assertThat(STAR_TOPOLOGY.getNodes())
+    assertThat(namesOf(STAR_TOPOLOGY.getNodesAddresses()))
         .containsExactlyInAnyOrder("source", "a", "b", "c", "d", "e");
-    assertThat(RING_TOPOLOGY.getNodes()).containsExactlyInAnyOrder("a", "b", "c", "d", "e");
+    assertThat(namesOf(RING_TOPOLOGY.getNodesAddresses()))
+        .containsExactlyInAnyOrder("a", "b", "c", "d", "e");
   }
 
   @Test
@@ -105,26 +113,32 @@ public class TopologyTest {
   public void testGetNodeNeighbours() {
     assertThat(SINGLETON_TOPOLOGY.getNeighboursOf("a")).isEmpty();
 
-    assertThat(TRIANGLE_TOPOLOGY.getNeighboursOf("a")).containsExactlyInAnyOrder("b");
-    assertThat(TRIANGLE_TOPOLOGY.getNeighboursOf("b")).containsExactlyInAnyOrder("c");
-    assertThat(TRIANGLE_TOPOLOGY.getNeighboursOf("c")).containsExactlyInAnyOrder("a");
+    assertThat(namesOf(TRIANGLE_TOPOLOGY.getNeighboursOf("a"))).containsExactlyInAnyOrder("b");
+    assertThat(namesOf(TRIANGLE_TOPOLOGY.getNeighboursOf("b"))).containsExactlyInAnyOrder("c");
+    assertThat(namesOf(TRIANGLE_TOPOLOGY.getNeighboursOf("c"))).containsExactlyInAnyOrder("a");
 
-    assertThat(BI_DIRECTIONAL_TRIANGLE_TOPOLOGY.getNeighboursOf("a"))
+    assertThat(namesOf(BI_DIRECTIONAL_TRIANGLE_TOPOLOGY.getNeighboursOf("a")))
         .containsExactlyInAnyOrder("b", "c");
-    assertThat(BI_DIRECTIONAL_TRIANGLE_TOPOLOGY.getNeighboursOf("b"))
+    assertThat(namesOf(BI_DIRECTIONAL_TRIANGLE_TOPOLOGY.getNeighboursOf("b")))
         .containsExactlyInAnyOrder("a", "c");
-    assertThat(BI_DIRECTIONAL_TRIANGLE_TOPOLOGY.getNeighboursOf("c"))
+    assertThat(namesOf(BI_DIRECTIONAL_TRIANGLE_TOPOLOGY.getNeighboursOf("c")))
         .containsExactlyInAnyOrder("a", "b");
 
-    assertThat(TWO_ISLAND_TRIANGLE_TOPOLOGY.getNeighboursOf("a")).containsExactlyInAnyOrder("b");
-    assertThat(TWO_ISLAND_TRIANGLE_TOPOLOGY.getNeighboursOf("b")).containsExactlyInAnyOrder("c");
-    assertThat(TWO_ISLAND_TRIANGLE_TOPOLOGY.getNeighboursOf("c")).containsExactlyInAnyOrder("a");
+    assertThat(namesOf(TWO_ISLAND_TRIANGLE_TOPOLOGY.getNeighboursOf("a")))
+        .containsExactlyInAnyOrder("b");
+    assertThat(namesOf(TWO_ISLAND_TRIANGLE_TOPOLOGY.getNeighboursOf("b")))
+        .containsExactlyInAnyOrder("c");
+    assertThat(namesOf(TWO_ISLAND_TRIANGLE_TOPOLOGY.getNeighboursOf("c")))
+        .containsExactlyInAnyOrder("a");
 
-    assertThat(TWO_ISLAND_TRIANGLE_TOPOLOGY.getNeighboursOf("x")).containsExactlyInAnyOrder("y");
-    assertThat(TWO_ISLAND_TRIANGLE_TOPOLOGY.getNeighboursOf("y")).containsExactlyInAnyOrder("z");
-    assertThat(TWO_ISLAND_TRIANGLE_TOPOLOGY.getNeighboursOf("z")).containsExactlyInAnyOrder("x");
+    assertThat(namesOf(TWO_ISLAND_TRIANGLE_TOPOLOGY.getNeighboursOf("x")))
+        .containsExactlyInAnyOrder("y");
+    assertThat(namesOf(TWO_ISLAND_TRIANGLE_TOPOLOGY.getNeighboursOf("y")))
+        .containsExactlyInAnyOrder("z");
+    assertThat(namesOf(TWO_ISLAND_TRIANGLE_TOPOLOGY.getNeighboursOf("z")))
+        .containsExactlyInAnyOrder("x");
 
-    assertThat(STAR_TOPOLOGY.getNeighboursOf("source"))
+    assertThat(namesOf(STAR_TOPOLOGY.getNeighboursOf("source")))
         .containsExactlyInAnyOrder("a", "b", "c", "d", "e");
     assertThat(STAR_TOPOLOGY.getNeighboursOf("a")).isEmpty();
     assertThat(STAR_TOPOLOGY.getNeighboursOf("b")).isEmpty();
@@ -132,107 +146,115 @@ public class TopologyTest {
     assertThat(STAR_TOPOLOGY.getNeighboursOf("d")).isEmpty();
     assertThat(STAR_TOPOLOGY.getNeighboursOf("e")).isEmpty();
 
-    assertThat(RING_TOPOLOGY.getNeighboursOf("a")).containsExactlyInAnyOrder("b");
-    assertThat(RING_TOPOLOGY.getNeighboursOf("b")).containsExactlyInAnyOrder("c");
-    assertThat(RING_TOPOLOGY.getNeighboursOf("c")).containsExactlyInAnyOrder("d");
-    assertThat(RING_TOPOLOGY.getNeighboursOf("d")).containsExactlyInAnyOrder("e");
-    assertThat(RING_TOPOLOGY.getNeighboursOf("e")).containsExactlyInAnyOrder("a");
+    assertThat(namesOf(RING_TOPOLOGY.getNeighboursOf("a"))).containsExactlyInAnyOrder("b");
+    assertThat(namesOf(RING_TOPOLOGY.getNeighboursOf("b"))).containsExactlyInAnyOrder("c");
+    assertThat(namesOf(RING_TOPOLOGY.getNeighboursOf("c"))).containsExactlyInAnyOrder("d");
+    assertThat(namesOf(RING_TOPOLOGY.getNeighboursOf("d"))).containsExactlyInAnyOrder("e");
+    assertThat(namesOf(RING_TOPOLOGY.getNeighboursOf("e"))).containsExactlyInAnyOrder("a");
   }
 
   @Test
   public void testRadialSearch() {
-    assertThat(TRIANGLE_TOPOLOGY.performRadialSearch("a", 0)).containsExactlyInAnyOrder("a");
-    assertThat(TRIANGLE_TOPOLOGY.performRadialSearch("a", 1)).containsExactlyInAnyOrder("a", "b");
-    assertThat(TRIANGLE_TOPOLOGY.performRadialSearch("a", 2))
-        .containsExactlyInAnyOrder("a", "b", "c");
-    assertThat(TRIANGLE_TOPOLOGY.performRadialSearch("a", 3))
-        .containsExactlyInAnyOrder("a", "b", "c");
-
-    assertThat(BI_DIRECTIONAL_TRIANGLE_TOPOLOGY.performRadialSearch("a", 0))
+    assertThat(namesOf(TRIANGLE_TOPOLOGY.performRadialSearch("a", 0)))
         .containsExactlyInAnyOrder("a");
-    assertThat(BI_DIRECTIONAL_TRIANGLE_TOPOLOGY.performRadialSearch("a", 1))
-        .containsExactlyInAnyOrder("a", "b", "c");
-    assertThat(BI_DIRECTIONAL_TRIANGLE_TOPOLOGY.performRadialSearch("a", 2))
-        .containsExactlyInAnyOrder("a", "b", "c");
-
-    assertThat(TWO_ISLAND_TRIANGLE_TOPOLOGY.performRadialSearch("a", 0))
-        .containsExactlyInAnyOrder("a");
-    assertThat(TWO_ISLAND_TRIANGLE_TOPOLOGY.performRadialSearch("a", 1))
+    assertThat(namesOf(TRIANGLE_TOPOLOGY.performRadialSearch("a", 1)))
         .containsExactlyInAnyOrder("a", "b");
-    assertThat(TWO_ISLAND_TRIANGLE_TOPOLOGY.performRadialSearch("a", 2))
+    assertThat(namesOf(TRIANGLE_TOPOLOGY.performRadialSearch("a", 2)))
         .containsExactlyInAnyOrder("a", "b", "c");
-    assertThat(TWO_ISLAND_TRIANGLE_TOPOLOGY.performRadialSearch("a", 3))
+    assertThat(namesOf(TRIANGLE_TOPOLOGY.performRadialSearch("a", 3)))
         .containsExactlyInAnyOrder("a", "b", "c");
 
-    assertThat(TWO_ISLAND_TRIANGLE_TOPOLOGY.performRadialSearch("x", 0))
+    assertThat(namesOf(BI_DIRECTIONAL_TRIANGLE_TOPOLOGY.performRadialSearch("a", 0)))
+        .containsExactlyInAnyOrder("a");
+    assertThat(namesOf(BI_DIRECTIONAL_TRIANGLE_TOPOLOGY.performRadialSearch("a", 1)))
+        .containsExactlyInAnyOrder("a", "b", "c");
+    assertThat(namesOf(BI_DIRECTIONAL_TRIANGLE_TOPOLOGY.performRadialSearch("a", 2)))
+        .containsExactlyInAnyOrder("a", "b", "c");
+
+    assertThat(namesOf(TWO_ISLAND_TRIANGLE_TOPOLOGY.performRadialSearch("a", 0)))
+        .containsExactlyInAnyOrder("a");
+    assertThat(namesOf(TWO_ISLAND_TRIANGLE_TOPOLOGY.performRadialSearch("a", 1)))
+        .containsExactlyInAnyOrder("a", "b");
+    assertThat(namesOf(TWO_ISLAND_TRIANGLE_TOPOLOGY.performRadialSearch("a", 2)))
+        .containsExactlyInAnyOrder("a", "b", "c");
+    assertThat(namesOf(TWO_ISLAND_TRIANGLE_TOPOLOGY.performRadialSearch("a", 3)))
+        .containsExactlyInAnyOrder("a", "b", "c");
+
+    assertThat(namesOf(TWO_ISLAND_TRIANGLE_TOPOLOGY.performRadialSearch("x", 0)))
         .containsExactlyInAnyOrder("x");
-    assertThat(TWO_ISLAND_TRIANGLE_TOPOLOGY.performRadialSearch("x", 1))
+    assertThat(namesOf(TWO_ISLAND_TRIANGLE_TOPOLOGY.performRadialSearch("x", 1)))
         .containsExactlyInAnyOrder("x", "y");
-    assertThat(TWO_ISLAND_TRIANGLE_TOPOLOGY.performRadialSearch("x", 2))
+    assertThat(namesOf(TWO_ISLAND_TRIANGLE_TOPOLOGY.performRadialSearch("x", 2)))
         .containsExactlyInAnyOrder("x", "y", "z");
-    assertThat(TWO_ISLAND_TRIANGLE_TOPOLOGY.performRadialSearch("x", 3))
+    assertThat(namesOf(TWO_ISLAND_TRIANGLE_TOPOLOGY.performRadialSearch("x", 3)))
         .containsExactlyInAnyOrder("x", "y", "z");
 
-    assertThat(STAR_TOPOLOGY.performRadialSearch("source", 0)).containsExactlyInAnyOrder("source");
-    assertThat(STAR_TOPOLOGY.performRadialSearch("source", 1))
+    assertThat(namesOf(STAR_TOPOLOGY.performRadialSearch("source", 0)))
+        .containsExactlyInAnyOrder("source");
+    assertThat(namesOf(STAR_TOPOLOGY.performRadialSearch("source", 1)))
         .containsExactlyInAnyOrder("source", "a", "b", "c", "d", "e");
-    assertThat(STAR_TOPOLOGY.performRadialSearch("source", 2))
+    assertThat(namesOf(STAR_TOPOLOGY.performRadialSearch("source", 2)))
         .containsExactlyInAnyOrder("source", "a", "b", "c", "d", "e");
 
-    assertThat(RING_TOPOLOGY.performRadialSearch("a", 0)).containsExactlyInAnyOrder("a");
-    assertThat(RING_TOPOLOGY.performRadialSearch("a", 1)).containsExactlyInAnyOrder("a", "b");
-    assertThat(RING_TOPOLOGY.performRadialSearch("a", 2)).containsExactlyInAnyOrder("a", "b", "c");
-    assertThat(RING_TOPOLOGY.performRadialSearch("a", 3))
+    assertThat(namesOf(RING_TOPOLOGY.performRadialSearch("a", 0))).containsExactlyInAnyOrder("a");
+    assertThat(namesOf(RING_TOPOLOGY.performRadialSearch("a", 1)))
+        .containsExactlyInAnyOrder("a", "b");
+    assertThat(namesOf(RING_TOPOLOGY.performRadialSearch("a", 2)))
+        .containsExactlyInAnyOrder("a", "b", "c");
+    assertThat(namesOf(RING_TOPOLOGY.performRadialSearch("a", 3)))
         .containsExactlyInAnyOrder("a", "b", "c", "d");
-    assertThat(RING_TOPOLOGY.performRadialSearch("a", 4))
+    assertThat(namesOf(RING_TOPOLOGY.performRadialSearch("a", 4)))
         .containsExactlyInAnyOrder("a", "b", "c", "d", "e");
-    assertThat(RING_TOPOLOGY.performRadialSearch("a", 5))
+    assertThat(namesOf(RING_TOPOLOGY.performRadialSearch("a", 5)))
         .containsExactlyInAnyOrder("a", "b", "c", "d", "e");
   }
 
   @Test
   public void testFloodSearch() {
-    assertThat(TRIANGLE_TOPOLOGY.performFloodSearch("a")).containsExactlyInAnyOrder("a", "b", "c");
-    assertThat(TRIANGLE_TOPOLOGY.performFloodSearch("b")).containsExactlyInAnyOrder("a", "b", "c");
-    assertThat(TRIANGLE_TOPOLOGY.performFloodSearch("c")).containsExactlyInAnyOrder("a", "b", "c");
-
-    assertThat(BI_DIRECTIONAL_TRIANGLE_TOPOLOGY.performFloodSearch("a"))
+    assertThat(namesOf(TRIANGLE_TOPOLOGY.performFloodSearch("a")))
         .containsExactlyInAnyOrder("a", "b", "c");
-    assertThat(BI_DIRECTIONAL_TRIANGLE_TOPOLOGY.performFloodSearch("b"))
+    assertThat(namesOf(TRIANGLE_TOPOLOGY.performFloodSearch("b")))
         .containsExactlyInAnyOrder("a", "b", "c");
-    assertThat(BI_DIRECTIONAL_TRIANGLE_TOPOLOGY.performFloodSearch("c"))
+    assertThat(namesOf(TRIANGLE_TOPOLOGY.performFloodSearch("c")))
         .containsExactlyInAnyOrder("a", "b", "c");
 
-    assertThat(TWO_ISLAND_TRIANGLE_TOPOLOGY.performFloodSearch("a"))
+    assertThat(namesOf(BI_DIRECTIONAL_TRIANGLE_TOPOLOGY.performFloodSearch("a")))
         .containsExactlyInAnyOrder("a", "b", "c");
-    assertThat(TWO_ISLAND_TRIANGLE_TOPOLOGY.performFloodSearch("b"))
+    assertThat(namesOf(BI_DIRECTIONAL_TRIANGLE_TOPOLOGY.performFloodSearch("b")))
         .containsExactlyInAnyOrder("a", "b", "c");
-    assertThat(TWO_ISLAND_TRIANGLE_TOPOLOGY.performFloodSearch("c"))
+    assertThat(namesOf(BI_DIRECTIONAL_TRIANGLE_TOPOLOGY.performFloodSearch("c")))
         .containsExactlyInAnyOrder("a", "b", "c");
-    assertThat(TWO_ISLAND_TRIANGLE_TOPOLOGY.performFloodSearch("x"))
+
+    assertThat(namesOf(TWO_ISLAND_TRIANGLE_TOPOLOGY.performFloodSearch("a")))
+        .containsExactlyInAnyOrder("a", "b", "c");
+    assertThat(namesOf(TWO_ISLAND_TRIANGLE_TOPOLOGY.performFloodSearch("b")))
+        .containsExactlyInAnyOrder("a", "b", "c");
+    assertThat(namesOf(TWO_ISLAND_TRIANGLE_TOPOLOGY.performFloodSearch("c")))
+        .containsExactlyInAnyOrder("a", "b", "c");
+    assertThat(namesOf(TWO_ISLAND_TRIANGLE_TOPOLOGY.performFloodSearch("x")))
         .containsExactlyInAnyOrder("x", "y", "z");
-    assertThat(TWO_ISLAND_TRIANGLE_TOPOLOGY.performFloodSearch("y"))
+    assertThat(namesOf(TWO_ISLAND_TRIANGLE_TOPOLOGY.performFloodSearch("y")))
         .containsExactlyInAnyOrder("x", "y", "z");
-    assertThat(TWO_ISLAND_TRIANGLE_TOPOLOGY.performFloodSearch("z"))
+    assertThat(namesOf(TWO_ISLAND_TRIANGLE_TOPOLOGY.performFloodSearch("z")))
         .containsExactlyInAnyOrder("x", "y", "z");
 
-    assertThat(STAR_TOPOLOGY.performFloodSearch("source"))
+    assertThat(namesOf(STAR_TOPOLOGY.performFloodSearch("source")))
         .containsExactlyInAnyOrder("source", "a", "b", "c", "d", "e");
-    assertThat(STAR_TOPOLOGY.performFloodSearch("a")).containsExactlyInAnyOrder("a");
-    assertThat(STAR_TOPOLOGY.performFloodSearch("b")).containsExactlyInAnyOrder("b");
-    assertThat(STAR_TOPOLOGY.performFloodSearch("c")).containsExactlyInAnyOrder("c");
-    assertThat(STAR_TOPOLOGY.performFloodSearch("d")).containsExactlyInAnyOrder("d");
-    assertThat(STAR_TOPOLOGY.performFloodSearch("e")).containsExactlyInAnyOrder("e");
+    assertThat(namesOf(STAR_TOPOLOGY.performFloodSearch("a"))).containsExactlyInAnyOrder("a");
+    assertThat(namesOf(STAR_TOPOLOGY.performFloodSearch("b"))).containsExactlyInAnyOrder("b");
+    assertThat(namesOf(STAR_TOPOLOGY.performFloodSearch("c"))).containsExactlyInAnyOrder("c");
+    assertThat(namesOf(STAR_TOPOLOGY.performFloodSearch("d"))).containsExactlyInAnyOrder("d");
+    assertThat(namesOf(STAR_TOPOLOGY.performFloodSearch("e"))).containsExactlyInAnyOrder("e");
 
-    assertThat(RING_TOPOLOGY.performFloodSearch("a"))
+    assertThat(namesOf(RING_TOPOLOGY.performFloodSearch("a")))
         .containsExactlyInAnyOrder("a", "b", "c", "d", "e");
-    assertThat(RING_TOPOLOGY.performFloodSearch("b"))
+    assertThat(namesOf(RING_TOPOLOGY.performFloodSearch("b")))
         .containsExactlyInAnyOrder("a", "b", "c", "d", "e");
-    assertThat(RING_TOPOLOGY.performFloodSearch("c"))
+    assertThat(namesOf(RING_TOPOLOGY.performFloodSearch("c")))
         .containsExactlyInAnyOrder("a", "b", "c", "d", "e");
-    assertThat(RING_TOPOLOGY.performFloodSearch("d"))
+    assertThat(namesOf(RING_TOPOLOGY.performFloodSearch("d")))
         .containsExactlyInAnyOrder("a", "b", "c", "d", "e");
-    assertThat(RING_TOPOLOGY.performFloodSearch("e"))
+    assertThat(namesOf(RING_TOPOLOGY.performFloodSearch("e")))
         .containsExactlyInAnyOrder("a", "b", "c", "d", "e");
   }
 }

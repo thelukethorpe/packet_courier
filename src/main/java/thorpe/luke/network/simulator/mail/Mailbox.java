@@ -1,8 +1,9 @@
-package thorpe.luke.network.simulator;
+package thorpe.luke.network.simulator.mail;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import thorpe.luke.network.packet.Packet;
+import thorpe.luke.network.simulator.worker.WorkerException;
 
 public class Mailbox {
 
@@ -16,7 +17,11 @@ public class Mailbox {
     packets.offer(packet);
   }
 
-  public Packet waitForMail() throws InterruptedException {
-    return packets.take();
+  public Packet waitForMail() {
+    try {
+      return packets.take();
+    } catch (InterruptedException e) {
+      throw new WorkerException(e);
+    }
   }
 }
