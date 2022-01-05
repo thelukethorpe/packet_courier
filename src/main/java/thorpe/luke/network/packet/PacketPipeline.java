@@ -26,6 +26,10 @@ public class PacketPipeline<Wrapper extends PacketWrapper<Wrapper>> {
     this.packetFilters.add(new NeutralPacketFilter<>());
   }
 
+  public static Parameters perfectParameters() {
+    return parameters();
+  }
+
   public static Parameters parameters(NetworkCondition... networkConditions) {
     return new Parameters(networkConditions);
   }

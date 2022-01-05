@@ -10,7 +10,10 @@ import thorpe.luke.network.packet.PacketPipeline.Parameters;
 import thorpe.luke.network.simulator.mail.Mail;
 import thorpe.luke.network.simulator.mail.NetworkSimulatorPostalService;
 import thorpe.luke.network.simulator.mail.PostalService;
-import thorpe.luke.network.simulator.node.*;
+import thorpe.luke.network.simulator.node.DefaultNodeInfo;
+import thorpe.luke.network.simulator.node.Node;
+import thorpe.luke.network.simulator.node.NodeConnection;
+import thorpe.luke.network.simulator.node.NodeInfoGenerator;
 import thorpe.luke.network.simulator.worker.WorkerScript;
 import thorpe.luke.time.Clock;
 import thorpe.luke.time.VirtualClock;
@@ -141,6 +144,9 @@ public class DistributedNetworkSimulation<NodeInfo> {
 
       Node<NodeInfo> node = new Node<>(name);
       nodes.put(name, new RunnableNode<>(node, workerScript, nodeInfoGenerator));
+      NodeConnection<NodeInfo> nodeConnection = new NodeConnection<>(node, node);
+      this.networkConditions.put(
+          nodeConnection, new PacketPipeline<>(PacketPipeline.perfectParameters(), clock.now()));
       return this;
     }
 
@@ -160,6 +166,8 @@ public class DistributedNetworkSimulation<NodeInfo> {
       } else if (!nodes.containsKey(destinationName)) {
         throw new InvalidSimulationConfigurationException(
             "Node with name \"" + destinationName + "\" has not been added yet.");
+      } else if (sourceName.equals(destinationName)) {
+        throw new InvalidSimulationConfigurationException("A node cannot be connected to itself.");
       }
 
       Node<NodeInfo> sourceNode = nodes.get(sourceName).getNode();
