@@ -5,9 +5,10 @@ import java.util.LinkedList;
 import java.util.Optional;
 import java.util.Queue;
 
-public class NeutralPacketFilter implements PacketFilter {
+public class NeutralPacketFilter<Wrapper extends PacketWrapper<Wrapper>>
+    implements PacketFilter<Wrapper> {
 
-  private final Queue<Packet> packets = new LinkedList<>();
+  private final Queue<Wrapper> packetWrapperQueue = new LinkedList<>();
 
   @Override
   public void tick(LocalDateTime now) {
@@ -15,12 +16,12 @@ public class NeutralPacketFilter implements PacketFilter {
   }
 
   @Override
-  public void enqueue(Packet packet) {
-    packets.offer(packet);
+  public void enqueue(Wrapper packetWrapper) {
+    packetWrapperQueue.offer(packetWrapper);
   }
 
   @Override
-  public Optional<Packet> tryDequeue() {
-    return Optional.ofNullable(packets.poll());
+  public Optional<Wrapper> tryDequeue() {
+    return Optional.ofNullable(packetWrapperQueue.poll());
   }
 }

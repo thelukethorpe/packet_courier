@@ -8,38 +8,40 @@ import thorpe.luke.network.packet.NetworkCondition;
 import thorpe.luke.network.packet.Packet;
 import thorpe.luke.network.packet.PacketPipeline;
 import thorpe.luke.network.simulator.DistributedNetworkSimulation;
-import thorpe.luke.network.simulator.NodeManager;
+import thorpe.luke.network.simulator.node.NodeAddress;
+import thorpe.luke.network.simulator.worker.WorkerManager;
 
 public class SimpleExample1 {
 
-  public static final String NODE_A_NAME = "Node A";
-  public static final String NODE_B_NAME = "Node B";
+  public static final String NODE_A_NAME = "Alice";
+  public static final String NODE_B_NAME = "Bob";
 
-  public static void runNodeA(NodeManager<SimpleExample1NodeInfo> nodeManager) {
+  public static void runNodeA(WorkerManager<SimpleExample1NodeInfo> workerManager) {
     // Node A sends the numbers 1 to 10 to node B.
     for (int i = 1; i <= 10; i++) {
       String message =
           "Hello "
-              + nodeManager.getInfo().getNodeBName()
+              + workerManager.getInfo().getNodeBAddress()
               + ", please print this message containing the number "
               + i
               + ".";
       Packet messageAsPacket = Packet.of(message);
-      nodeManager.sendMail(nodeManager.getInfo().getNodeBName(), messageAsPacket);
+      workerManager.sendMail(
+          workerManager.getInfo().getNodeBAddress().asRootWorkerAddress(), messageAsPacket);
     }
   }
 
-  public static void runNodeB(NodeManager<SimpleExample1NodeInfo> nodeManager) {
+  public static void runNodeB(WorkerManager<SimpleExample1NodeInfo> workerManager) {
     // Node B waits for messages from node A and automatically shuts down after 5 seconds.
     ExecutorService executorService = Executors.newSingleThreadExecutor();
     Future<Void> result =
         executorService.submit(
             () -> {
               do {
-                Packet packet = nodeManager.waitForMail();
+                Packet packet = workerManager.waitForMail();
                 String message = packet.asString();
-                nodeManager.log(
-                    nodeManager.getInfo().getNodeBName()
+                workerManager.log(
+                    workerManager.getInfo().getNodeBAddress()
                         + " has received the following message: "
                         + message);
               } while (true);
@@ -55,8 +57,8 @@ public class SimpleExample1 {
   }
 
   public static class SimpleExample1NodeInfo {
-    public String getNodeBName() {
-      return NODE_B_NAME;
+    public NodeAddress getNodeBAddress() {
+      return new NodeAddress(NODE_B_NAME);
     }
   }
 
@@ -65,7 +67,7 @@ public class SimpleExample1 {
     Random random = new Random();
     DistributedNetworkSimulation<SimpleExample1NodeInfo> distributedNetworkSimulation =
         DistributedNetworkSimulation.configuration(
-                (name, topology, clock) -> new SimpleExample1NodeInfo())
+                (address, topology, clock) -> new SimpleExample1NodeInfo())
             .addNode(NODE_A_NAME, SimpleExample1::runNodeA)
             .addNode(NODE_B_NAME, SimpleExample1::runNodeB)
             .addConnection(

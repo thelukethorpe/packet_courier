@@ -7,45 +7,49 @@ import thorpe.luke.log.ConsoleLogger;
 import thorpe.luke.network.packet.NetworkCondition;
 import thorpe.luke.network.packet.Packet;
 import thorpe.luke.network.packet.PacketPipeline;
-import thorpe.luke.network.simulator.DefaultNodeInfo;
 import thorpe.luke.network.simulator.DistributedNetworkSimulation;
-import thorpe.luke.network.simulator.NodeManager;
+import thorpe.luke.network.simulator.node.DefaultNodeInfo;
+import thorpe.luke.network.simulator.node.NodeAddress;
+import thorpe.luke.network.simulator.worker.WorkerManager;
 
 public class SimpleExample2 {
 
   // Number of nodes.
   public static final int N = 5;
 
-  public static void runNode(NodeManager<DefaultNodeInfo> nodeManager) {
+  public static void runNode(WorkerManager<DefaultNodeInfo> workerManager) {
     // Simple flood algorithm. Nodes timeout after 10 seconds.
     ExecutorService executorService = Executors.newSingleThreadExecutor();
     Future<Void> result =
         executorService.submit(
             () -> {
-              for (String neighbour : nodeManager.getInfo().getNeighbours()) {
+              for (NodeAddress neighbour : workerManager.getInfo().getNeighbours()) {
                 for (int i = 1; i <= N; i++) {
-                  String message = nodeManager.getInfo().getName() + "(" + i + ")";
+                  String message = workerManager.getAddress().getName() + "[" + i + "]";
                   Packet messageAsPacket = Packet.of(message);
-                  nodeManager.sendMail(neighbour, messageAsPacket);
+                  workerManager.sendMail(neighbour.asRootWorkerAddress(), messageAsPacket);
                 }
               }
 
               do {
-                Packet packet = nodeManager.waitForMail();
+                Packet packet = workerManager.waitForMail();
                 String message = packet.asString();
                 String newMessage =
                     message
                         + " -> "
-                        + nodeManager.getInfo().getName()
+                        + workerManager.getAddress().getName()
                         + ", received at t = "
-                        + nodeManager.getInfo().getCurrentTime().get(ChronoField.MILLI_OF_SECOND)
+                        + workerManager.getInfo().getCurrentTime().get(ChronoField.MILLI_OF_SECOND)
                         + "ms";
                 Packet newMessageAsPacket = Packet.of(newMessage);
-                nodeManager.log(newMessage);
-                nodeManager
+                workerManager.log(newMessage);
+                workerManager
                     .getInfo()
                     .getNeighbours()
-                    .forEach(neighbour -> nodeManager.sendMail(neighbour, newMessageAsPacket));
+                    .forEach(
+                        neighbour ->
+                            workerManager.sendMail(
+                                neighbour.asRootWorkerAddress(), newMessageAsPacket));
               } while (true);
             });
     try {
@@ -69,7 +73,7 @@ public class SimpleExample2 {
 
     String[] nodeNames = new String[N];
     for (int i = 0; i < N; i++) {
-      String nodeName = "Node " + (char) ('A' + i);
+      String nodeName = "#" + i;
       nodeNames[i] = nodeName;
       distributedNetworkSimulationConfiguration.addNode(nodeName, SimpleExample2::runNode);
     }
