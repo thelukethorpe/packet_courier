@@ -5,9 +5,10 @@ import java.util.Optional;
 import java.util.Random;
 import thorpe.luke.distribution.Distribution;
 
-public class SimulatedPacketDropFilter implements PacketFilter {
+public class SimulatedPacketDropFilter<Wrapper extends PacketWrapper<Wrapper>>
+    implements PacketFilter<Wrapper> {
 
-  private final NeutralPacketFilter neutralPacketFilter = new NeutralPacketFilter();
+  private final NeutralPacketFilter<Wrapper> neutralPacketFilter = new NeutralPacketFilter();
   private final Distribution<Boolean> dropDistribution;
   private final Random random;
 
@@ -22,14 +23,14 @@ public class SimulatedPacketDropFilter implements PacketFilter {
   }
 
   @Override
-  public void enqueue(Packet packet) {
+  public void enqueue(Wrapper packetWrapper) {
     if (!dropDistribution.sample(random)) {
-      neutralPacketFilter.enqueue(packet);
+      neutralPacketFilter.enqueue(packetWrapper);
     }
   }
 
   @Override
-  public Optional<Packet> tryDequeue() {
+  public Optional<Wrapper> tryDequeue() {
     return neutralPacketFilter.tryDequeue();
   }
 }

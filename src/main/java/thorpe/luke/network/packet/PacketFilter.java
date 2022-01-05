@@ -3,10 +3,10 @@ package thorpe.luke.network.packet;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-public interface PacketFilter {
+public interface PacketFilter<Wrapper extends PacketWrapper<Wrapper>> {
   void tick(LocalDateTime now);
 
-  void enqueue(Packet packet);
+  void enqueue(Wrapper packetWrapper);
 
-  Optional<Packet> tryDequeue();
+  Optional<Wrapper> tryDequeue();
 }

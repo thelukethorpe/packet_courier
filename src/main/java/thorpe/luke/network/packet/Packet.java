@@ -1,8 +1,9 @@
 package thorpe.luke.network.packet;
 
 import java.util.Arrays;
+import java.util.function.Function;
 
-public class Packet {
+public class Packet implements PacketWrapper<Packet> {
   private final byte[] data;
 
   public Packet(byte[] data) {
@@ -20,6 +21,11 @@ public class Packet {
   @Override
   public int hashCode() {
     return Arrays.hashCode(data);
+  }
+
+  @Override
+  public Packet map(Function<Packet, Packet> function) {
+    return function.apply(this);
   }
 
   @Override

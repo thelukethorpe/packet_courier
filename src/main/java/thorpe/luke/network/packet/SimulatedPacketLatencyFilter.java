@@ -8,7 +8,8 @@ import java.util.PriorityQueue;
 import java.util.Random;
 import thorpe.luke.distribution.Distribution;
 
-public class SimulatedPacketLatencyFilter implements PacketFilter {
+public class SimulatedPacketLatencyFilter<Wrapper extends PacketWrapper<Wrapper>>
+    implements PacketFilter<Wrapper> {
 
   private final PriorityQueue<ScheduledPacket> packetQueue = new PriorityQueue<>();
   private final Distribution<Double> latencyDistribution;
@@ -33,36 +34,36 @@ public class SimulatedPacketLatencyFilter implements PacketFilter {
   }
 
   @Override
-  public void enqueue(Packet packet) {
+  public void enqueue(Wrapper packetWrapper) {
     long latency = Math.round(latencyDistribution.sample(random));
     LocalDateTime scheduledDequeueTime = now.plus(Duration.of(latency, timeUnit));
-    packetQueue.offer(new ScheduledPacket(scheduledDequeueTime, packet));
+    packetQueue.offer(new ScheduledPacket(scheduledDequeueTime, packetWrapper));
   }
 
   @Override
-  public Optional<Packet> tryDequeue() {
+  public Optional<Wrapper> tryDequeue() {
     if (packetQueue.isEmpty() || packetQueue.peek().getScheduledDequeueTime().isAfter(now)) {
       return Optional.empty();
     }
-    return Optional.ofNullable(packetQueue.poll()).map(ScheduledPacket::getPacket);
+    return Optional.ofNullable(packetQueue.poll()).map(ScheduledPacket::getPacketWrapper);
   }
 
-  private static class ScheduledPacket implements Comparable<ScheduledPacket> {
+  private class ScheduledPacket implements Comparable<ScheduledPacket> {
 
     private final LocalDateTime scheduledDequeueTime;
-    private final Packet packet;
+    private final Wrapper packetWrapper;
 
-    private ScheduledPacket(LocalDateTime scheduledDequeueTime, Packet packet) {
+    private ScheduledPacket(LocalDateTime scheduledDequeueTime, Wrapper packetWrapper) {
       this.scheduledDequeueTime = scheduledDequeueTime;
-      this.packet = packet;
+      this.packetWrapper = packetWrapper;
     }
 
     public LocalDateTime getScheduledDequeueTime() {
       return scheduledDequeueTime;
     }
 
-    public Packet getPacket() {
-      return packet;
+    public Wrapper getPacketWrapper() {
+      return packetWrapper;
     }
 
     @Override
