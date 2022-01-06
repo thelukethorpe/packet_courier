@@ -17,7 +17,7 @@ public class Node<NodeInfo> {
 
   private Node(NodeAddress address) {
     this.address = address;
-    this.workerAddressGenerator = new WorkerAddressGenerator(address);
+    this.workerAddressGenerator = new WorkerAddressGenerator();
     this.workerAddressBook = new WorkerAddressBook<>();
   }
 
