@@ -25,7 +25,7 @@ public class SimpleExample2 {
             () -> {
               for (NodeAddress neighbour : workerManager.getInfo().getNeighbours()) {
                 for (int i = 1; i <= N; i++) {
-                  String message = workerManager.getAddress().getName() + "[" + i + "]";
+                  String message = workerManager.getAddress() + "[" + i + "]";
                   Packet messageAsPacket = Packet.of(message);
                   workerManager.sendMail(neighbour.asRootWorkerAddress(), messageAsPacket);
                 }
@@ -37,7 +37,7 @@ public class SimpleExample2 {
                 String newMessage =
                     message
                         + " -> "
-                        + workerManager.getAddress().getName()
+                        + workerManager.getAddress()
                         + ", received at t = "
                         + workerManager.getInfo().getCurrentTime().get(ChronoField.MILLI_OF_SECOND)
                         + "ms";

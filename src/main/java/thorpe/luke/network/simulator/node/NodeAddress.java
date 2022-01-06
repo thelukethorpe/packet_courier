@@ -14,7 +14,7 @@ public class NodeAddress {
   }
 
   public WorkerAddress asRootWorkerAddress() {
-    return new WorkerAddress("Worker(root) running on Node(" + name + ")", this);
+    return new WorkerAddress("root", this);
   }
 
   @Override
