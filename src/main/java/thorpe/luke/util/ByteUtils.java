@@ -35,4 +35,8 @@ public class ByteUtils {
     }
     return array;
   }
+
+  public static byte flip(byte b) {
+    return (byte) (b ^ 0b11111111);
+  }
 }

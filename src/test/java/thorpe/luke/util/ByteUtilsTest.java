@@ -61,4 +61,21 @@ public class ByteUtilsTest {
     TestObject deserializedTestObject = (TestObject) deserializedObject;
     assertThat(deserializedTestObject).isEqualTo(testObject);
   }
+
+  @Test
+  public void testFlip() {
+    byte byte0 = 0b00000000;
+    byte flippedByte0 = (byte) 0b11111111;
+    byte byte1 = 0b00000001;
+    byte flippedByte1 = (byte) 0b11111110;
+    byte byte2 = 0b00000010;
+    byte flippedByte2 = (byte) 0b11111101;
+    byte byte3 = 0b00000011;
+    byte flippedByte3 = (byte) 0b11111100;
+
+    assertThat(ByteUtils.flip(byte0)).isEqualTo(flippedByte0);
+    assertThat(ByteUtils.flip(byte1)).isEqualTo(flippedByte1);
+    assertThat(ByteUtils.flip(byte2)).isEqualTo(flippedByte2);
+    assertThat(ByteUtils.flip(byte3)).isEqualTo(flippedByte3);
+  }
 }
