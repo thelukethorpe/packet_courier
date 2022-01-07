@@ -37,6 +37,10 @@ public class Packet implements PacketWrapper<Packet> {
     }
   }
 
+  public <T> Optional<T> tryParse(Class<T> clazz) {
+    return tryParse();
+  }
+
   public List<Byte> getData() {
     return new ArrayList<>(data);
   }
