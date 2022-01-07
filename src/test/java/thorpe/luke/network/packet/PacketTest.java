@@ -5,8 +5,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.Test;
 import thorpe.luke.network.simulator.node.NodeAddress;
 import thorpe.luke.network.simulator.worker.WorkerAddress;
+import thorpe.luke.util.ByteUtils;
 
 public class PacketTest {
+
+  public Packet flipBits(Packet packet) {
+    return packet.bytewiseMap(ByteUtils::flip);
+  }
 
   @Test
   public void testPacketStringConversion() {
@@ -21,6 +26,14 @@ public class PacketTest {
     WorkerAddress workerAddress = new WorkerAddress("worker", nodeAddress);
     Packet workerAddressAsPacket = Packet.of(workerAddress);
     assertThat(workerAddressAsPacket.tryParse()).hasValue(workerAddress);
+  }
+
+  @Test
+  public void testBadParseReturnsEmptyOptional() {
+    String message = "hello there!";
+    Packet messageAsPacket = Packet.of(message);
+    Packet corruptedPacket = flipBits(messageAsPacket);
+    assertThat(corruptedPacket.tryParse()).isEmpty();
   }
 
   @Test

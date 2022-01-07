@@ -2,6 +2,7 @@ package thorpe.luke.network.packet;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.io.StreamCorruptedException;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -29,7 +30,7 @@ public class Packet implements PacketWrapper<Packet> {
   public <T> Optional<T> tryParse() {
     try {
       return Optional.of((T) ByteUtils.deserialize(ByteUtils.toArray(getData())));
-    } catch (ClassCastException | ClassNotFoundException e) {
+    } catch (ClassCastException | ClassNotFoundException | StreamCorruptedException e) {
       return Optional.empty();
     } catch (IOException e) {
       throw new PacketException(e);
@@ -43,6 +44,10 @@ public class Packet implements PacketWrapper<Packet> {
   @Override
   public int hashCode() {
     return data.hashCode();
+  }
+
+  public Packet bytewiseMap(Function<Byte, Byte> function) {
+    return new Packet(this.getData().stream().map(function).collect(Collectors.toList()));
   }
 
   @Override
