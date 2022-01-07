@@ -43,10 +43,14 @@ public class ConcurrentLinkedPriorityQueue<E extends Comparable<E>> {
   }
 
   public E poll() {
+    return pollIf(e -> true);
+  }
+
+  public E pollIf(Predicate<E> condition) {
     head.lock();
     head.next.lock();
     Node next = head.next;
-    E item = head.pollNext();
+    E item = next.item != null && condition.test(next.item) ? head.pollNext() : null;
     next.unlock();
     head.unlock();
     return item;
@@ -89,9 +93,6 @@ public class ConcurrentLinkedPriorityQueue<E extends Comparable<E>> {
 
     private E pollNext() {
       E item = next.item;
-      if (item == null) {
-        return null;
-      }
       this.setNext(next.next);
       size.decrementAndGet();
       return item;
