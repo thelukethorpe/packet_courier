@@ -49,5 +49,9 @@ public class WorkerTask {
       WorkerTask workerTask = new WorkerTask(runnable, duration);
       workerTask.execute();
     }
+
+    public <NodeInfo> WorkerScript<NodeInfo> asWorkerScript(WorkerScript<NodeInfo> workerScript) {
+      return workerManager -> this.execute(() -> workerScript.run(workerManager));
+    }
   }
 }
