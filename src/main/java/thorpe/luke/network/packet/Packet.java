@@ -1,26 +1,53 @@
 package thorpe.luke.network.packet;
 
-import java.util.Arrays;
+import java.io.IOException;
+import java.io.Serializable;
+import java.io.StreamCorruptedException;
+import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import thorpe.luke.util.ByteUtils;
 
 public class Packet implements PacketWrapper<Packet> {
-  private final byte[] data;
+  private final List<Byte> data;
 
-  public Packet(byte[] data) {
-    this.data = data;
+  public Packet(List<Byte> data) {
+    this.data = Collections.unmodifiableList(data);
   }
 
-  public static Packet of(String message) {
-    return new Packet(message.getBytes());
+  public static Packet fromBytes(byte... bytes) {
+    return new Packet(ByteUtils.toList(bytes));
   }
 
-  public String asString() {
-    return this.toString();
+  public static Packet of(Serializable serializable) {
+    try {
+      return new Packet(ByteUtils.toList(ByteUtils.serialize(serializable)));
+    } catch (IOException e) {
+      throw new PacketException(e);
+    }
+  }
+
+  public <T> Optional<T> tryParse() {
+    try {
+      return Optional.of((T) ByteUtils.deserialize(ByteUtils.toArray(getData())));
+    } catch (ClassCastException | ClassNotFoundException | StreamCorruptedException e) {
+      return Optional.empty();
+    } catch (IOException e) {
+      throw new PacketException(e);
+    }
+  }
+
+  public List<Byte> getData() {
+    return new ArrayList<>(data);
   }
 
   @Override
   public int hashCode() {
-    return Arrays.hashCode(data);
+    return data.hashCode();
+  }
+
+  public Packet bytewiseMap(Function<Byte, Byte> function) {
+    return new Packet(this.getData().stream().map(function).collect(Collectors.toList()));
   }
 
   @Override
@@ -34,13 +61,17 @@ public class Packet implements PacketWrapper<Packet> {
       return true;
     } else if (obj instanceof Packet) {
       Packet that = (Packet) obj;
-      return Arrays.equals(this.data, that.data);
+      return this.data.equals(that.data);
     }
     return false;
   }
 
   @Override
   public String toString() {
-    return new String(data);
+    return "Packet(length="
+        + data.size()
+        + ",contents=["
+        + data.stream().map(Object::toString).collect(Collectors.joining(","))
+        + "])";
   }
 }

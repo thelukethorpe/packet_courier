@@ -1,9 +1,10 @@
 package thorpe.luke.network.simulator.worker;
 
+import java.io.Serializable;
 import java.util.Objects;
 import thorpe.luke.network.simulator.node.NodeAddress;
 
-public class WorkerAddress {
+public class WorkerAddress implements Serializable {
   private final String name;
   private final NodeAddress hostingNodeAddress;
   private final WorkerAddress parentWorkerAddress;
