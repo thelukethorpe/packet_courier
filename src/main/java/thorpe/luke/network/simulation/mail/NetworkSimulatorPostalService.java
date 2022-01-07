@@ -1,4 +1,4 @@
-package thorpe.luke.network.simulator.mail;
+package thorpe.luke.network.simulation.mail;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -10,10 +10,10 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import thorpe.luke.network.packet.Packet;
 import thorpe.luke.network.packet.PacketPipeline;
-import thorpe.luke.network.simulator.node.Node;
-import thorpe.luke.network.simulator.node.NodeAddress;
-import thorpe.luke.network.simulator.node.NodeConnection;
-import thorpe.luke.network.simulator.worker.WorkerAddress;
+import thorpe.luke.network.simulation.node.Node;
+import thorpe.luke.network.simulation.node.NodeAddress;
+import thorpe.luke.network.simulation.node.NodeConnection;
+import thorpe.luke.network.simulation.worker.WorkerAddress;
 
 public class NetworkSimulatorPostalService<NodeInfo> implements PostalService {
   private final Map<NodeAddress, Node<NodeInfo>> nodeToAddressMap;

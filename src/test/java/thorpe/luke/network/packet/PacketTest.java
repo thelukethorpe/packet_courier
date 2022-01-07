@@ -3,8 +3,8 @@ package thorpe.luke.network.packet;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.Test;
-import thorpe.luke.network.simulator.node.NodeAddress;
-import thorpe.luke.network.simulator.worker.WorkerAddress;
+import thorpe.luke.network.simulation.node.NodeAddress;
+import thorpe.luke.network.simulation.worker.WorkerAddress;
 import thorpe.luke.util.ByteUtils;
 
 public class PacketTest {

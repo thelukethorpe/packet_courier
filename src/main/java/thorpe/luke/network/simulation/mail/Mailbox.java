@@ -1,9 +1,9 @@
-package thorpe.luke.network.simulator.mail;
+package thorpe.luke.network.simulation.mail;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import thorpe.luke.network.packet.Packet;
-import thorpe.luke.network.simulator.worker.WorkerException;
+import thorpe.luke.network.simulation.worker.WorkerException;
 
 public class Mailbox {
 

@@ -1,9 +1,9 @@
-package thorpe.luke.network.simulator.mail;
+package thorpe.luke.network.simulation.mail;
 
 import java.util.function.Function;
 import thorpe.luke.network.packet.Packet;
 import thorpe.luke.network.packet.PacketWrapper;
-import thorpe.luke.network.simulator.worker.WorkerAddress;
+import thorpe.luke.network.simulation.worker.WorkerAddress;
 
 public class Mail implements PacketWrapper<Mail> {
   private final WorkerAddress destinationAddress;

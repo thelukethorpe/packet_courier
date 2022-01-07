@@ -1,4 +1,4 @@
-package thorpe.luke.network.simulator.worker;
+package thorpe.luke.network.simulation.worker;
 
 public class WorkerException extends RuntimeException {
   public WorkerException(Exception e) {

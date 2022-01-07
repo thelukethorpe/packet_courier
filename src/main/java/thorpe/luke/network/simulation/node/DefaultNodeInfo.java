@@ -1,4 +1,4 @@
-package thorpe.luke.network.simulator.node;
+package thorpe.luke.network.simulation.node;
 
 import java.time.LocalDateTime;
 import java.util.Collection;

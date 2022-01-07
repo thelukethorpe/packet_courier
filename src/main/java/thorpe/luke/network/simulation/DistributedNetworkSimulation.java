@@ -1,4 +1,4 @@
-package thorpe.luke.network.simulator;
+package thorpe.luke.network.simulation;
 
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -7,14 +7,14 @@ import java.util.stream.Collectors;
 import thorpe.luke.log.Logger;
 import thorpe.luke.network.packet.PacketPipeline;
 import thorpe.luke.network.packet.PacketPipeline.Parameters;
-import thorpe.luke.network.simulator.mail.Mail;
-import thorpe.luke.network.simulator.mail.NetworkSimulatorPostalService;
-import thorpe.luke.network.simulator.mail.PostalService;
-import thorpe.luke.network.simulator.node.DefaultNodeInfo;
-import thorpe.luke.network.simulator.node.Node;
-import thorpe.luke.network.simulator.node.NodeConnection;
-import thorpe.luke.network.simulator.node.NodeInfoGenerator;
-import thorpe.luke.network.simulator.worker.WorkerScript;
+import thorpe.luke.network.simulation.mail.Mail;
+import thorpe.luke.network.simulation.mail.NetworkSimulatorPostalService;
+import thorpe.luke.network.simulation.mail.PostalService;
+import thorpe.luke.network.simulation.node.DefaultNodeInfo;
+import thorpe.luke.network.simulation.node.Node;
+import thorpe.luke.network.simulation.node.NodeConnection;
+import thorpe.luke.network.simulation.node.NodeInfoGenerator;
+import thorpe.luke.network.simulation.worker.WorkerScript;
 import thorpe.luke.time.Clock;
 import thorpe.luke.time.VirtualClock;
 
