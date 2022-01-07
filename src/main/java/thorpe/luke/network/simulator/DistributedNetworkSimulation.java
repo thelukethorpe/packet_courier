@@ -194,7 +194,9 @@ public class DistributedNetworkSimulation<NodeInfo> {
       for (NodeConnection<NodeInfo> nodeConnection : networkConditions.keySet()) {
         String sourceName = nodeConnection.getSource().getAddress().getName();
         String destinationName = nodeConnection.getDestination().getAddress().getName();
-        nodeToNeighboursMap.get(sourceName).add(destinationName);
+        if (!sourceName.equals(destinationName)) {
+          nodeToNeighboursMap.get(sourceName).add(destinationName);
+        }
       }
       NetworkSimulatorPostalService<NodeInfo> postalService =
           new NetworkSimulatorPostalService<>(
