@@ -2,7 +2,6 @@ package thorpe.luke.network.simulator.example;
 
 import java.time.temporal.ChronoUnit;
 import java.util.Random;
-import java.util.concurrent.*;
 import thorpe.luke.log.ConsoleLogger;
 import thorpe.luke.network.packet.NetworkCondition;
 import thorpe.luke.network.packet.Packet;
@@ -10,6 +9,7 @@ import thorpe.luke.network.packet.PacketPipeline;
 import thorpe.luke.network.simulator.DistributedNetworkSimulation;
 import thorpe.luke.network.simulator.node.NodeAddress;
 import thorpe.luke.network.simulator.worker.WorkerManager;
+import thorpe.luke.network.simulator.worker.WorkerTask;
 
 public class SimpleExample1 {
 
@@ -33,9 +33,9 @@ public class SimpleExample1 {
 
   public static void runNodeB(WorkerManager<SimpleExample1NodeInfo> workerManager) {
     // Node B waits for messages from node A and automatically shuts down after 5 seconds.
-    ExecutorService executorService = Executors.newSingleThreadExecutor();
-    Future<Void> result =
-        executorService.submit(
+    WorkerTask.configure()
+        .withTimeout(5, ChronoUnit.SECONDS)
+        .execute(
             () -> {
               do {
                 Packet packet = workerManager.waitForMail();
@@ -49,14 +49,6 @@ public class SimpleExample1 {
                                     + message));
               } while (true);
             });
-    try {
-      result.get(5, TimeUnit.SECONDS);
-    } catch (InterruptedException | ExecutionException | TimeoutException e) {
-      // Do nothing.
-    } finally {
-      // Kill any hanging threads.
-      executorService.shutdownNow();
-    }
   }
 
   public static class SimpleExample1NodeInfo {
