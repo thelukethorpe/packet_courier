@@ -88,7 +88,7 @@ public class SimpleExample2 {
     DistributedNetworkSimulation<DefaultNodeInfo> distributedNetworkSimulation =
         distributedNetworkSimulationConfiguration.start();
     try {
-      distributedNetworkSimulation.join();
+      distributedNetworkSimulation.waitFor();
     } catch (InterruptedException e) {
       e.printStackTrace();
       System.exit(1);

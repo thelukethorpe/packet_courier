@@ -74,7 +74,7 @@ public class SimpleExample1 {
             .addLogger(new ConsoleLogger())
             .start();
     try {
-      distributedNetworkSimulation.join();
+      distributedNetworkSimulation.waitFor();
     } catch (InterruptedException e) {
       e.printStackTrace();
       System.exit(1);

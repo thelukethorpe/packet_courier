@@ -82,7 +82,7 @@ public class DistributedNetworkSimulation<NodeInfo> {
     simulator.start();
   }
 
-  public void join() throws InterruptedException {
+  public void waitFor() throws InterruptedException {
     simulator.join();
   }
 
