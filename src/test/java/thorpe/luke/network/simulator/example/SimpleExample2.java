@@ -1,8 +1,8 @@
 package thorpe.luke.network.simulator.example;
 
 import java.time.temporal.ChronoField;
+import java.time.temporal.ChronoUnit;
 import java.util.Random;
-import java.util.concurrent.*;
 import thorpe.luke.log.ConsoleLogger;
 import thorpe.luke.network.packet.NetworkCondition;
 import thorpe.luke.network.packet.Packet;
@@ -11,6 +11,7 @@ import thorpe.luke.network.simulator.DistributedNetworkSimulation;
 import thorpe.luke.network.simulator.node.DefaultNodeInfo;
 import thorpe.luke.network.simulator.node.NodeAddress;
 import thorpe.luke.network.simulator.worker.WorkerManager;
+import thorpe.luke.network.simulator.worker.WorkerTask;
 
 public class SimpleExample2 {
 
@@ -19,9 +20,9 @@ public class SimpleExample2 {
 
   public static void runNode(WorkerManager<DefaultNodeInfo> workerManager) {
     // Simple flood algorithm. Nodes timeout after 10 seconds.
-    ExecutorService executorService = Executors.newSingleThreadExecutor();
-    Future<Void> result =
-        executorService.submit(
+    WorkerTask.configure()
+        .withTimeout(10, ChronoUnit.SECONDS)
+        .execute(
             () -> {
               for (NodeAddress neighbour : workerManager.getInfo().getNeighbours()) {
                 for (int i = 1; i <= N; i++) {
@@ -59,14 +60,6 @@ public class SimpleExample2 {
                         });
               } while (true);
             });
-    try {
-      result.get(10, TimeUnit.SECONDS);
-    } catch (InterruptedException | ExecutionException | TimeoutException e) {
-      // Do nothing.
-    } finally {
-      // Kill any hanging threads.
-      executorService.shutdownNow();
-    }
   }
 
   public static void main(String[] args) {
