@@ -33,23 +33,30 @@ public class SimpleExample2 {
 
               do {
                 Packet packet = workerManager.waitForMail();
-                String message = packet.asString();
-                String newMessage =
-                    message
-                        + " -> "
-                        + workerManager.getAddress()
-                        + ", received at t = "
-                        + workerManager.getInfo().getCurrentTime().get(ChronoField.MILLI_OF_SECOND)
-                        + "ms";
-                Packet newMessageAsPacket = Packet.of(newMessage);
-                workerManager.log(newMessage);
-                workerManager
-                    .getInfo()
-                    .getNeighbours()
-                    .forEach(
-                        neighbour ->
-                            workerManager.sendMail(
-                                neighbour.asRootWorkerAddress(), newMessageAsPacket));
+                packet
+                    .tryParse()
+                    .ifPresent(
+                        message -> {
+                          String newMessage =
+                              message
+                                  + " -> "
+                                  + workerManager.getAddress()
+                                  + ", received at t = "
+                                  + workerManager
+                                      .getInfo()
+                                      .getCurrentTime()
+                                      .get(ChronoField.MILLI_OF_SECOND)
+                                  + "ms";
+                          Packet newMessageAsPacket = Packet.of(newMessage);
+                          workerManager.log(newMessage);
+                          workerManager
+                              .getInfo()
+                              .getNeighbours()
+                              .forEach(
+                                  neighbour ->
+                                      workerManager.sendMail(
+                                          neighbour.asRootWorkerAddress(), newMessageAsPacket));
+                        });
               } while (true);
             });
     try {

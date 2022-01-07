@@ -39,11 +39,14 @@ public class SimpleExample1 {
             () -> {
               do {
                 Packet packet = workerManager.waitForMail();
-                String message = packet.asString();
-                workerManager.log(
-                    workerManager.getInfo().getNodeBAddress()
-                        + " has received the following message: "
-                        + message);
+                packet
+                    .tryParse()
+                    .ifPresent(
+                        message ->
+                            workerManager.log(
+                                workerManager.getInfo().getNodeBAddress()
+                                    + " has received the following message: "
+                                    + message));
               } while (true);
             });
     try {

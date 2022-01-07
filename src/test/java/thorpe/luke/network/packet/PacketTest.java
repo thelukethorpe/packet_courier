@@ -9,7 +9,8 @@ public class PacketTest {
   @Test
   public void testPacketStringConversion() {
     String message = "hello there!";
-    assertThat(Packet.of(message).asString()).isEqualTo(message);
+    Packet messageAsPacket = Packet.of(message);
+    assertThat(messageAsPacket.tryParse()).hasValue(message);
   }
 
   @Test

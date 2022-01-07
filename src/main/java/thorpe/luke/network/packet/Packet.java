@@ -1,7 +1,11 @@
 package thorpe.luke.network.packet;
 
+import java.io.IOException;
+import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.function.Function;
+import thorpe.luke.util.ByteUtils;
 
 public class Packet implements PacketWrapper<Packet> {
   private final byte[] data;
@@ -10,12 +14,22 @@ public class Packet implements PacketWrapper<Packet> {
     this.data = data;
   }
 
-  public static Packet of(String message) {
-    return new Packet(message.getBytes());
+  public static Packet of(Serializable serializable) {
+    try {
+      return new Packet(ByteUtils.serialize(serializable));
+    } catch (IOException e) {
+      throw new PacketException(e);
+    }
   }
 
-  public String asString() {
-    return this.toString();
+  public <T> Optional<T> tryParse() {
+    try {
+      return Optional.of((T) ByteUtils.deserialize(data));
+    } catch (ClassCastException | ClassNotFoundException e) {
+      return Optional.empty();
+    } catch (IOException e) {
+      throw new PacketException(e);
+    }
   }
 
   @Override
