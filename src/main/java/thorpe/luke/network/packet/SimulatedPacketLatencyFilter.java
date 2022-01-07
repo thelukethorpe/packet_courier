@@ -4,14 +4,15 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
-import java.util.PriorityQueue;
 import java.util.Random;
 import thorpe.luke.distribution.Distribution;
+import thorpe.luke.util.concurrent.ConcurrentLinkedPriorityQueue;
 
 public class SimulatedPacketLatencyFilter<Wrapper extends PacketWrapper<Wrapper>>
     implements PacketFilter<Wrapper> {
 
-  private final PriorityQueue<ScheduledPacket> packetQueue = new PriorityQueue<>();
+  private final ConcurrentLinkedPriorityQueue<ScheduledPacket> packetQueue =
+      new ConcurrentLinkedPriorityQueue<>();
   private final Distribution<Double> latencyDistribution;
   private final ChronoUnit timeUnit;
   private final Random random;
@@ -42,10 +43,9 @@ public class SimulatedPacketLatencyFilter<Wrapper extends PacketWrapper<Wrapper>
 
   @Override
   public Optional<Wrapper> tryDequeue() {
-    if (packetQueue.isEmpty() || packetQueue.peek().getScheduledDequeueTime().isAfter(now)) {
-      return Optional.empty();
-    }
-    return Optional.ofNullable(packetQueue.poll()).map(ScheduledPacket::getPacketWrapper);
+    return Optional.ofNullable(
+            packetQueue.pollIf(front -> front.getScheduledDequeueTime().isAfter(now)))
+        .map(ScheduledPacket::getPacketWrapper);
   }
 
   private class ScheduledPacket implements Comparable<ScheduledPacket> {

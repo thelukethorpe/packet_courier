@@ -8,7 +8,7 @@ import thorpe.luke.distribution.Distribution;
 public class SimulatedPacketDropFilter<Wrapper extends PacketWrapper<Wrapper>>
     implements PacketFilter<Wrapper> {
 
-  private final NeutralPacketFilter<Wrapper> neutralPacketFilter = new NeutralPacketFilter();
+  private final NeutralPacketFilter<Wrapper> neutralPacketFilter = new NeutralPacketFilter<>();
   private final Distribution<Boolean> dropDistribution;
   private final Random random;
 
