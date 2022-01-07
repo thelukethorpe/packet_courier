@@ -209,10 +209,4 @@ public class DistributedNetworkSimulation<NodeInfo> {
       return distributedNetworkSimulation;
     }
   }
-
-  public static class InvalidSimulationConfigurationException extends RuntimeException {
-    public InvalidSimulationConfigurationException(String message) {
-      super(message);
-    }
-  }
 }
