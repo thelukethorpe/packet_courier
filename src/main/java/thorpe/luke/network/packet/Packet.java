@@ -2,21 +2,25 @@ package thorpe.luke.network.packet;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.Arrays;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import thorpe.luke.util.ByteUtils;
 
 public class Packet implements PacketWrapper<Packet> {
-  private final byte[] data;
+  private final List<Byte> data;
 
-  public Packet(byte[] data) {
-    this.data = data;
+  public Packet(List<Byte> data) {
+    this.data = Collections.unmodifiableList(data);
+  }
+
+  public static Packet fromBytes(byte... bytes) {
+    return new Packet(ByteUtils.toList(bytes));
   }
 
   public static Packet of(Serializable serializable) {
     try {
-      return new Packet(ByteUtils.serialize(serializable));
+      return new Packet(ByteUtils.toList(ByteUtils.serialize(serializable)));
     } catch (IOException e) {
       throw new PacketException(e);
     }
@@ -24,7 +28,7 @@ public class Packet implements PacketWrapper<Packet> {
 
   public <T> Optional<T> tryParse() {
     try {
-      return Optional.of((T) ByteUtils.deserialize(data));
+      return Optional.of((T) ByteUtils.deserialize(ByteUtils.toArray(getData())));
     } catch (ClassCastException | ClassNotFoundException e) {
       return Optional.empty();
     } catch (IOException e) {
@@ -32,9 +36,13 @@ public class Packet implements PacketWrapper<Packet> {
     }
   }
 
+  public List<Byte> getData() {
+    return new ArrayList<>(data);
+  }
+
   @Override
   public int hashCode() {
-    return Arrays.hashCode(data);
+    return data.hashCode();
   }
 
   @Override
@@ -48,13 +56,17 @@ public class Packet implements PacketWrapper<Packet> {
       return true;
     } else if (obj instanceof Packet) {
       Packet that = (Packet) obj;
-      return Arrays.equals(this.data, that.data);
+      return this.data.equals(that.data);
     }
     return false;
   }
 
   @Override
   public String toString() {
-    return new String(data);
+    return "Packet(length="
+        + data.size()
+        + ",contents=["
+        + data.stream().map(Object::toString).collect(Collectors.joining(","))
+        + "])";
   }
 }

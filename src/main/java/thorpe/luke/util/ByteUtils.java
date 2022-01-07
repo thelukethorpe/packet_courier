@@ -1,6 +1,8 @@
 package thorpe.luke.util;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ByteUtils {
 
@@ -15,5 +17,22 @@ public class ByteUtils {
     ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(data);
     ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream);
     return objectInputStream.readObject();
+  }
+
+  public static List<Byte> toList(byte[] array) {
+    List<Byte> list = new ArrayList<>(array.length);
+    for (byte b : array) {
+      list.add(b);
+    }
+    return list;
+  }
+
+  public static byte[] toArray(List<Byte> list) {
+    byte[] array = new byte[list.size()];
+    int i = 0;
+    for (Byte b : list) {
+      array[i++] = b;
+    }
+    return array;
   }
 }

@@ -25,19 +25,30 @@ public class PacketTest {
 
   @Test
   public void testPacketEquals() {
-    byte byte1 = 0b00000000;
-    byte byte2 = 0b00000001;
-    byte byte3 = 0b00000010;
-    byte byte4 = 0b00000011;
+    byte byte0 = 0b00000000;
+    byte byte1 = 0b00000001;
+    byte byte2 = 0b00000010;
+    byte byte3 = 0b00000011;
 
-    assertThat(new Packet(new byte[] {byte1, byte2, byte3, byte4}))
-        .isEqualTo(new Packet(new byte[] {byte1, byte2, byte3, byte4}));
-    assertThat(new Packet(new byte[] {byte1, byte2, byte3}))
-        .isNotEqualTo(new Packet(new byte[] {byte1, byte2, byte3, byte4}));
+    assertThat(Packet.fromBytes(byte0, byte1, byte2, byte3))
+        .isEqualTo(Packet.fromBytes(byte0, byte1, byte2, byte3));
+    assertThat(Packet.fromBytes(byte0, byte1, byte2))
+        .isNotEqualTo(Packet.fromBytes(byte0, byte1, byte2, byte3));
 
-    assertThat(new Packet(new byte[] {byte2, byte4}))
-        .isEqualTo(new Packet(new byte[] {byte2, byte4}));
-    assertThat(new Packet(new byte[] {byte2, byte3}))
-        .isNotEqualTo(new Packet(new byte[] {byte2, byte4}));
+    assertThat(Packet.fromBytes(byte1, byte3)).isEqualTo(Packet.fromBytes(byte1, byte3));
+    assertThat(Packet.fromBytes(byte1, byte2)).isNotEqualTo(Packet.fromBytes(byte1, byte3));
+  }
+
+  @Test
+  public void testPacketToString() {
+    byte byte0 = 0b00000000;
+    byte byte1 = 0b00000001;
+    byte byte2 = 0b00000010;
+    byte byte3 = 0b00000011;
+
+    assertThat(Packet.fromBytes(byte0)).asString().isEqualTo("Packet(length=1,contents=[0])");
+    assertThat(Packet.fromBytes(byte2, byte1, byte3, byte0))
+        .asString()
+        .isEqualTo("Packet(length=4,contents=[2,1,3,0])");
   }
 }
