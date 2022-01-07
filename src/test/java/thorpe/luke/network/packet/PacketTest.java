@@ -3,6 +3,8 @@ package thorpe.luke.network.packet;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.Test;
+import thorpe.luke.network.simulator.node.NodeAddress;
+import thorpe.luke.network.simulator.worker.WorkerAddress;
 
 public class PacketTest {
 
@@ -11,6 +13,14 @@ public class PacketTest {
     String message = "hello there!";
     Packet messageAsPacket = Packet.of(message);
     assertThat(messageAsPacket.tryParse()).hasValue(message);
+  }
+
+  @Test
+  public void testPacketAddressConversion() {
+    NodeAddress nodeAddress = new NodeAddress("node");
+    WorkerAddress workerAddress = new WorkerAddress("worker", nodeAddress);
+    Packet workerAddressAsPacket = Packet.of(workerAddress);
+    assertThat(workerAddressAsPacket.tryParse()).hasValue(workerAddress);
   }
 
   @Test
