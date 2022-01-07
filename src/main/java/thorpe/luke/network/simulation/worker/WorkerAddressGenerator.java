@@ -1,4 +1,4 @@
-package thorpe.luke.network.simulator.worker;
+package thorpe.luke.network.simulation.worker;
 
 import thorpe.luke.util.UniqueStringGenerator;
 

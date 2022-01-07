@@ -1,4 +1,4 @@
-package thorpe.luke.network.simulator;
+package thorpe.luke.network.simulation;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -8,7 +8,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 import org.junit.Test;
-import thorpe.luke.network.simulator.node.NodeAddress;
+import thorpe.luke.network.simulation.node.NodeAddress;
 
 public class TopologyTest {
   public static final Topology EMPTY_TOPOLOGY = Topology.of(Collections.emptyMap());

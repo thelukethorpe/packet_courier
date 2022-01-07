@@ -1,10 +1,10 @@
-package thorpe.luke.network.simulator.node;
+package thorpe.luke.network.simulation.node;
 
 import java.util.Collection;
 import thorpe.luke.log.Logger;
-import thorpe.luke.network.simulator.mail.Mail;
-import thorpe.luke.network.simulator.mail.PostalService;
-import thorpe.luke.network.simulator.worker.*;
+import thorpe.luke.network.simulation.mail.Mail;
+import thorpe.luke.network.simulation.mail.PostalService;
+import thorpe.luke.network.simulation.worker.*;
 
 public class Node<NodeInfo> {
   private final NodeAddress address;

@@ -1,4 +1,4 @@
-package thorpe.luke.network.simulator.example;
+package thorpe.luke.network.simulation.example;
 
 import java.time.temporal.ChronoUnit;
 import java.util.Random;
@@ -6,10 +6,10 @@ import thorpe.luke.log.ConsoleLogger;
 import thorpe.luke.network.packet.NetworkCondition;
 import thorpe.luke.network.packet.Packet;
 import thorpe.luke.network.packet.PacketPipeline;
-import thorpe.luke.network.simulator.DistributedNetworkSimulation;
-import thorpe.luke.network.simulator.node.NodeAddress;
-import thorpe.luke.network.simulator.worker.WorkerManager;
-import thorpe.luke.network.simulator.worker.WorkerTask;
+import thorpe.luke.network.simulation.DistributedNetworkSimulation;
+import thorpe.luke.network.simulation.node.NodeAddress;
+import thorpe.luke.network.simulation.worker.WorkerManager;
+import thorpe.luke.network.simulation.worker.WorkerTask;
 
 public class SimpleExample1 {
 
@@ -74,7 +74,7 @@ public class SimpleExample1 {
             .addLogger(new ConsoleLogger())
             .start();
     try {
-      distributedNetworkSimulation.join();
+      distributedNetworkSimulation.waitFor();
     } catch (InterruptedException e) {
       e.printStackTrace();
       System.exit(1);

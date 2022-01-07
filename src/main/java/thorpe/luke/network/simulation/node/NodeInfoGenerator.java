@@ -1,6 +1,6 @@
-package thorpe.luke.network.simulator.node;
+package thorpe.luke.network.simulation.node;
 
-import thorpe.luke.network.simulator.Topology;
+import thorpe.luke.network.simulation.Topology;
 import thorpe.luke.time.Clock;
 
 @FunctionalInterface

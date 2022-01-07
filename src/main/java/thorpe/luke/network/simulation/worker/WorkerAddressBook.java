@@ -1,12 +1,12 @@
-package thorpe.luke.network.simulator.worker;
+package thorpe.luke.network.simulation.worker;
 
 import java.util.Collection;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import thorpe.luke.log.Logger;
-import thorpe.luke.network.simulator.mail.Mailbox;
-import thorpe.luke.network.simulator.mail.PostalService;
+import thorpe.luke.network.simulation.mail.Mailbox;
+import thorpe.luke.network.simulation.mail.PostalService;
 import thorpe.luke.util.GarbageCollector;
 import thorpe.luke.util.Prunable;
 

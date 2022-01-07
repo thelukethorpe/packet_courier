@@ -1,7 +1,7 @@
-package thorpe.luke.network.simulator.mail;
+package thorpe.luke.network.simulation.mail;
 
 import thorpe.luke.network.packet.Packet;
-import thorpe.luke.network.simulator.worker.WorkerAddress;
+import thorpe.luke.network.simulation.worker.WorkerAddress;
 
 public interface PostalService {
 

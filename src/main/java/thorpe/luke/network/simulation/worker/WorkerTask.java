@@ -1,4 +1,4 @@
-package thorpe.luke.network.simulator.worker;
+package thorpe.luke.network.simulation.worker;
 
 import java.time.Duration;
 import java.time.temporal.TemporalUnit;

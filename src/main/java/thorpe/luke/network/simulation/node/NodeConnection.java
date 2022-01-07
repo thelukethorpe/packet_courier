@@ -1,4 +1,4 @@
-package thorpe.luke.network.simulator.node;
+package thorpe.luke.network.simulation.node;
 
 import java.util.Objects;
 
