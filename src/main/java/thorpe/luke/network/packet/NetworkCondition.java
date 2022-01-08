@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Random;
 import thorpe.luke.distribution.BernoulliDistribution;
+import thorpe.luke.distribution.ExponentialDistribution;
 import thorpe.luke.distribution.UniformDistribution;
 
 public interface NetworkCondition {
@@ -23,7 +24,10 @@ public interface NetworkCondition {
 
   static NetworkCondition uniformPacketLatency(
       double minLatency, double maxLatency, ChronoUnit timeUnit, Random random) {
-    if (maxLatency < minLatency) {
+    if (minLatency < 0.0) {
+      throw new InvalidNetworkConditionException(
+          "Minimum latency should be greater than or equal to zero.");
+    } else if (maxLatency < minLatency) {
       throw new InvalidNetworkConditionException(
           "Minimum latency should be less than or equal to maximum latency.");
     }
@@ -37,12 +41,21 @@ public interface NetworkCondition {
     };
   }
 
+  static NetworkCondition exponentialPacketLatency(
+      double meanLatency, ChronoUnit timeUnit, Random random) {
+    if (meanLatency <= 0.0) {
+      throw new InvalidNetworkConditionException("Mean latency should be greater than zero.");
+    }
+    return new NetworkCondition() {
+      @Override
+      public <Wrapper extends PacketWrapper<Wrapper>>
+          PacketFilter<Wrapper> asPacketFilterStartingAt(LocalDateTime startTime) {
+        return new SimulatedPacketLatencyFilter<>(
+            new ExponentialDistribution(meanLatency), timeUnit, startTime, random);
+      }
+    };
+  }
+
   <Wrapper extends PacketWrapper<Wrapper>> PacketFilter<Wrapper> asPacketFilterStartingAt(
       LocalDateTime startTime);
-
-  class InvalidNetworkConditionException extends RuntimeException {
-    public InvalidNetworkConditionException(String message) {
-      super(message);
-    }
-  }
 }
