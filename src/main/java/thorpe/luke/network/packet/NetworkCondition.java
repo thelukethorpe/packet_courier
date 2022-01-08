@@ -55,10 +55,4 @@ public interface NetworkCondition {
 
   <Wrapper extends PacketWrapper<Wrapper>> PacketFilter<Wrapper> asPacketFilterStartingAt(
       LocalDateTime startTime);
-
-  class InvalidNetworkConditionException extends RuntimeException {
-    public InvalidNetworkConditionException(String message) {
-      super(message);
-    }
-  }
 }
