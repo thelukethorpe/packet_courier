@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Random;
 import thorpe.luke.distribution.BernoulliDistribution;
+import thorpe.luke.distribution.ExponentialDistribution;
 import thorpe.luke.distribution.UniformDistribution;
 
 public interface NetworkCondition {
@@ -33,6 +34,21 @@ public interface NetworkCondition {
           PacketFilter<Wrapper> asPacketFilterStartingAt(LocalDateTime startTime) {
         return new SimulatedPacketLatencyFilter<>(
             new UniformDistribution(minLatency, maxLatency), timeUnit, startTime, random);
+      }
+    };
+  }
+
+  static NetworkCondition exponentialPacketLatency(
+      double meanLatency, ChronoUnit timeUnit, Random random) {
+    if (meanLatency <= 0.0) {
+      throw new InvalidNetworkConditionException("Mean latency should be greater than zero.");
+    }
+    return new NetworkCondition() {
+      @Override
+      public <Wrapper extends PacketWrapper<Wrapper>>
+          PacketFilter<Wrapper> asPacketFilterStartingAt(LocalDateTime startTime) {
+        return new SimulatedPacketLatencyFilter<>(
+            new ExponentialDistribution(meanLatency), timeUnit, startTime, random);
       }
     };
   }
