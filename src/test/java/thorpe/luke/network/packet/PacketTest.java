@@ -2,6 +2,7 @@ package thorpe.luke.network.packet;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.List;
 import org.junit.Test;
 import thorpe.luke.network.simulation.node.NodeAddress;
 import thorpe.luke.network.simulation.worker.WorkerAddress;
@@ -34,6 +35,16 @@ public class PacketTest {
     Packet messageAsPacket = Packet.of(message);
     Packet corruptedPacket = flipBits(messageAsPacket);
     assertThat(corruptedPacket.tryParse()).isEmpty();
+  }
+
+  @Test
+  public void testCorruptedPacketStringStillParses() {
+    String message = "hello there!";
+    Packet packet = Packet.of(message);
+    List<Byte> data = packet.getData();
+    data.set(11, (byte) (data.get(11) ^ 0b00000010));
+    Packet corruptedPacket = new Packet(data);
+    assertThat(corruptedPacket.tryParse(String.class)).hasValue("hellm there!");
   }
 
   @Test
