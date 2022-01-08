@@ -24,7 +24,10 @@ public interface NetworkCondition {
 
   static NetworkCondition uniformPacketLatency(
       double minLatency, double maxLatency, ChronoUnit timeUnit, Random random) {
-    if (maxLatency < minLatency) {
+    if (minLatency < 0.0) {
+      throw new InvalidNetworkConditionException(
+          "Minimum latency should be greater than or equal to zero.");
+    } else if (maxLatency < minLatency) {
       throw new InvalidNetworkConditionException(
           "Minimum latency should be less than or equal to maximum latency.");
     }
