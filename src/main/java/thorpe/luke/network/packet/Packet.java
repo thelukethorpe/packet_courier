@@ -60,6 +60,11 @@ public class Packet implements PacketWrapper<Packet> {
   }
 
   @Override
+  public Packet copy() {
+    return new Packet(new ArrayList<>(data));
+  }
+
+  @Override
   public boolean equals(Object obj) {
     if (obj == this) {
       return true;

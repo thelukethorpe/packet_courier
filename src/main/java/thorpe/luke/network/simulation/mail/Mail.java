@@ -26,4 +26,9 @@ public class Mail implements PacketWrapper<Mail> {
   public Mail map(Function<Packet, Packet> function) {
     return new Mail(destinationAddress, function.apply(packet));
   }
+
+  @Override
+  public Mail copy() {
+    return new Mail(destinationAddress, packet.copy());
+  }
 }

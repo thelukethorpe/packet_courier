@@ -5,6 +5,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Random;
 import thorpe.luke.distribution.BernoulliDistribution;
 import thorpe.luke.distribution.ExponentialDistribution;
+import thorpe.luke.distribution.PoissonDistribution;
 import thorpe.luke.distribution.UniformDistribution;
 
 public interface NetworkCondition {
@@ -18,6 +19,21 @@ public interface NetworkCondition {
       public <Wrapper extends PacketWrapper<Wrapper>>
           PacketFilter<Wrapper> asPacketFilterStartingAt(LocalDateTime startTime) {
         return new SimulatedPacketDropFilter<>(new BernoulliDistribution(dropProbability), random);
+      }
+    };
+  }
+
+  static NetworkCondition poissonPacketDuplication(double meanDuplications, Random random) {
+    if (meanDuplications < 0.0) {
+      throw new InvalidNetworkConditionException(
+          "Mean duplications should be greater than or equal to zero.");
+    }
+    return new NetworkCondition() {
+      @Override
+      public <Wrapper extends PacketWrapper<Wrapper>>
+          PacketFilter<Wrapper> asPacketFilterStartingAt(LocalDateTime startTime) {
+        return new SimulatedPacketDuplicationFilter<>(
+            new PoissonDistribution(meanDuplications), random);
       }
     };
   }
