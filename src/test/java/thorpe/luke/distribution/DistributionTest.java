@@ -30,6 +30,8 @@ public abstract class DistributionTest<T> {
   protected double toDouble(T value) {
     if (value instanceof Boolean) {
       return (Boolean) value ? 1.0 : 0.0;
+    } else if (value instanceof Integer) {
+      return ((Integer) value).doubleValue();
     } else {
       return (Double) value;
     }
