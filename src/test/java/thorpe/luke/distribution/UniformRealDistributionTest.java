@@ -5,7 +5,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-public class UniformDistributionTest extends DistributionTest<Double> {
+public class UniformRealDistributionTest extends DistributionTest<Double> {
 
   @Override
   protected Collection<DistributionWithCdfTable> getSomeDistributionsWithCdfTables() {
@@ -24,6 +24,6 @@ public class UniformDistributionTest extends DistributionTest<Double> {
       double percentile = i / (double) (CDF_TABLE_SIZE - 1);
       cdfTable.put(percentile, min + percentile * (max - min));
     }
-    return new DistributionWithCdfTable(new UniformDistribution(min, max), cdfTable);
+    return new DistributionWithCdfTable(new UniformRealDistribution(min, max), cdfTable);
   }
 }
