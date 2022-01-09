@@ -2,12 +2,12 @@ package thorpe.luke.distribution;
 
 import java.util.Random;
 
-public class UniformDistribution implements Distribution<Double> {
+public class UniformRealDistribution implements Distribution<Double> {
 
   private final double min;
   private final double max;
 
-  public UniformDistribution(double min, double max) {
+  public UniformRealDistribution(double min, double max) {
     assert (min <= max);
     this.min = min;
     this.max = max;

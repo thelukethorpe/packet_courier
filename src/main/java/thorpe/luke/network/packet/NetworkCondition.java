@@ -3,12 +3,27 @@ package thorpe.luke.network.packet;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Random;
-import thorpe.luke.distribution.BernoulliDistribution;
-import thorpe.luke.distribution.ExponentialDistribution;
-import thorpe.luke.distribution.PoissonDistribution;
-import thorpe.luke.distribution.UniformDistribution;
+import thorpe.luke.distribution.*;
 
 public interface NetworkCondition {
+  static NetworkCondition uniformPacketCorruption(double corruptionProbability, Random random) {
+    if (corruptionProbability < 0.0 || 1.0 < corruptionProbability) {
+      throw new InvalidNetworkConditionException(
+          "Packet corruption probability should be between 0 and 1.");
+    }
+    return new NetworkCondition() {
+      @Override
+      public <Wrapper extends PacketWrapper<Wrapper>>
+          PacketFilter<Wrapper> asPacketFilterStartingAt(LocalDateTime startTime) {
+        return new SimulatedPacketCorruptionFilter<>(
+            new BernoulliDistribution(corruptionProbability),
+            new UniformIntegerDistribution(0, Integer.MAX_VALUE),
+            new UniformIntegerDistribution(0, Integer.MAX_VALUE),
+            random);
+      }
+    };
+  }
+
   static NetworkCondition uniformPacketDrop(double dropProbability, Random random) {
     if (dropProbability < 0.0 || 1.0 < dropProbability) {
       throw new InvalidNetworkConditionException(
@@ -52,7 +67,7 @@ public interface NetworkCondition {
       public <Wrapper extends PacketWrapper<Wrapper>>
           PacketFilter<Wrapper> asPacketFilterStartingAt(LocalDateTime startTime) {
         return new SimulatedPacketLatencyFilter<>(
-            new UniformDistribution(minLatency, maxLatency), timeUnit, startTime, random);
+            new UniformRealDistribution(minLatency, maxLatency), timeUnit, startTime, random);
       }
     };
   }
