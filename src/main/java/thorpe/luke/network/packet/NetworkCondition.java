@@ -53,21 +53,21 @@ public interface NetworkCondition {
     };
   }
 
-  static NetworkCondition uniformPacketLatency(
-      double minLatency, double maxLatency, ChronoUnit timeUnit, Random random) {
-    if (minLatency < 0.0) {
+  static NetworkCondition normalPacketLatency(
+      double meanLatency, double standardDeviation, ChronoUnit timeUnit, Random random) {
+    if (meanLatency < 0.0) {
       throw new InvalidNetworkConditionException(
-          "Minimum latency should be greater than or equal to zero.");
-    } else if (maxLatency < minLatency) {
+          "Mean latency should be greater than or equal to zero.");
+    } else if (standardDeviation <= 0.0) {
       throw new InvalidNetworkConditionException(
-          "Minimum latency should be less than or equal to maximum latency.");
+          "Latency standard-deviation should be greater than zero.");
     }
     return new NetworkCondition() {
       @Override
       public <Wrapper extends PacketWrapper<Wrapper>>
           PacketFilter<Wrapper> asPacketFilterStartingAt(LocalDateTime startTime) {
         return new SimulatedPacketLatencyFilter<>(
-            new UniformRealDistribution(minLatency, maxLatency), timeUnit, startTime, random);
+            new NormalDistribution(meanLatency, standardDeviation), timeUnit, startTime, random);
       }
     };
   }
@@ -83,6 +83,25 @@ public interface NetworkCondition {
           PacketFilter<Wrapper> asPacketFilterStartingAt(LocalDateTime startTime) {
         return new SimulatedPacketLatencyFilter<>(
             new ExponentialDistribution(meanLatency), timeUnit, startTime, random);
+      }
+    };
+  }
+
+  static NetworkCondition uniformPacketLatency(
+      double minLatency, double maxLatency, ChronoUnit timeUnit, Random random) {
+    if (minLatency < 0.0) {
+      throw new InvalidNetworkConditionException(
+          "Minimum latency should be greater than or equal to zero.");
+    } else if (maxLatency < minLatency) {
+      throw new InvalidNetworkConditionException(
+          "Minimum latency should be less than or equal to maximum latency.");
+    }
+    return new NetworkCondition() {
+      @Override
+      public <Wrapper extends PacketWrapper<Wrapper>>
+          PacketFilter<Wrapper> asPacketFilterStartingAt(LocalDateTime startTime) {
+        return new SimulatedPacketLatencyFilter<>(
+            new UniformRealDistribution(minLatency, maxLatency), timeUnit, startTime, random);
       }
     };
   }
