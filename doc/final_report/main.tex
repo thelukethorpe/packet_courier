@@ -52,21 +52,19 @@
 }
 
 \begin{document}
+    \pagenumbering{gobble}
     \include{cover}
-    \pagenumbering{roman}
+    \null\clearpage
 
     \include{abstract}
+    \pagenumbering{roman}
+    \tableofcontents
 
-    \tableofcontents  %to make the table of contents
 
-%to start the page numbering from desired number we used
-
-    % start roman page numbering
-    \clearpage
-    \pagenumbering{arabic}  % start arabic page numbering
+    \null\clearpage
+    \pagenumbering{arabic}
 
 %chapter 1 formatting
-
 
     \chapter{Introduction}
     \pagestyle{fancy}
@@ -79,8 +77,8 @@
     \renewcommand{\footrulewidth}{2pt}
     \input{chapter_1_introduction.tex}
 
-%chapter 2 formatting
 
+%chapter 2 formatting
 
     \chapter{Background}
     \pagestyle{fancy}
@@ -93,8 +91,8 @@
     \renewcommand{\footrulewidth}{2pt}
     \input{chapter_2_background.tex}
 
-%chapter 3 formatting
 
+%chapter 3 formatting
 
     \chapter{Design}
     \pagestyle{fancy}
@@ -107,8 +105,8 @@
     \renewcommand{\footrulewidth}{2pt}
     \input{chapter_3_design.tex}
 
-%chapter 4 formatting
 
+%chapter 4 formatting
 
     \chapter{Implementation}
     \pagestyle{fancy}
@@ -121,8 +119,8 @@
     \renewcommand{\footrulewidth}{2pt}
     \input{chapter_4_implementation.tex}
 
-%chapter 5 formatting
 
+%chapter 5 formatting
 
     \chapter{Evaluation}
     \pagestyle{fancy}
@@ -135,8 +133,8 @@
     \renewcommand{\footrulewidth}{2pt}
     \input{chapter_5_evaluation.tex}
 
-%chapter 6 formatting
 
+%chapter 6 formatting
 
     \chapter{Conclusion}
     \pagestyle{fancy}
