@@ -2,8 +2,29 @@
 
 \subsection{tc-netem}
 
-Linux offers a network emulation tool, \emph{tc-netem}, as standard with the operating system\cite{tc_netem_8_man,
-    tc_netem_src}.
+The network emulation tool known as \emph{tc-netem} is a staple of the Linux operating system\cite{tc_netem_wiki,
+    tc_netem_8_man,tc_netem_src}. It allows users to attach a virtual packet pipeline to a local network device and
+offers the following features:
+\begin{itemize}
+    \item \textbf{Bandwidth throttling} \\
+    Constrains bitrate to a specified upper limit.
+    \item \textbf{Packet limiting} \\
+    Enforces that only a certain number of packets can be enqueued at any one time.
+    \item \textbf{Packet delay} \\
+    Imbues packets with an artificial latency in keeping with a chosen distribution (uniform, normal, Pareto or
+    Pareto-normal).
+    \item \textbf{Packet loss} \\
+    Drops packets according to a parameterized strategy (a Bernoulli distribution, a 4-state Markov chain or the
+    Gilbert-Elliott model\cite{ge_model}).
+    \item \textbf{Packet corruption} \\
+    Samples a Bernoulli distribution and flips a bit at random on success.
+    \item \textbf{Packet duplication} \\
+    Samples a Bernoulli distribution and duplicates the given packet on success (notably can be generalised to a
+    Poisson distribution rather trivially).
+    \item \textbf{Packet slotting} \\
+    Partitions packets into ``slots'' which are released in their entirety in accordance with some criterion (notably
+    can be used to emulate burst behaviours).
+\end{itemize}
 
 
 \section{Related Technologies}
