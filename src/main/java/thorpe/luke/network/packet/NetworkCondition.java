@@ -6,6 +6,20 @@ import java.util.Random;
 import thorpe.luke.distribution.*;
 
 public interface NetworkCondition {
+  static NetworkCondition packetLimit(int packetLimit) {
+    if (packetLimit < 0) {
+      throw new InvalidNetworkConditionException(
+          "Packet limit should be greater than or equal to 0.");
+    }
+    return new NetworkCondition() {
+      @Override
+      public <Wrapper extends PacketWrapper<Wrapper>>
+          PacketFilter<Wrapper> asPacketFilterStartingAt(LocalDateTime startTime) {
+        return new PacketLimitingFilter<>(packetLimit);
+      }
+    };
+  }
+
   static NetworkCondition uniformPacketCorruption(double corruptionProbability, Random random) {
     if (corruptionProbability < 0.0 || 1.0 < corruptionProbability) {
       throw new InvalidNetworkConditionException(
