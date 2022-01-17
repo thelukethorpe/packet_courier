@@ -16,7 +16,7 @@ public class SimulatedPacketLatencyFilter<Wrapper extends PacketWrapper<Wrapper>
   private final Distribution<Double> latencyDistribution;
   private final ChronoUnit timeUnit;
   private final Random random;
-  private LocalDateTime now;
+  private volatile LocalDateTime now;
 
   public SimulatedPacketLatencyFilter(
       Distribution<Double> latencyDistribution,
