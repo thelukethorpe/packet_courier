@@ -20,6 +20,20 @@ public interface NetworkCondition {
     };
   }
 
+  static NetworkCondition packetThrottle(int throttleRate, ChronoUnit timeUnit) {
+    if (throttleRate < 0) {
+      throw new InvalidNetworkConditionException(
+          "Packet throttle rate should be greater than or equal to 0.");
+    }
+    return new NetworkCondition() {
+      @Override
+      public <Wrapper extends PacketWrapper<Wrapper>>
+          PacketFilter<Wrapper> asPacketFilterStartingAt(LocalDateTime startTime) {
+        return new PacketThrottlingFilter<>(throttleRate, timeUnit, startTime);
+      }
+    };
+  }
+
   static NetworkCondition uniformPacketCorruption(double corruptionProbability, Random random) {
     if (corruptionProbability < 0.0 || 1.0 < corruptionProbability) {
       throw new InvalidNetworkConditionException(

@@ -18,10 +18,6 @@ public class Mail implements PacketWrapper<Mail> {
     return destinationAddress;
   }
 
-  public Packet getPacket() {
-    return packet;
-  }
-
   @Override
   public Mail map(Function<Packet, Packet> function) {
     return new Mail(destinationAddress, function.apply(packet));
@@ -30,5 +26,10 @@ public class Mail implements PacketWrapper<Mail> {
   @Override
   public Mail copy() {
     return new Mail(destinationAddress, packet.copy());
+  }
+
+  @Override
+  public Packet getPacket() {
+    return packet;
   }
 }

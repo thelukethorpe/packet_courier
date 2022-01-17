@@ -6,4 +6,6 @@ public interface PacketWrapper<Wrapper extends PacketWrapper<Wrapper>> {
   Wrapper map(Function<Packet, Packet> function);
 
   Wrapper copy();
+
+  Packet getPacket();
 }

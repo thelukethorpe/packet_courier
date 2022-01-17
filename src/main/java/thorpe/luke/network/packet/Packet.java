@@ -45,6 +45,10 @@ public class Packet implements PacketWrapper<Packet> {
     return new ArrayList<>(data);
   }
 
+  public int countBytes() {
+    return data.size();
+  }
+
   @Override
   public int hashCode() {
     return data.hashCode();
@@ -62,6 +66,11 @@ public class Packet implements PacketWrapper<Packet> {
   @Override
   public Packet copy() {
     return new Packet(new ArrayList<>(data));
+  }
+
+  @Override
+  public Packet getPacket() {
+    return this;
   }
 
   @Override
