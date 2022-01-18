@@ -17,7 +17,7 @@ offers the following features:
     Drops packets according to a parameterized strategy (a Bernoulli distribution, a 4-state Markov chain or the
     Gilbert-Elliott model\cite{ge_model}).
     \item \textbf{Packet corruption} \\
-    Samples a Bernoulli distribution and flips a bit at random on success.
+    Samples a Bernoulli distribution and flips a random bit on success.
     \item \textbf{Packet duplication} \\
     Samples a Bernoulli distribution and duplicates the given packet on success (notably can be generalised to a
     Poisson distribution rather trivially).
@@ -31,7 +31,25 @@ tool appears to be so rich in its capabilities that one could build a packet pip
 network conditions, and as such, \texttt{tc-netem} has set the bar when it comes to the depth of possible
 configuration. It is not without its downsides, though, the first of which being that it is a Linux native
 application. There are analogous products for Mac in the form of \texttt{ns-2}\cite{ns_2_man, ns_2_wiki} and
-\texttt{Network Link Conditioner}\cite{nlc}, and similarly \texttt{ipfw}\cite{ipfw,ipfw_man} for Windows.
+\texttt{Network Link Conditioner}\cite{nlc}, and similarly \texttt{ipfw}\cite{ipfw,ipfw_man} for Windows, which are
+deserving of investigation on their own merits. Yet, unless an OS adaptive approach is undertaken at the design
+stage, their existence alone does little to console their lack of platform agnosticism.
+
+\texttt{tc-netem} also happens to be deficient when it comes to the ``quality of life'' of a prospective user. If basic
+packet modulation is all that is required, then \texttt{tc-netem} does the job excellently. Consider a game developer
+who wishes to ensure that their game runs relatively smoothly in spite of latency and jitter, but does not necessarily
+have the material means to establish a genuine WAN\cite{wan_cisco} connection between two game instances. In this
+case, \texttt{tc-netem} can be utilised to full effect; with a simple, one-time terminal command, a packet pipeline
+can be established between two local game clients.
+
+Now consider a complex and innovative game being developed by a
+studio with over one thousand employees. The scope of the game is so vast that it requires computation to be split over
+multiple machines forming an intricate topology, which in turn will serve hundreds of client requests every second.
+Although \texttt{tc-netem} could in principle deliver the testbed demands of such a system, it almost certainly
+could not be done by hand, so to speak. Instead, it would necessitate some kind of managment software that would wrap
+the \texttt{tc-netem} functionality and present programmers with a palatable interface, only then to \emph{still}
+fall foul of platform dependency concerns; a non-trivial set of concerns for an innately multi-platform exercise such
+has video game development.
 
 
 \section{Related Technologies}
