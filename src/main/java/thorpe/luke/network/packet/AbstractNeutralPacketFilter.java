@@ -1,18 +1,16 @@
 package thorpe.luke.network.packet;
 
 import java.time.LocalDateTime;
-import java.util.LinkedList;
 import java.util.Optional;
 import java.util.Queue;
 
-public class PacketLimitingFilter<Wrapper extends PacketWrapper<Wrapper>>
+abstract class AbstractNeutralPacketFilter<Wrapper extends PacketWrapper<Wrapper>>
     implements PacketFilter<Wrapper> {
 
-  private final Queue<Wrapper> packetWrapperQueue = new LinkedList<>();
-  private final int limit;
+  private final Queue<Wrapper> packetWrapperQueue;
 
-  public PacketLimitingFilter(int limit) {
-    this.limit = limit;
+  protected AbstractNeutralPacketFilter(Queue<Wrapper> packetWrapperQueue) {
+    this.packetWrapperQueue = packetWrapperQueue;
   }
 
   @Override
@@ -22,9 +20,7 @@ public class PacketLimitingFilter<Wrapper extends PacketWrapper<Wrapper>>
 
   @Override
   public void enqueue(Wrapper packetWrapper) {
-    if (packetWrapperQueue.size() < limit) {
-      packetWrapperQueue.offer(packetWrapper);
-    }
+    packetWrapperQueue.offer(packetWrapper);
   }
 
   @Override

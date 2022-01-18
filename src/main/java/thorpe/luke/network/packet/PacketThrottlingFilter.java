@@ -2,34 +2,31 @@ package thorpe.luke.network.packet;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.LinkedList;
 import java.util.Optional;
 import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class PacketThrottlingFilter<Wrapper extends PacketWrapper<Wrapper>>
     implements PacketFilter<Wrapper> {
 
-  private final Queue<Wrapper> packetWrapperQueue = new ConcurrentLinkedQueue<>();
-  private final Lock dequeueLock = new ReentrantLock();
-  private final int throttleRate;
+  private final Queue<Wrapper> packetWrapperQueue = new LinkedList<>();
+  private final int byteThrottleRate;
   private final ChronoUnit timeUnit;
-  private final AtomicLong byteBudget;
+  private long byteBudget;
   private LocalDateTime now;
 
-  public PacketThrottlingFilter(int throttleRate, ChronoUnit timeUnit, LocalDateTime startTime) {
-    this.throttleRate = throttleRate;
-    this.byteBudget = new AtomicLong(0);
+  public PacketThrottlingFilter(
+      int byteThrottleRate, ChronoUnit timeUnit, LocalDateTime startTime) {
+    this.byteThrottleRate = byteThrottleRate;
     this.timeUnit = timeUnit;
+    this.byteBudget = 0;
     this.now = startTime;
   }
 
   @Override
   public void tick(LocalDateTime now) {
     long timeElapsed = timeUnit.between(this.now, now);
-    byteBudget.addAndGet(timeElapsed * throttleRate);
+    byteBudget += timeElapsed * byteThrottleRate;
     this.now = now;
   }
 
@@ -40,21 +37,16 @@ public class PacketThrottlingFilter<Wrapper extends PacketWrapper<Wrapper>>
 
   @Override
   public Optional<Wrapper> tryDequeue() {
-    dequeueLock.lock();
-    try {
-      Wrapper packetWrapper = packetWrapperQueue.peek();
-      if (packetWrapper == null) {
-        return Optional.empty();
-      }
-      int packetByteCount = packetWrapper.getPacket().countBytes();
-      if (packetByteCount > byteBudget.get()) {
-        return Optional.empty();
-      }
-      byteBudget.addAndGet(-packetByteCount);
-      packetWrapperQueue.poll();
-      return Optional.of(packetWrapper);
-    } finally {
-      dequeueLock.unlock();
+    Wrapper packetWrapper = packetWrapperQueue.peek();
+    if (packetWrapper == null) {
+      return Optional.empty();
     }
+    int packetByteCount = packetWrapper.getPacket().countBytes();
+    if (packetByteCount > byteBudget) {
+      return Optional.empty();
+    }
+    byteBudget -= packetByteCount;
+    packetWrapperQueue.poll();
+    return Optional.of(packetWrapper);
   }
 }
