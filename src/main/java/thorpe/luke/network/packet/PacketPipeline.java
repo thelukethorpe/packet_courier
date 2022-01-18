@@ -1,14 +1,11 @@
 package thorpe.luke.network.packet;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class PacketPipeline<Wrapper extends PacketWrapper<Wrapper>> {
-  private final ArrayList<PacketFilter<Wrapper>> packetFilters;
+  private final List<PacketFilter<Wrapper>> packetFilters;
 
   public PacketPipeline(Parameters packetPipelineParameters, LocalDateTime startTime) {
     this(
@@ -22,8 +19,8 @@ public class PacketPipeline<Wrapper extends PacketWrapper<Wrapper>> {
   }
 
   private PacketPipeline(List<PacketFilter<Wrapper>> packetFilters) {
-    this.packetFilters = new ArrayList<>(packetFilters);
-    this.packetFilters.add(new NeutralPacketFilter<>());
+    packetFilters.add(0, new ConcurrentNeutralPacketFilter<>());
+    this.packetFilters = Collections.unmodifiableList(new ArrayList<>(packetFilters));
   }
 
   public static Parameters perfectParameters() {

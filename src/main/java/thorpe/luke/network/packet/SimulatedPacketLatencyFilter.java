@@ -4,19 +4,18 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
+import java.util.PriorityQueue;
 import java.util.Random;
 import thorpe.luke.distribution.Distribution;
-import thorpe.luke.util.concurrent.ConcurrentLinkedPriorityQueue;
 
 public class SimulatedPacketLatencyFilter<Wrapper extends PacketWrapper<Wrapper>>
     implements PacketFilter<Wrapper> {
 
-  private final ConcurrentLinkedPriorityQueue<ScheduledPacket> packetQueue =
-      new ConcurrentLinkedPriorityQueue<>();
+  private final PriorityQueue<ScheduledPacket> packetQueue = new PriorityQueue<>();
   private final Distribution<Double> latencyDistribution;
   private final ChronoUnit timeUnit;
   private final Random random;
-  private volatile LocalDateTime now;
+  private LocalDateTime now;
 
   public SimulatedPacketLatencyFilter(
       Distribution<Double> latencyDistribution,
@@ -43,9 +42,12 @@ public class SimulatedPacketLatencyFilter<Wrapper extends PacketWrapper<Wrapper>
 
   @Override
   public Optional<Wrapper> tryDequeue() {
-    return Optional.ofNullable(
-            packetQueue.pollIf(front -> front.getScheduledDequeueTime().isAfter(now)))
-        .map(ScheduledPacket::getPacketWrapper);
+    ScheduledPacket scheduledPacket = packetQueue.peek();
+    if (scheduledPacket == null || scheduledPacket.getScheduledDequeueTime().isBefore(now)) {
+      return Optional.empty();
+    }
+    packetQueue.poll();
+    return Optional.of(scheduledPacket).map(ScheduledPacket::getPacketWrapper);
   }
 
   private class ScheduledPacket implements Comparable<ScheduledPacket> {
