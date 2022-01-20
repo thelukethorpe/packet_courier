@@ -90,6 +90,22 @@ tutorial:
     as smoothly as possible.
 \end{itemize}
 
+The guide also details a walk-through of an example simulation, \texttt{first.cc}, programmed in C++ and entailing a
+mixed bag of non-self-evident semantic quirks native to the \texttt{ns-3} framework. One such quirk is how
+granularity is configured with respect to time:
+
+\begin{lstlisting}[language=C++]
+    Time::SetResolution (Time::NS);
+\end{lstlisting}
+
+Upon closer inspection, the \texttt{SetResolution} function is static and can only be invoked once due to memory
+management constraints. In essence, this code is making an unconstrained change to the global program state out of thin
+air, reaping the benefits of a programming style that is generally perceived as unsavoury within software engineering
+circles\cite{stack_exchange_static_methods, git_connected_static_methods, medium_static_methods,
+    tom_butler_static_methods}. Even those who play Devil's advocate to this school of thought tend to do so with the
+caveat that the static manipulation of global artifacts is dangerous and almost never
+necessary\cite{java_code_geeks_static_methods}.
+
 
 \section{Related Technologies}
 
