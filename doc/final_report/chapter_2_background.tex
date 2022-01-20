@@ -104,7 +104,30 @@ air, reaping the benefits of a programming style that is generally perceived as 
 circles\cite{stack_exchange_static_methods, git_connected_static_methods, medium_static_methods,
     tom_butler_static_methods}. Even those who play Devil's advocate to this school of thought tend to do so with the
 caveat that the static manipulation of global artifacts is dangerous and almost never
-necessary\cite{java_code_geeks_static_methods}.
+necessary\cite{java_code_geeks_static_methods}. Although, one could certainly argue that these techniques are merely
+emblematic of low-level paradigms that are inherently less restrained.
+
+Without hampering on topics of stylistic nuance, it is important to consider how any prospective solution will be
+used. It is surely almost tautological to say that the more self-evident an interface is in its operability, the
+simpler it is to use. Through this lens much can be learnt from the how \texttt{ns-3} chooses to present itself to
+the user. For example, the next few lines of code in \texttt{first.cc} are:
+
+\begin{lstlisting}[language=C++,firstnumber=2]
+    LogComponentEnable (``UdpEchoClientApplication'', LOG_LEVEL_INFO);
+    LogComponentEnable (``UdpEchoServerApplication'', LOG_LEVEL_INFO);
+
+    NodeContainer nodes;
+    nodes.Create (2);
+
+    PointToPointHelper pointToPoint;
+    pointToPoint.SetDeviceAttribute (``DataRate'', StringValue (``5Mbps''));
+    pointToPoint.SetChannelAttribute (``Delay'', StringValue (``2ms''));
+\end{lstlisting}
+
+Free-floating strings are used throughout the \texttt{ns-3} API in the manner observed above, namely as a mechanism to
+retrieve and inject information into the global simulation state. Design choices of this nature needlessly burdern the
+developer with the responsibility of ensuring the syntax and semantics of their configuration are correct, something
+that can and should be woven into the root language where possible.
 
 
 \section{Related Technologies}
