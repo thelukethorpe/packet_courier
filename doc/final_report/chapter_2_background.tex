@@ -105,7 +105,7 @@ circles\cite{stack_exchange_static_methods, git_connected_static_methods, medium
     tom_butler_static_methods}. Even those who play Devil's advocate to this school of thought tend to do so with the
 caveat that the static manipulation of global artifacts is dangerous and almost never
 necessary\cite{java_code_geeks_static_methods}. Although, one could certainly argue that these techniques are merely
-emblematic of low-level paradigms that are inherently less restrained.
+emblematic of low-level paradigms that are inherently more open-ended.
 
 Without hampering on topics of stylistic nuance, it is important to consider how any prospective solution will be
 used. It is surely almost tautological to say that the more self-evident an interface is in its operability, the
@@ -126,8 +126,26 @@ the user. For example, the next few lines of code in \texttt{first.cc} are:
 
 Free-floating strings are used throughout the \texttt{ns-3} API in the manner observed above, namely as a mechanism to
 retrieve and inject information into the global simulation state. Design choices of this nature needlessly burdern the
-developer with the responsibility of ensuring the syntax and semantics of their configuration are correct, something
+developer with the responsibility of ensuring the syntax and semantics of their configuration are correct; something
 that can and should be woven into the root language where possible.
+
+The flip-side of a less prescriptive specification is an increased degree of freedom, which is amply on display in
+the \texttt{ns-3} library. The sheer depth of possibility on offer here is somewhat akin to staring into the abyss.
+\texttt{ns-3} appears to be an apparatus of simulation in its most literal form; every minor concern that one could
+deliberate over when constructing a network in the real world is just as valid a concern here, all the way down to
+the individual MAC and IPv6 addresses for each network device. Herein lies a genuine dichotomy between reductive
+simplicity and bewildering complexity; the documentation for \texttt{tc-netem} fits on 5 pages of
+A4\cite{tc_netem_8_man}, whereas the instruction manual for \texttt{ns-3} consists of a 139 pdf\cite{ns_3_man_pdf}.
+Moreover, there is \texttt{ns-3} source code that remains unaccounted for in the form of
+\texttt{ns3::ErrorModel::DoCorrupt}. The word ``corrupt'' does not appear anywhere in what can only be described as
+a book of dense technical discourse. This leaves anyone who wants to introduce some notion of packet corruption into
+their model stranded to uncover this entrenched information for themselves. These are barriers to entry that
+assuredly must be absent in whatever innovation emerges from this thesis.
+
+On balance, one could make a good case that these criticisms are unsporting, for they are disparaging a fish for its
+inability to climb a tree\cite{einstein_quotes}. \texttt{ns-3} undeniably has applications, however, they are likely
+to live in specialist domains whereby teams of engineers can devote the necessary time to examine the tool fully.
+Only then could one ever hope to extract all the riches beholden to it.
 
 
 \section{Related Technologies}
