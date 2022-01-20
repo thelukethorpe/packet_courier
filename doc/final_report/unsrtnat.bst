@@ -900,6 +900,7 @@ FUNCTION {manual}
   organization output
   address output
   format.edition output
+  format.pages output
   format.date output
   format.url output
   new.block
