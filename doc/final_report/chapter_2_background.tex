@@ -70,7 +70,25 @@ Introducing \texttt{ns-3}, a discrete-event network simulator that provides a \e
 features\cite{ns_3_man} and boasting a repository of 378 subdirectories containing nearly 900,000 lines of C++ source
 code\cite{ns_3_gitlab}. It naturally follows that the ensuing API is a behemoth of riddling complexity on first
 glance, but a helpful \emph{traveller's guide} put together by the \texttt{ns-3} dev-team supplies an intuitive and
-well-established entry-point\cite{ns_3_man_pdf}.
+well-established entry-point\cite{ns_3_man_pdf}. In tow, five essential concepts are introduced within the \texttt{ns-3}
+tutorial:
+\begin{itemize}
+    \item \textbf{Node} \\
+    A point of interconnection within a larger topology (just as in graph theory). In the context of an \texttt{ns-3}
+    simulation, this can be thought of as a machine in a wider network.
+    \item \textbf{Application} \\
+    A C++ class that encodes for the behaviour of a user-level program, which can in turn be executed on a Node.
+    \item \textbf{Channel} \\
+    A network medium over which data flows. This can be configured to represent any arbitrary connection, such as a
+    simple wire, an Ethernet switch, WiFi or a 4G link.
+    \item \textbf{Net Device} \\
+    An intermediate abstraction that modulates the communication between a node and its adjacent channels. This
+    represents both the physical network interface card and the accompanying firmware that are required of any device
+    to send packets over a network.
+    \item \textbf{Topology Helpers} \\
+    A suite of subroutines and convenience utilities that allow users to set up and configure their virtual networks
+    as smoothly as possible.
+\end{itemize}
 
 
 \section{Related Technologies}
