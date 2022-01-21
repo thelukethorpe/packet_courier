@@ -148,8 +148,8 @@ developers over a non-trivial length of time. Only then could one ever hope to e
 \subsection{Elixir}
 
 Distributed algorithms have become such a fundamental aspect of computational infrastructure that there are entire
-programming languages built around the paradigm. Elixir, a functional language that takes advantage of the Elrang VM,
-is one such example\cite{elixir, erlang}.
+programming languages built around the paradigm. One such example is Elixir, a functional language that takes advantage
+of the Elrang VM\cite{elixir, erlang}.
 
 Even though Elixir could hardly be dubbed as a ``simulation tool'' outright, it could be considered a distant cousin.
 There are many parallels to be drawn between the language semantics of Elixir and the various abstractions that
@@ -162,6 +162,32 @@ a thread (in programmatic terms) or a node (in networking terms)\cite{elixir_pro
 to one another using the \texttt{send} function, which takes the process-id of the recipient and the message content as
 an Elixir object. Delivery of messages is guarunteed, as the Erlang VM leverages TCP in its underlying
 protocol\cite{erlang_protocol}.
+
+Each Elixir process also has a \emph{mailbox}, which is a handy abstraction for where messages are posted upon
+delivery. Upon calling \texttt{receive}, a process will wait until a message that matches the current pattern is
+delivered to the mailbox.
+
+\begin{lstlisting}
+    iex> send(self(), {:hello, ``world''})
+    {:hello, ``world''}
+    iex> receive do
+    ...>   {:hello, msg} -> msg
+    ...>   {:world, _msg} -> ``won't match''
+    ...> end
+    ``world''
+\end{lstlisting}
+
+Elixir processes can spawn child processes, much in a similar way to how a thread can spawn further threads. The
+\texttt{spawn} function returns the process-id of the associated child process, so the parent can always identify its
+child. The reverse does not apply; a child process could go its entire life without knowing its parent. A parent
+process could choose to inform its child of its process-id as a matter of procedure, but ultimately this is at the
+discretion of the developer.
+
+While there is certainly more to be said on Elixir as a programming language, the concepts covered thus far lay out
+much of the foundational abstractions that make it distinct. Furthermore, they seem to implicitly encapsulate what a
+software engineer in this field would care about in the abstract; nodes in the topology and how they communicate.
+As such, a similar set of semantics would likely form a terrific basis on which to design an elegant and intuitive
+tool for distributed simulation.
 
 
 \section{Related Technologies}
