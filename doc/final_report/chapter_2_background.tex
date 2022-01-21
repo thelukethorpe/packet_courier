@@ -157,6 +157,12 @@ have been observed in \texttt{tc-netem} and \texttt{ns-3}. Examining how the lan
 yield valuable insights into how engineers implement distributed systems at a high level, and as such, what kind of
 environment they might expect to see in a simulation library.
 
+One of the crucial building blocks of Elixir is the \emph{process}, a lightweight abstraction that can be likened to
+a thread (in programmatic terms) or a node (in networking terms)\cite{elixir_processes}. Processes can pass messages
+to one another using the \texttt{send} function, which takes the process-id of the recipient and the message content as
+an Elixir object. Delivery of messages is guarunteed, as the Erlang VM leverages TCP in its underlying
+protocol\cite{erlang_protocol}.
+
 
 \section{Related Technologies}
 
