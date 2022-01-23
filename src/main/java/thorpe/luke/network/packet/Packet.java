@@ -1,5 +1,6 @@
 package thorpe.luke.network.packet;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.StreamCorruptedException;
@@ -30,7 +31,10 @@ public class Packet implements PacketWrapper<Packet> {
   public <T> Optional<T> tryParse() {
     try {
       return Optional.of((T) ByteUtils.deserialize(ByteUtils.toArray(getData())));
-    } catch (ClassCastException | ClassNotFoundException | StreamCorruptedException e) {
+    } catch (ClassCastException
+        | ClassNotFoundException
+        | StreamCorruptedException
+        | EOFException e) {
       return Optional.empty();
     } catch (IOException e) {
       throw new PacketException(e);
