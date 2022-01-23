@@ -151,7 +151,7 @@ Distributed algorithms have become such a fundamental aspect of computational in
 programming languages built around the paradigm. One such example is Elixir, a functional language that takes advantage
 of the Elrang VM\cite{elixir, erlang}.
 
-Even though Elixir could hardly be dubbed as a ``simulation tool'' outright, it could be considered a distant cousin.
+Even though Elixir could hardly be dubbed as a ``simulation tool'' outright, it could be considered a close cousin.
 There are many parallels to be drawn between the language semantics of Elixir and the various abstractions that
 have been observed in \texttt{tc-netem} and \texttt{ns-3}. Examining how the language is structured will hopefully
 yield valuable insights into how engineers implement distributed systems at a high level, and as such, what kind of
@@ -177,9 +177,9 @@ delivered to the mailbox.
     ``world''
 \end{lstlisting}
 
-Elixir processes can spawn child processes, much in a similar way to how a thread can spawn further threads. The
-\texttt{spawn} function returns the process-id of the associated child process, so the parent can always identify its
-child. The reverse does not apply; a child process could go its entire life without knowing its parent. A parent
+Elixir processes can spawn child processes, much in a similar way to how a thread can create and run further threads.
+The \texttt{spawn} function returns the process-id of the associated child process, so the parent can always identify
+its child. The reverse does not apply; a child process could go its entire life without knowing its parent. A parent
 process could choose to inform its child of its process-id as a matter of procedure, but ultimately this is at the
 discretion of the developer.
 
