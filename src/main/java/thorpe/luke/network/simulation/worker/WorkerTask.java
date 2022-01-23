@@ -1,33 +1,33 @@
 package thorpe.luke.network.simulation.worker;
 
-import java.time.Duration;
-import java.time.temporal.TemporalUnit;
 import java.util.concurrent.*;
 
 public class WorkerTask {
   private final Runnable runnable;
-  private final Duration duration;
+  private final long time;
+  private final TimeUnit unit;
 
-  private WorkerTask(Runnable runnable, Duration duration) {
+  public WorkerTask(Runnable runnable, long time, TimeUnit unit) {
     this.runnable = runnable;
-    this.duration = duration;
+    this.time = time;
+    this.unit = unit;
   }
 
   private void execute() {
-    ExecutorService executorService = Executors.newSingleThreadExecutor();
-    Future<?> result = executorService.submit(runnable);
+    Future<Void> result =
+        CompletableFuture.supplyAsync(
+            () -> {
+              runnable.run();
+              return null;
+            });
     try {
-      if (duration == null) {
-        result.get();
-      } else {
-        // Nanos are the smallest time unit for a Duration.
-        result.get(duration.toNanos(), TimeUnit.NANOSECONDS);
-      }
-    } catch (InterruptedException | ExecutionException | TimeoutException e) {
+      result.get(time, unit);
+    } catch (ExecutionException e) {
+      throw new WorkerException(e);
+    } catch (InterruptedException | TimeoutException e) {
       // Do nothing.
     } finally {
-      // Kill any hanging threads.
-      executorService.shutdownNow();
+      result.cancel(true);
     }
   }
 
@@ -36,17 +36,19 @@ public class WorkerTask {
   }
 
   public static class Configuration {
-    private Duration duration;
+    private long time = 0;
+    private TimeUnit unit = TimeUnit.MILLISECONDS;
 
     private Configuration() {}
 
-    public Configuration withTimeout(long time, TemporalUnit unit) {
-      duration = Duration.of(time, unit);
+    public Configuration withTimeout(long time, TimeUnit unit) {
+      this.time = time;
+      this.unit = unit;
       return this;
     }
 
     public void execute(Runnable runnable) {
-      WorkerTask workerTask = new WorkerTask(runnable, duration);
+      WorkerTask workerTask = new WorkerTask(runnable, time, unit);
       workerTask.execute();
     }
 

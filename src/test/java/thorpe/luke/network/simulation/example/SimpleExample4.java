@@ -1,7 +1,8 @@
 package thorpe.luke.network.simulation.example;
 
-import java.time.temporal.ChronoUnit;
+import java.util.Optional;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 import thorpe.luke.log.ConsoleLogger;
 import thorpe.luke.network.packet.NetworkCondition;
@@ -28,19 +29,22 @@ public class SimpleExample4 {
   public static void runNodeB(WorkerManager<SimpleExample4NodeInfo> workerManager) {
     // Node B waits for messages from node A and automatically shuts down after 5 seconds.
     WorkerTask.configure()
-        .withTimeout(5, ChronoUnit.SECONDS)
+        .withTimeout(5, TimeUnit.SECONDS)
         .execute(
             () -> {
               do {
                 Packet packet = workerManager.waitForMail();
-                packet
-                    .tryParse()
-                    .ifPresent(
-                        message ->
-                            workerManager.log(
-                                workerManager.getInfo().getNodeBAddress()
-                                    + " has received the following message: "
-                                    + message));
+                Optional<String> parsedPacket = packet.tryParse();
+                if (parsedPacket.isPresent()) {
+                  workerManager.log(
+                      workerManager.getAddress()
+                          + " has received the following message: "
+                          + parsedPacket.get());
+                } else {
+                  workerManager.log(
+                      workerManager.getAddress()
+                          + " has received a packet that could not be parsed!");
+                }
               } while (true);
             });
   }

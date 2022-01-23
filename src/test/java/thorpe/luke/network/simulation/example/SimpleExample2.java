@@ -1,8 +1,8 @@
 package thorpe.luke.network.simulation.example;
 
 import java.time.temporal.ChronoField;
-import java.time.temporal.ChronoUnit;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 import thorpe.luke.log.ConsoleLogger;
 import thorpe.luke.network.packet.NetworkCondition;
 import thorpe.luke.network.packet.Packet;
@@ -21,7 +21,7 @@ public class SimpleExample2 {
   public static void runNode(WorkerManager<DefaultNodeInfo> workerManager) {
     // Simple flood algorithm. Nodes timeout after 10 seconds.
     WorkerTask.configure()
-        .withTimeout(10, ChronoUnit.SECONDS)
+        .withTimeout(10, TimeUnit.SECONDS)
         .execute(
             () -> {
               for (NodeAddress neighbour : workerManager.getInfo().getNeighbours()) {

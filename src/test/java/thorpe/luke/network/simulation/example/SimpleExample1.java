@@ -2,6 +2,7 @@ package thorpe.luke.network.simulation.example;
 
 import java.time.temporal.ChronoUnit;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 import thorpe.luke.log.ConsoleLogger;
 import thorpe.luke.network.packet.NetworkCondition;
 import thorpe.luke.network.packet.Packet;
@@ -34,7 +35,7 @@ public class SimpleExample1 {
   public static void runNodeB(WorkerManager<SimpleExample1NodeInfo> workerManager) {
     // Node B waits for messages from node A and automatically shuts down after 5 seconds.
     WorkerTask.configure()
-        .withTimeout(5, ChronoUnit.SECONDS)
+        .withTimeout(5, TimeUnit.SECONDS)
         .execute(
             () -> {
               do {
