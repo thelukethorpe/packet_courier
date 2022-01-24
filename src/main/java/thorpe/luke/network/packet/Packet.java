@@ -30,7 +30,7 @@ public class Packet implements PacketWrapper<Packet> {
 
   public <T> Optional<T> tryParse() {
     try {
-      return Optional.of((T) ByteUtils.deserialize(ByteUtils.toArray(getData())));
+      return Optional.ofNullable((T) ByteUtils.deserialize(ByteUtils.toArray(getData())));
     } catch (ClassCastException
         | ClassNotFoundException
         | StreamCorruptedException
