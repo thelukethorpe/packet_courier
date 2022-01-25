@@ -291,8 +291,9 @@ the implementation documented as well.
 
 \section{INTERIM REPORT ONLY: Evaluation Plan}
 
-There seem to be two dimensions of success that can be measured when evaluting this project: the quality of user
-experience and the power and performance of the tool. The former posits abstract and qualitative questions such as:
+\lettrine{T}{here} seem to be two dimensions of success that can be measured when evaluating this project: the quality
+of user experience and the power and performance of the tool. The former posits abstract and qualitative questions
+such as:
 \begin{itemize}
     \item How intuitive is this tool?
     \item How quickly can I integrate it with my current test suite?
@@ -305,22 +306,42 @@ These are just some of the very valid and quite probable questions that will be 
 experience. Naturally, they are also somewhat illusive when it comes to actually being answered in a satisfactory way
 . Of course, a minority of such questions can be addressed in a vacuum. For example, is the cab of a Rolls Royce more
 comfortable than a solitary confinement cell in Guantanamo Bay? The answer is patently obvious, yet it is undoubtedly
-a question of user experience. 
+a question of user experience.
+
+Putting trivial examples aside, one way of measuring the quality of user experience enabled by the end product is to
+establish a pipeline for expected usage and compare this to other leading products. If our solution has fewer steps
+that are markedly simpler, then this is one metric that can be used. In addition, experiments with real people can be
+conducted, measuring quantities such as time taken or number of clicks required to perform particular tasks within
+the framework. Anonymous, long-form surveys can be conducted as well. Ultimately the approach taken will depend on
+the exact nature of the feature being analysed. Admitedly, this is all very loose and will definitely need to be
+considered in more detail (and in a more concrete manner) as the user-focus is refined in the coming weeks.
+
+There are less subjective metrics that can be used in the context of technical performance, however. The most
+critical of which being the maximum number of workers that a simulation is capable of managing at any given time, and
+how it reacts to any upper limits being abruptly crashed into. Do these values change depending on the machine, and
+in what way exactly? Would it be possible to run some kind of proprietary diagnostic that could inform the current
+user of their machine's limitations?
+
+Ultimately the maximum size of supported topology and the time taken to execute standard algorithms are two simple
+quantities that can be compared across multiple simulation tools for contrast and compare. Although these will
+certainly be very useful experiments to conduct, if nothing else for the information of any prospective user, the
+niche that this tool is attempting to appeal are likely to value improvements in usability and user experience than
+performance metrics.
 
 
 \section{INTERIM REPORT ONLY: Ethical Issues}
 
 \lettrine{A}{s} far as I can tell, this project has virtually zero impact on the well-being or suffering of conscious
-creatures, beyond allowing people to test their distributed algorithms in a more convinient way. If there was ever an
-architypally ``amoral'' endeavour, then it'd probably sound something like this. If an extremist political group
+creatures, beyond allowing people to test their distributed algorithms in a more convenient way. If there was ever an
+archetypal ``amoral'' endeavour, then it'd probably sound something like this. If an extremist political group
 wishes to abuse the fruits of these labours to develop a super-weapon of mass destruction under the guise of
 distributed computing, then I'm not sure there's much that can be done to stop them.
 
 The only serious concerns arise in the unlikely scenario whereby the final solution contains crippling bugs or security
 vulnerabilities that end up causing collateral damage to users. This can be remidied by ensuring that any
-distributions of the tool are accomompanied by a sufficiently encompassing liscence that exonerates liability for any
+distributions of the tool are accompanied by a sufficiently encompassing licence that exonerates liability for any
 damages. While the ideal solution is just to ensure that no such issues exist, that would be quite a naive and
 arrogant expectation. A simple and popular logging tool was recently discovered to have a major security leak
 (https://www.ncsc.gov.uk/information/log4j-vulnerability-what-everyone-needs-to-know); why would I assume any code I
-write would be free of similiar issues? As such, the liscenes of any tools used should also be taken into account as
+write would be free of similar issues? As such, the liscenes of any tools used should also be taken into account as
 well.
