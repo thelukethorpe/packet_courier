@@ -143,7 +143,7 @@ be absent in whatever innovation emerges from this thesis.
 On balance, one could make a good case that these criticisms are unsporting, for they are disparaging a fish for its
 inability to climb a tree\cite{einstein_quotes}. \texttt{ns-3} undeniably has applications, however, they are likely
 to live in specialist domains. A full examination of this tool would demand the devotion of an entire team of
-developers over a non-trivial length of time. Only then could one ever hope to extract all the riches beholden to it.
+developers over a non-trivial length of time; only then could one ever hope to extract all the riches beholden to it.
 
 \subsection{Elixir}
 
@@ -194,10 +194,64 @@ tool for distributed simulation.
 
 TODO
 
+\newpage
+
 
 \section{INTERIM REPORT ONLY: Project Plan}
 
-TODO
+\lettrine{G}{iven} that these next sections will only appear as part of the interim report (which in turn is purely a
+feedback exercise), I'm going to take this opportunity to relax the tone of my writing and speak directly to the
+marker in an effort to quickly get everyone up-to-speed. To detail every nuance of the technical architecture of the
+project in its current state would be equivalent to writing about half of the final report, which just isn't feasible
+in the available time-frame.
+
+My language of choice is Java, as inspired by Pandora, a tool often used by first-year logic students to practice
+natural deduction. Java is platform agnotistic, whilst also being high level and not having to deal with
+cross-compiler issues like C++. I also couldn't justify putting up with the scrapyard, Mad Max approach to semantics
+that is characteristic of C++ for the fairly meagre performance upside, which I'm sure is going to be the subject of
+some rumination during the design stages of the report.
+
+I'm not quite where I'd like to be when it comes to the report; ideally I would have reviewed 2 or 3 more
+technologies in the form of Kubernetes, Docker, gRPC, etc. I have a massive backlog of actual simulation tools that I
+haven't managed to get to as well (if I ever do). There are also structural issues that I need to fix, such as code
+snippets that aren't captioned or referenced, a lack of appendices, a general lack of diagrams. The introduction also
+remains unfinished, since I wasn't sure what to write for ``contributions'', as this seems to require a conclusive
+scope for the project which is still subject to change.
+
+I am however well ahead of schedule on the code front. For some context, I have previous experience working with
+network simulation during my tenure working on the SpatialOS tool at Improbable. The project currently contains 3258
+lines of Java code. Here is a high-level overview of the file structure (please excuse the ropey formatting; the
+project is very large):
+
+\begin{center}
+    \includegraphics[width=0.35\textwidth]{images/interim_file_structure}
+\end{center}
+
+I currently don't have a name for the tool, but it has absolute parity with \texttt{tc-netem} (semantics which I'm
+likely to change as the project evolves). Here is an example of some working setup code which one might write to
+configure and run a simulation:
+
+\begin{center}
+    \includegraphics[width=\textwidth]{images/interim_example_sim_code}
+\end{center}
+
+A quick rundown on the current semantics. Nodes are connected in a topology. Each connection in said topology admits
+of a packet pipeline, which applies a sequence of network conditions to packets which flow through it, i.e.:
+probabilistic drop, corruption, duplication or latency, or perhaps even bandwidth throttling or packet limiting. Each
+node runs one or more workers, which are essentially wrapped threads. Each worker has an address. Workers send
+messages to other workers. These messages are routed by nodes. For example, if worker 1 running on node A sent a
+message to worker 2 running on node B, this message would ultimately be serialized into a packet, go through the packet
+pipeline connecting node A and node B. If this packet survives the trip, then node B will look up worker 2 in its
+address book and post it to worker 2's mailbox (providing that worker 2 exists). For the purposes of simplicity, the
+addressing mechanism is an artifact of the simulation logic, and cannot fall foul of corruption, i.e.: a message
+addressed to worker 2 will only be delivered to worker 2, if it is delivered at all. If a user wishes to bake their
+own custom addressing mechanism (that is fallible to corruption) into the provided framework, then they are free to
+do so.
+
+Nodes \texttt{A} and \texttt{B} are each given a \texttt{WorkerScript} during this setup, which are special kinds of
+lambda. A \texttt{WorkerScript} is a function which takes a \texttt{WorkerManager} as a parameter, which in turn
+provides each worker with a variety of important utilities, such as sending and receiving mail, or spawning child
+workers.
 
 
 \section{INTERIM REPORT ONLY: Evaluation Plan}
