@@ -1,36 +1,50 @@
 \documentclass[a4paper, 12pt, oneside,apa]{report}
-%\documentclass{article} To write the article
+
 \usepackage{blindtext}
 \usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
 
-% to show reference in table of contents
-\usepackage[nottoc]{tocbibind}
-\usepackage[
-    backend=biber,
-    style=apa,
-    sorting=nyt,
-]{biblatex}
-\addbibresource{bibliography.bib}
-
-% to insert images
 \usepackage{graphicx}
-
-% to insert math equations
 \usepackage{amsmath}
-
-% to insert symbols
 \usepackage{amssymb}
+
+\usepackage[numbers]{natbib}
+\bibliographystyle{unsrtnat}
+\usepackage{setspace}
 
 \usepackage{dirtytalk}
 \usepackage{multicol}
 
-% To set captions
+\usepackage{listings}
+\usepackage{xcolor}
+\lstset
+{
+    basicstyle=\footnotesize,
+    numbers=left,
+    xleftmargin=2em,
+    frame=single,
+    framexleftmargin=1.5em,
+    stepnumber=1,
+    showstringspaces=false,
+    tabsize=2,
+    breaklines=true,
+    breakatwhitespace=false,
+}
+
 \usepackage[font=footnotesize,labelfont=bf]{caption}
 \usepackage{fancyhdr}
-% To make a heading of Reference
+\usepackage{lettrine}
+\usepackage[utf8]{inputenc}
+\usepackage{erewhon}
+\usepackage{lipsum}
+\usepackage{GoudyIn}
 
-%Page Margins settings
+\renewcommand{\LettrineFontHook}{\GoudyInfamily{}}
+\LettrineTextFont{\itshape}
+\setcounter{DefaultLines}{3}
+\setlength{\DefaultNindent}{0pt}
+\setlength{\DefaultFindent}{1pt}
+
 \setlength{\topmargin}{-0.5in}
 \setlength{\oddsidemargin}{20pt}
 \setlength{\evensidemargin}{15pt}
@@ -52,18 +66,18 @@
 }
 
 \begin{document}
+    \pagenumbering{gobble}
     \include{cover}
-    \pagenumbering{roman}
+    \null\clearpage
 
     \include{abstract}
+    \pagenumbering{roman}
+    \singlespacing
+    \tableofcontents
 
-    \tableofcontents  %to make the table of contents
 
-%to start the page numbering from desired number we used
-
-    % start roman page numbering
-    \clearpage
-    \pagenumbering{arabic}  % start arabic page numbering
+    \null\clearpage
+    \pagenumbering{arabic}
 
 %chapter 1 formatting
 
@@ -79,6 +93,7 @@
     \renewcommand{\footrulewidth}{2pt}
     \input{chapter_1_introduction.tex}
 
+
 %chapter 2 formatting
 
 
@@ -92,6 +107,7 @@
     \renewcommand{\headrulewidth}{2pt}
     \renewcommand{\footrulewidth}{2pt}
     \input{chapter_2_background.tex}
+
 
 %chapter 3 formatting
 
@@ -107,6 +123,7 @@
     \renewcommand{\footrulewidth}{2pt}
     \input{chapter_3_design.tex}
 
+
 %chapter 4 formatting
 
 
@@ -121,6 +138,7 @@
     \renewcommand{\footrulewidth}{2pt}
     \input{chapter_4_implementation.tex}
 
+
 %chapter 5 formatting
 
 
@@ -134,6 +152,7 @@
     \renewcommand{\headrulewidth}{2pt}
     \renewcommand{\footrulewidth}{2pt}
     \input{chapter_5_evaluation.tex}
+
 
 %chapter 6 formatting
 
@@ -161,5 +180,7 @@
 %    \renewcommand{\footrulewidth}{2pt}
 %    \input{chapter_x}
 
+
+    \bibliography{bibliography}
 
 \end{document}
