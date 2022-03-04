@@ -17,6 +17,7 @@ import thorpe.luke.network.simulation.node.NodeInfoGenerator;
 import thorpe.luke.network.simulation.worker.WorkerScript;
 import thorpe.luke.time.Clock;
 import thorpe.luke.time.VirtualClock;
+import thorpe.luke.time.WallClock;
 
 public class DistributedNetworkSimulation<NodeInfo> {
 
@@ -118,9 +119,9 @@ public class DistributedNetworkSimulation<NodeInfo> {
     private final Map<String, RunnableNode<NodeInfo>> nodes = new HashMap<>();
     private final Map<NodeConnection<NodeInfo>, PacketPipeline<Mail>> networkConditions =
         new HashMap<>();
-    private final Clock clock = new VirtualClock(ChronoUnit.MILLIS);
     private final Collection<Logger> loggers = new LinkedList<>();
     private final NodeInfoGenerator<NodeInfo> nodeInfoGenerator;
+    private Clock clock = new VirtualClock(ChronoUnit.MILLIS);
 
     public Configuration(NodeInfoGenerator<NodeInfo> nodeInfoGenerator) {
       this.nodeInfoGenerator = nodeInfoGenerator;
@@ -185,6 +186,11 @@ public class DistributedNetworkSimulation<NodeInfo> {
 
     public Configuration<NodeInfo> addLogger(Logger logger) {
       loggers.add(logger);
+      return this;
+    }
+
+    public Configuration<NodeInfo> usingWallClock() {
+      clock = new WallClock();
       return this;
     }
 

@@ -39,8 +39,8 @@ public class PacketPipeline<Wrapper extends PacketWrapper<Wrapper>> {
     for (int i = 0; i + 1 < packetFilters.size(); i++) {
       PacketFilter<Wrapper> currentFilter = packetFilters.get(i);
       PacketFilter<Wrapper> nextFilter = packetFilters.get(i + 1);
-      currentFilter.tick(now);
       currentFilter.tryDequeue().ifPresent(nextFilter::enqueue);
+      nextFilter.tick(now);
     }
   }
 

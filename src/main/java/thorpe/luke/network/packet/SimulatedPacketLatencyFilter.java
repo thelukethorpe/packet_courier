@@ -43,7 +43,7 @@ public class SimulatedPacketLatencyFilter<Wrapper extends PacketWrapper<Wrapper>
   @Override
   public Optional<Wrapper> tryDequeue() {
     ScheduledPacket scheduledPacket = packetQueue.peek();
-    if (scheduledPacket == null || scheduledPacket.getScheduledDequeueTime().isBefore(now)) {
+    if (scheduledPacket == null || scheduledPacket.getScheduledDequeueTime().isAfter(now)) {
       return Optional.empty();
     }
     packetQueue.poll();

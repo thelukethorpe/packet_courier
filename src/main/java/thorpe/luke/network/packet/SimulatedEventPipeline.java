@@ -9,7 +9,7 @@ import thorpe.luke.distribution.ExponentialDistribution;
 public class SimulatedEventPipeline<Wrapper extends PacketWrapper<Wrapper>>
     implements PacketFilter<Wrapper> {
 
-  private final Collection<State> states;
+  private final List<State> states;
   private final StateTracker stateTracker;
   private final PriorityQueue<ScheduledEvent> eventQueue = new PriorityQueue<>();
   private final NeutralPacketFilter<Wrapper> outputBuffer;
@@ -17,22 +17,35 @@ public class SimulatedEventPipeline<Wrapper extends PacketWrapper<Wrapper>>
   private final Random random;
   private LocalDateTime now;
 
-  private SimulatedEventPipeline(
-      Collection<State> states,
-      State defaultState,
+  public SimulatedEventPipeline(
+      PacketPipeline<Wrapper> defaultPacketPipeline,
+      List<NetworkEvent> networkEvents,
       ChronoUnit timeUnit,
       LocalDateTime startTime,
       Random random) {
-    this.states = states;
-    this.stateTracker = new StateTracker(defaultState);
+    this.stateTracker = new StateTracker();
     this.outputBuffer = new NeutralPacketFilter<>();
     this.timeUnit = timeUnit;
     this.random = random;
     this.now = startTime;
+
+    this.states = new ArrayList<>(networkEvents.size() + 1);
+    State defaultState = new State(Integer.MIN_VALUE, 0.0, 0.0, defaultPacketPipeline);
+    stateTracker.push(defaultState);
+    states.add(defaultState);
+
+    int nextPrecedence = 0;
+    for (NetworkEvent networkEvent : networkEvents) {
+      State state = new State(nextPrecedence++, networkEvent);
+      states.add(state);
+      LocalDateTime eventStartTime = sampleFromEventDurationDistribution(state.getMeanInterval());
+      eventQueue.offer(new ScheduledEvent(eventStartTime, EventType.START, state));
+    }
   }
 
   private LocalDateTime sampleFromEventDurationDistribution(double meanDuration) {
-    ExponentialDistribution eventDurationDistribution = new ExponentialDistribution(meanDuration);
+    ExponentialDistribution eventDurationDistribution =
+        new ExponentialDistribution(1.0 / meanDuration);
     long eventDuration = Math.round(eventDurationDistribution.sample(random));
     return now.plus(Duration.of(eventDuration, timeUnit));
   }
@@ -40,9 +53,13 @@ public class SimulatedEventPipeline<Wrapper extends PacketWrapper<Wrapper>>
   @Override
   public void tick(LocalDateTime now) {
     this.now = now;
+    states
+        .stream()
+        .map(State::getPacketPipeline)
+        .forEach(packetPipeline -> packetPipeline.tick(now));
     do {
       ScheduledEvent scheduledEvent = eventQueue.peek();
-      if (scheduledEvent == null || scheduledEvent.getScheduledInvocationTime().isBefore(now)) {
+      if (scheduledEvent == null || scheduledEvent.getScheduledInvocationTime().isAfter(now)) {
         return;
       }
       eventQueue.poll();
@@ -50,15 +67,15 @@ public class SimulatedEventPipeline<Wrapper extends PacketWrapper<Wrapper>>
       switch (scheduledEvent.getEventType()) {
         case START:
           stateTracker.push(state);
-          LocalDateTime finishTime = sampleFromEventDurationDistribution(state.getMeanDuration());
-          ScheduledEvent finishEvent = new ScheduledEvent(finishTime, EventType.FINISH, state);
-          eventQueue.offer(finishEvent);
+          LocalDateTime eventFinishTime =
+              sampleFromEventDurationDistribution(state.getMeanDuration());
+          eventQueue.offer(new ScheduledEvent(eventFinishTime, EventType.FINISH, state));
           break;
         case FINISH:
           stateTracker.pop(state);
-          LocalDateTime startTime = sampleFromEventDurationDistribution(state.getMeanInterval());
-          ScheduledEvent startEvent = new ScheduledEvent(startTime, EventType.START, state);
-          eventQueue.offer(startEvent);
+          LocalDateTime eventStartTime =
+              sampleFromEventDurationDistribution(state.getMeanInterval());
+          eventQueue.offer(new ScheduledEvent(eventStartTime, EventType.START, state));
           break;
       }
     } while (true);
@@ -94,6 +111,14 @@ public class SimulatedEventPipeline<Wrapper extends PacketWrapper<Wrapper>>
       this.meanInterval = meanInterval;
       this.meanDuration = meanDuration;
       this.packetPipeline = packetPipeline;
+    }
+
+    private State(int precedence, NetworkEvent networkEvent) {
+      this(
+          precedence,
+          networkEvent.getMeanInterval(),
+          networkEvent.getMeanDuration(),
+          new PacketPipeline<>(networkEvent.getPacketPipelineParameters(), now));
     }
 
     public double getMeanInterval() {
@@ -153,9 +178,8 @@ public class SimulatedEventPipeline<Wrapper extends PacketWrapper<Wrapper>>
   private class StateTracker {
     private final TreeSet<State> states;
 
-    private StateTracker(State defaultState) {
+    private StateTracker() {
       this.states = new TreeSet<>();
-      this.push(defaultState);
     }
 
     public State getCurrentState() {
