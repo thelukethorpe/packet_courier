@@ -71,8 +71,10 @@ public class SimpleExample1 {
                 NODE_B_NAME,
                 PacketPipeline.parameters(
                     NetworkCondition.uniformPacketDrop(0.5, random),
-                    NetworkCondition.uniformPacketLatency(35.0, 50.0, ChronoUnit.MILLIS, random)))
+                    NetworkCondition.uniformPacketLatency(
+                        250.0, 1000.0, ChronoUnit.MILLIS, random)))
             .addLogger(new ConsoleLogger())
+            .usingWallClock()
             .start();
     try {
       distributedNetworkSimulation.waitFor();
