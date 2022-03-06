@@ -3,6 +3,7 @@ package thorpe.luke.network.packet;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 import thorpe.luke.distribution.*;
 
@@ -40,6 +41,15 @@ public interface NetworkCondition {
       Random random,
       PacketPipeline.Parameters defaultPacketPipelineParameters,
       NetworkEvent... networkEvents) {
+    return eventPipeline(
+        timeUnit, random, defaultPacketPipelineParameters, Arrays.asList(networkEvents));
+  }
+
+  static NetworkCondition eventPipeline(
+      ChronoUnit timeUnit,
+      Random random,
+      PacketPipeline.Parameters defaultPacketPipelineParameters,
+      List<NetworkEvent> networkEvents) {
     return new NetworkCondition() {
       @Override
       public <Wrapper extends PacketWrapper<Wrapper>>
@@ -47,7 +57,7 @@ public interface NetworkCondition {
         PacketPipeline<Wrapper> defaultPacketPipeline =
             new PacketPipeline<>(defaultPacketPipelineParameters, startTime);
         return new SimulatedEventPipeline<>(
-            defaultPacketPipeline, Arrays.asList(networkEvents), timeUnit, startTime, random);
+            defaultPacketPipeline, networkEvents, timeUnit, startTime, random);
       }
     };
   }

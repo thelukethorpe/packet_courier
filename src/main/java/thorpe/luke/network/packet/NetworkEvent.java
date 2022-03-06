@@ -1,5 +1,8 @@
 package thorpe.luke.network.packet;
 
+import java.util.Arrays;
+import java.util.List;
+
 public class NetworkEvent {
   private final double meanInterval;
   private final double meanDuration;
@@ -45,6 +48,10 @@ public class NetworkEvent {
     }
 
     public NetworkEvent buildWithNetworkConditions(NetworkCondition... networkConditions) {
+      return buildWithNetworkConditions(Arrays.asList(networkConditions));
+    }
+
+    public NetworkEvent buildWithNetworkConditions(List<NetworkCondition> networkConditions) {
       return new NetworkEvent(
           meanInterval, meanDuration, PacketPipeline.parameters(networkConditions));
     }

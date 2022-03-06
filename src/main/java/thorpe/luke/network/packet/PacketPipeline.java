@@ -28,6 +28,10 @@ public class PacketPipeline<Wrapper extends PacketWrapper<Wrapper>> {
   }
 
   public static Parameters parameters(NetworkCondition... networkConditions) {
+    return parameters(Arrays.asList(networkConditions));
+  }
+
+  public static Parameters parameters(List<NetworkCondition> networkConditions) {
     return new Parameters(networkConditions);
   }
 
@@ -52,8 +56,8 @@ public class PacketPipeline<Wrapper extends PacketWrapper<Wrapper>> {
   public static class Parameters {
     private final List<NetworkCondition> networkConditions;
 
-    private Parameters(NetworkCondition... networkConditions) {
-      this.networkConditions = Arrays.asList(networkConditions);
+    private Parameters(List<NetworkCondition> networkConditions) {
+      this.networkConditions = networkConditions;
     }
 
     public List<NetworkCondition> getNetworkConditions() {
