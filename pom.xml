@@ -29,7 +29,6 @@
       <groupId>com.google.protobuf</groupId>
       <artifactId>protobuf-java-util</artifactId>
       <version>3.19.4</version>
-<!--      <scope>runtime</scope>-->
     </dependency>
   </dependencies>
 
