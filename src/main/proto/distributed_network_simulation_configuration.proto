@@ -1,0 +1,119 @@
+syntax = "proto3";
+
+package thorpe.luke.network.simulation;
+
+option java_multiple_files = true;
+option java_outer_classname = "DistributedNetworkSimulationConfigurationProtobuf";
+option java_package = "thorpe.luke.network.simulation";
+
+message DistributedNetworkSimulationConfigurationProto {
+  repeated ConnectionProto connections = 1;
+  optional bool wallClockEnabled = 2;
+  optional int32 seed = 3;
+}
+
+message ConnectionProto {
+  string sourceNodeName = 1;
+  string destinationNodeName = 2;
+  repeated NetworkConditionProto networkConditions = 3;
+}
+
+message NetworkConditionProto {
+  oneof parameters {
+      PacketLimitParametersProto packetLimitParameters = 1;
+      PacketThrottleParametersProto packetThrottleParameters = 2;
+      PacketCorruptionParametersProto packetCorruptionParameters = 3;
+      PacketDropParametersProto packetDropParameters = 4;
+      PacketDuplicationParametersProto packetDuplicationParameters = 5;
+      PacketLatencyParametersProto packetLatencyParameters = 6;
+      EventPipelineParametersProto eventPipelineParameters = 7;
+  }
+}
+
+message PacketLimitParametersProto {
+  int32 packetLimit = 1;
+}
+
+message PacketThrottleParametersProto {
+  int32 byteThrottleRate = 1;
+  TimeUnitProto timeUnit = 2;
+}
+
+message PacketCorruptionParametersProto {
+  double corruptionProbability = 1;
+}
+
+message PacketDropParametersProto {
+  double dropProbability = 1;
+}
+
+message PacketDuplicationParametersProto {
+  double meanDuplications = 1;
+}
+
+message PacketLatencyParametersProto {
+  oneof latencyDistributionParameters {
+    ExponentialDistributionParametersProto exponential = 1;
+    NormalDistributionParametersProto normal = 2;
+    UniformRealDistributionParametersProto uniform = 3;
+  }
+  TimeUnitProto timeUnit = 4;
+}
+
+message EventPipelineParametersProto {
+  TimeUnitProto timeUnit = 1;
+  repeated NetworkConditionProto defaultNetworkConditions = 2;
+  repeated NetworkEventProto networkEvents = 3;
+}
+
+message NetworkEventProto {
+  double meanInterval = 1;
+  double meanDuration = 2;
+  repeated NetworkConditionProto networkConditions = 3;
+}
+
+message BernoulliDistributionParametersProto {
+  double probability = 1;
+}
+
+message ExponentialDistributionParametersProto {
+  double lambda = 1;
+}
+
+message NormalDistributionParametersProto {
+  double mean = 1;
+  double standardDeviation = 2;
+}
+
+message PoissonDistributionParametersProto {
+  double lambda = 1;
+}
+
+message UniformIntegerDistributionParametersProto {
+  int32 minimum = 1;
+  int32 maximum = 2;
+}
+
+message UniformRealDistributionParametersProto {
+  double minimum = 1;
+  double maximum = 2;
+}
+
+enum TimeUnitProto {
+  NANO_SECONDS = 0;
+  MICRO_SECONDS = 1;
+  MILLI_SECONDS = 2;
+  SECONDS = 3;
+  MINUTES = 4;
+  HOURS = 5;
+  DAYS = 6;
+  WEEKS = 7;
+  MONTHS = 8;
+  YEARS = 9;
+  DECADES = 10;
+  CENTURIES = 11;
+  MILLENNIA = 12;
+  ERAS = 13;
+  FOREVER = 14;
+}
+

@@ -1,25 +1,26 @@
 package thorpe.luke.network.simulation.example;
 
-import java.time.temporal.ChronoUnit;
-import java.util.Random;
+import java.io.File;
+import java.net.URISyntaxException;
+import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 import thorpe.luke.log.ConsoleLogger;
-import thorpe.luke.network.packet.NetworkCondition;
-import thorpe.luke.network.packet.NetworkEvent;
 import thorpe.luke.network.packet.Packet;
-import thorpe.luke.network.packet.PacketPipeline;
 import thorpe.luke.network.simulation.DistributedNetworkSimulation;
+import thorpe.luke.network.simulation.DistributedNetworkSimulationConfigurationProtoParser;
 import thorpe.luke.network.simulation.node.NodeAddress;
 import thorpe.luke.network.simulation.worker.WorkerManager;
+import thorpe.luke.network.simulation.worker.WorkerScript;
 import thorpe.luke.network.simulation.worker.WorkerTask;
 import thorpe.luke.util.Mutable;
 
-public class SimpleExample5 {
+public class ProtoExample1 {
 
   public static final String NODE_A_NAME = "Alice";
   public static final String NODE_B_NAME = "Bob";
 
-  public static void runNodeA(WorkerManager<SimpleExample5NodeInfo> workerManager) {
+  public static void runNodeA(WorkerManager<ProtoExample1NodeInfo> workerManager) {
     // Node A sends the numbers 1 to 15,000 to node B.
     for (int i = 1; i <= 15_000; i++) {
       workerManager.sendMail(
@@ -32,7 +33,7 @@ public class SimpleExample5 {
     }
   }
 
-  public static void runNodeB(WorkerManager<SimpleExample5NodeInfo> workerManager) {
+  public static void runNodeB(WorkerManager<ProtoExample1NodeInfo> workerManager) {
     // Node B waits for messages from node A and automatically shuts down after 15 seconds.
     WorkerTask.configure()
         .withTimeout(15, TimeUnit.SECONDS)
@@ -60,41 +61,26 @@ public class SimpleExample5 {
             });
   }
 
-  public static class SimpleExample5NodeInfo {
+  public static class ProtoExample1NodeInfo {
     public NodeAddress getNodeBAddress() {
       return new NodeAddress(NODE_B_NAME);
     }
   }
 
-  public static void main(String[] args) {
-    // Packet pipeline goes through phases of either dropping all packets or adding a uniformly distributed delay.
-    Random random = new Random();
-    DistributedNetworkSimulation<SimpleExample5NodeInfo> distributedNetworkSimulation =
-        DistributedNetworkSimulation.configuration(
-                (address, topology, clock) -> new SimpleExample5NodeInfo())
-            .addNode(NODE_A_NAME, SimpleExample5::runNodeA)
-            .addNode(NODE_B_NAME, SimpleExample5::runNodeB)
-            .addConnection(
-                NODE_A_NAME,
-                NODE_B_NAME,
-                PacketPipeline.parameters(
-                    NetworkCondition.eventPipeline(
-                        ChronoUnit.MILLIS,
-                        random,
-                        PacketPipeline.perfectParameters(),
-                        NetworkEvent.builder()
-                            .withMeanInterval(400.0)
-                            .withMeanDuration(650.0)
-                            .buildWithNetworkConditions(
-                                NetworkCondition.uniformPacketDrop(1.0, random)),
-                        NetworkEvent.builder()
-                            .withMeanInterval(175.0)
-                            .withMeanDuration(250.0)
-                            .buildWithNetworkConditions(
-                                NetworkCondition.uniformPacketLatency(
-                                    35.0, 50.0, ChronoUnit.MILLIS, random)))))
+  public static void main(String[] args) throws URISyntaxException {
+    File configurationProtobufFile =
+        Paths.get(ProtoExample1.class.getResource("example1.protobuf").toURI()).toFile();
+    DistributedNetworkSimulation<ProtoExample1NodeInfo> distributedNetworkSimulation =
+        DistributedNetworkSimulationConfigurationProtoParser.parse(
+                configurationProtobufFile,
+                (address, topology, clock) -> new ProtoExample1NodeInfo(),
+                new HashMap<String, WorkerScript<ProtoExample1NodeInfo>>() {
+                  {
+                    put(NODE_A_NAME, ProtoExample1::runNodeA);
+                    put(NODE_B_NAME, ProtoExample1::runNodeB);
+                  }
+                })
             .addLogger(new ConsoleLogger())
-            .usingWallClock()
             .start();
     try {
       distributedNetworkSimulation.waitFor();
