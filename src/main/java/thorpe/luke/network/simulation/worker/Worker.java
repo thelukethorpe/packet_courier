@@ -1,5 +1,6 @@
 package thorpe.luke.network.simulation.worker;
 
+import java.nio.file.Path;
 import java.util.Collection;
 import thorpe.luke.log.Logger;
 import thorpe.luke.network.packet.Packet;
@@ -20,20 +21,25 @@ public class Worker<NodeInfo> {
       Mailbox mailbox,
       PostalService postalService,
       Collection<Logger> loggers,
+      Path crashDumpLocation,
       WorkerAddressGenerator workerAddressGenerator,
       WorkerAddressBook<NodeInfo> workerAddressBook) {
     this.workerThread =
         new Thread(
-            () ->
-                workerScript.run(
-                    new WorkerManager<>(
-                        address,
-                        nodeInfo,
-                        mailbox,
-                        postalService,
-                        loggers,
-                        workerAddressGenerator,
-                        workerAddressBook)));
+            () -> {
+              workerScript.run(
+                  new WorkerManager<>(
+                      address,
+                      nodeInfo,
+                      mailbox,
+                      postalService,
+                      loggers,
+                      crashDumpLocation,
+                      workerAddressGenerator,
+                      workerAddressBook));
+              loggers.forEach(Logger::flush);
+              loggers.forEach(Logger::close);
+            });
     this.address = address;
     this.mailbox = mailbox;
     this.state = State.READY;
