@@ -69,7 +69,7 @@ public class SimpleExample2 {
         PacketPipeline.parameters(NetworkCondition.uniformPacketDrop(1.0 / N, random));
     DistributedNetworkSimulation.Configuration<DefaultNodeInfo>
         distributedNetworkSimulationConfiguration =
-            DistributedNetworkSimulation.configuration().addLogger(new ConsoleLogger());
+            DistributedNetworkSimulation.configuration().addLogger(ConsoleLogger.out());
 
     String[] nodeNames = new String[N];
     for (int i = 0; i < N; i++) {

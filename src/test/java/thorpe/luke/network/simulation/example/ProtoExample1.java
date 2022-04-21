@@ -80,7 +80,7 @@ public class ProtoExample1 {
                     put(NODE_B_NAME, ProtoExample1::runNodeB);
                   }
                 })
-            .addLogger(new ConsoleLogger())
+            .addLogger(ConsoleLogger.out())
             .start();
     try {
       distributedNetworkSimulation.waitFor();

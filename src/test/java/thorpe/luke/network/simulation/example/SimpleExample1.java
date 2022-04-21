@@ -73,7 +73,7 @@ public class SimpleExample1 {
                     NetworkCondition.uniformPacketDrop(0.5, random),
                     NetworkCondition.uniformPacketLatency(
                         250.0, 1000.0, ChronoUnit.MILLIS, random)))
-            .addLogger(new ConsoleLogger())
+            .addLogger(ConsoleLogger.out())
             .usingWallClock()
             .start();
     try {

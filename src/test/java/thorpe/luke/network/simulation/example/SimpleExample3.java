@@ -72,7 +72,7 @@ public class SimpleExample3 {
             .addNode(NODE_B_NAME, SimpleExample3::runNodeB)
             .addConnection(NODE_A_NAME, NODE_B_NAME, PacketPipeline.perfectParameters())
             .addConnection(NODE_B_NAME, NODE_A_NAME, PacketPipeline.perfectParameters())
-            .addLogger(new ConsoleLogger())
+            .addLogger(ConsoleLogger.out())
             .start();
     try {
       distributedNetworkSimulation.waitFor();

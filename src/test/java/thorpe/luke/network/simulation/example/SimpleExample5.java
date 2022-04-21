@@ -93,7 +93,7 @@ public class SimpleExample5 {
                             .buildWithNetworkConditions(
                                 NetworkCondition.uniformPacketLatency(
                                     35.0, 50.0, ChronoUnit.MILLIS, random)))))
-            .addLogger(new ConsoleLogger())
+            .addLogger(ConsoleLogger.out())
             .usingWallClock()
             .start();
     try {
