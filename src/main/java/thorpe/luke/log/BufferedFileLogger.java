@@ -20,12 +20,14 @@ public class BufferedFileLogger implements Logger {
     buffer.add(message);
   }
 
+  @Override
   public synchronized void flush() {
     buffer.forEach(fileWriter::println);
     buffer.clear();
     fileWriter.flush();
   }
 
+  @Override
   public synchronized void close() {
     fileWriter.close();
   }

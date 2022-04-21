@@ -14,6 +14,11 @@ public class DefaultNodeInfo {
     this.clock = clock;
   }
 
+  public static NodeInfoGenerator<DefaultNodeInfo> generator() {
+    return (address, topology, clock) ->
+        new DefaultNodeInfo(topology.getNeighboursOf(address.getName()), clock);
+  }
+
   public Collection<NodeAddress> getNeighbours() {
     return neighbours;
   }

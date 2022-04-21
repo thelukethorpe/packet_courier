@@ -4,13 +4,22 @@ import com.google.protobuf.util.JsonFormat;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 import java.util.stream.Collectors;
+import thorpe.luke.log.BufferedFileLogger;
+import thorpe.luke.log.ConsoleLogger;
+import thorpe.luke.log.Logger;
 import thorpe.luke.network.packet.NetworkCondition;
 import thorpe.luke.network.packet.NetworkEvent;
 import thorpe.luke.network.packet.PacketPipeline;
+import thorpe.luke.network.simulation.node.DefaultNodeInfo;
 import thorpe.luke.network.simulation.node.NodeInfoGenerator;
+import thorpe.luke.network.simulation.worker.WorkerProcessConfiguration;
 import thorpe.luke.network.simulation.worker.WorkerScript;
 
 public class DistributedNetworkSimulationConfigurationProtoParser<NodeInfo> {
@@ -26,6 +35,11 @@ public class DistributedNetworkSimulationConfigurationProtoParser<NodeInfo> {
     this.configuration = configuration;
     this.nodeNameToWorkerScriptWorkList = nodeNameToWorkerScriptWorkList;
     this.random = random;
+  }
+
+  public static DistributedNetworkSimulation.Configuration<DefaultNodeInfo> parse(
+      File protobufFile) {
+    return parse(protobufFile, DefaultNodeInfo.generator(), new HashMap<>());
   }
 
   public static <NodeInfo> DistributedNetworkSimulation.Configuration<NodeInfo> parse(
@@ -58,9 +72,32 @@ public class DistributedNetworkSimulationConfigurationProtoParser<NodeInfo> {
 
   private DistributedNetworkSimulation.Configuration<NodeInfo> parseConfiguration(
       DistributedNetworkSimulationConfigurationProto configurationProto) {
-    if (configurationProto.hasWallClockEnabled() && configurationProto.getWallClockEnabled()) {
+    for (CommandNodeProto commandNodeProto : configurationProto.getCommandsNodesList()) {
+      String name = commandNodeProto.getName();
+      String command = commandNodeProto.getCommand();
+      configuration.addNode(name, WorkerProcessConfiguration.fromCommand(command));
+    }
+
+    if (configurationProto.getWallClockEnabled()) {
       configuration.usingWallClock();
     }
+    if (configurationProto.getProcessLoggingEnabled()) {
+      configuration.withProcessLoggingEnabled();
+    }
+    if (configurationProto.hasCrashDumpLocation()) {
+      configuration.withCrashDumpLocation(Paths.get(configurationProto.getCrashDumpLocation()));
+    }
+    if (configurationProto.hasPort()) {
+      configuration.withPort(configurationProto.getPort());
+    }
+    if (configurationProto.hasDatagramBufferSize()) {
+      configuration.withDatagramBufferSize(configurationProto.getDatagramBufferSize());
+    }
+
+    configurationProto
+        .getLoggersList()
+        .forEach(loggerProto -> configuration.addLogger(parseLogger(loggerProto)));
+
     for (ConnectionProto connectionProto : configurationProto.getConnectionsList()) {
       String sourceNodeName = connectionProto.getSourceNodeName();
       WorkerScript<NodeInfo> sourceNodeWorkerScript =
@@ -86,6 +123,36 @@ public class DistributedNetworkSimulationConfigurationProtoParser<NodeInfo> {
       configuration.addConnection(sourceNodeName, destinationNodeName, packetPipelineParameters);
     }
     return configuration;
+  }
+
+  private static Logger parseLogger(LoggerProto loggerProto) {
+    switch (loggerProto.getLoggerParametersCase()) {
+      case CONSOLE:
+        return parseConsoleLogger(loggerProto.getConsole());
+      case FILE:
+        return parseFileLogger(loggerProto.getFile());
+    }
+    throw new DistributedNetworkSimulationConfigurationProtoParserException(
+        "Logger Proto is missing parameters.");
+  }
+
+  private static ConsoleLogger parseConsoleLogger(ConsoleLoggerProto consoleLoggerProto) {
+    switch (consoleLoggerProto) {
+      case STDOUT:
+        return ConsoleLogger.out();
+      case STDERR:
+        return ConsoleLogger.err();
+    }
+    throw new DistributedNetworkSimulationConfigurationProtoParserException(
+        "Console Logger Proto not recognized.");
+  }
+
+  private static BufferedFileLogger parseFileLogger(FileLoggerProto fileLoggerProto) {
+    try {
+      return new BufferedFileLogger(Paths.get(fileLoggerProto.getPath()).toFile());
+    } catch (IOException e) {
+      throw new DistributedNetworkSimulationConfigurationProtoParserException(e);
+    }
   }
 
   private NetworkCondition parseNetworkCondition(NetworkConditionProto networkConditionProto) {

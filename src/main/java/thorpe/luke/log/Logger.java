@@ -1,6 +1,9 @@
 package thorpe.luke.log;
 
-@FunctionalInterface
 public interface Logger {
   void log(String message);
+
+  void flush();
+
+  void close();
 }

@@ -7,9 +7,20 @@ option java_outer_classname = "DistributedNetworkSimulationConfigurationProtobuf
 option java_package = "thorpe.luke.network.simulation";
 
 message DistributedNetworkSimulationConfigurationProto {
-  repeated ConnectionProto connections = 1;
-  optional bool wallClockEnabled = 2;
-  optional int32 seed = 3;
+  repeated CommandNodeProto commandsNodes = 1;
+  repeated ConnectionProto connections = 2;
+  bool wallClockEnabled = 3;
+  bool processLoggingEnabled = 4;
+  optional string crashDumpLocation = 5;
+  optional int32 port = 6;
+  optional int32 datagramBufferSize = 7;
+  repeated LoggerProto loggers = 8;
+  optional int32 seed = 9;
+}
+
+message CommandNodeProto {
+  string name = 1;
+  string command = 2;
 }
 
 message ConnectionProto {
@@ -20,13 +31,13 @@ message ConnectionProto {
 
 message NetworkConditionProto {
   oneof parameters {
-      PacketLimitParametersProto packetLimitParameters = 1;
-      PacketThrottleParametersProto packetThrottleParameters = 2;
-      PacketCorruptionParametersProto packetCorruptionParameters = 3;
-      PacketDropParametersProto packetDropParameters = 4;
-      PacketDuplicationParametersProto packetDuplicationParameters = 5;
-      PacketLatencyParametersProto packetLatencyParameters = 6;
-      EventPipelineParametersProto eventPipelineParameters = 7;
+    PacketLimitParametersProto packetLimitParameters = 1;
+    PacketThrottleParametersProto packetThrottleParameters = 2;
+    PacketCorruptionParametersProto packetCorruptionParameters = 3;
+    PacketDropParametersProto packetDropParameters = 4;
+    PacketDuplicationParametersProto packetDuplicationParameters = 5;
+    PacketLatencyParametersProto packetLatencyParameters = 6;
+    EventPipelineParametersProto eventPipelineParameters = 7;
   }
 }
 
@@ -117,3 +128,18 @@ enum TimeUnitProto {
   FOREVER = 14;
 }
 
+message LoggerProto {
+  oneof loggerParameters {
+    ConsoleLoggerProto console = 1;
+    FileLoggerProto file = 2;
+  }
+}
+
+enum ConsoleLoggerProto {
+  STDOUT = 0;
+  STDERR = 1;
+}
+
+message FileLoggerProto {
+  string path = 1;
+}

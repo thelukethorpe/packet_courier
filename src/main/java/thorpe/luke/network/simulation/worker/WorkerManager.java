@@ -1,17 +1,29 @@
 package thorpe.luke.network.simulation.worker;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collection;
+import java.util.List;
+import thorpe.luke.log.BufferedFileLogger;
 import thorpe.luke.log.Logger;
 import thorpe.luke.network.packet.Packet;
 import thorpe.luke.network.simulation.mail.Mailbox;
 import thorpe.luke.network.simulation.mail.PostalService;
 
 public class WorkerManager<NodeInfo> {
+
+  private static final DateTimeFormatter CRASH_DUMP_DATE_FORMAT =
+      DateTimeFormatter.ofPattern("yyyy_MM_dd_hh_mm_ss");
+
   private final WorkerAddress address;
   private final NodeInfo nodeInfo;
   private final Mailbox mailbox;
   private final PostalService postalService;
   private final Collection<Logger> loggers;
+  private final Path crashDumpLocation;
   private final WorkerAddressGenerator workerAddressGenerator;
   private final WorkerAddressBook<NodeInfo> workerAddressBook;
 
@@ -21,6 +33,7 @@ public class WorkerManager<NodeInfo> {
       Mailbox mailbox,
       PostalService postalService,
       Collection<Logger> loggers,
+      Path crashDumpLocation,
       WorkerAddressGenerator workerAddressGenerator,
       WorkerAddressBook<NodeInfo> workerAddressBook) {
     this.address = address;
@@ -28,6 +41,7 @@ public class WorkerManager<NodeInfo> {
     this.mailbox = mailbox;
     this.postalService = postalService;
     this.loggers = loggers;
+    this.crashDumpLocation = crashDumpLocation;
     this.workerAddressGenerator = workerAddressGenerator;
     this.workerAddressBook = workerAddressBook;
   }
@@ -57,11 +71,35 @@ public class WorkerManager<NodeInfo> {
         nodeInfo,
         postalService,
         loggers,
+        crashDumpLocation,
         workerAddressGenerator,
         workerAddressBook);
   }
 
   public void log(String message) {
     loggers.forEach(logger -> logger.log(message));
+  }
+
+  public void generateCrashDump(List<String> crashDumpContents) {
+    if (crashDumpLocation == null) {
+      return;
+    }
+    LocalDateTime now = LocalDateTime.now();
+    String crashDumpFileName =
+        address.getHostingNodeAddress().getName()
+            + "__"
+            + CRASH_DUMP_DATE_FORMAT.format(now)
+            + ".simdump";
+    File crashDumpFile = crashDumpLocation.resolve(crashDumpFileName).toFile();
+    BufferedFileLogger crashDumpFileLogger;
+    try {
+      crashDumpFileLogger = new BufferedFileLogger(crashDumpFile);
+    } catch (IOException e) {
+      e.printStackTrace();
+      return;
+    }
+    crashDumpContents.forEach(crashDumpFileLogger::log);
+    crashDumpFileLogger.flush();
+    crashDumpFileLogger.close();
   }
 }

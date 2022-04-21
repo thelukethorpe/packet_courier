@@ -67,7 +67,7 @@ public class SimpleExample4 {
                 NODE_A_NAME,
                 NODE_B_NAME,
                 PacketPipeline.parameters(NetworkCondition.uniformPacketCorruption(0.75, random)))
-            .addLogger(new ConsoleLogger())
+            .addLogger(ConsoleLogger.out())
             .start();
     try {
       distributedNetworkSimulation.waitFor();
