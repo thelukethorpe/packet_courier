@@ -57,9 +57,7 @@ public class DistributedNetworkSimulation<NodeInfo> {
   }
 
   public static Configuration<DefaultNodeInfo> configuration() {
-    return new Configuration<>(
-        (address, topology, clock) ->
-            new DefaultNodeInfo(topology.getNeighboursOf(address.getName()), clock));
+    return new Configuration<>(DefaultNodeInfo.generator());
   }
 
   private void start() {
