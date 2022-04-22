@@ -1,4 +1,4 @@
-package thorpe.luke.network.simulation;
+package thorpe.luke.network.simulation.proto;
 
 import com.google.protobuf.util.JsonFormat;
 import java.io.File;
@@ -17,6 +17,7 @@ import thorpe.luke.log.Logger;
 import thorpe.luke.network.packet.NetworkCondition;
 import thorpe.luke.network.packet.NetworkEvent;
 import thorpe.luke.network.packet.PacketPipeline;
+import thorpe.luke.network.simulation.*;
 import thorpe.luke.network.simulation.node.DefaultNodeInfo;
 import thorpe.luke.network.simulation.node.NodeInfoGenerator;
 import thorpe.luke.network.simulation.worker.WorkerProcessConfiguration;

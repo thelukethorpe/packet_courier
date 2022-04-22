@@ -1,4 +1,4 @@
-package thorpe.luke.network.simulation;
+package thorpe.luke.network.simulation.proto;
 
 public class PacketCourierSimulationConfigurationProtoParserException extends RuntimeException {
   public PacketCourierSimulationConfigurationProtoParserException(String message) {
