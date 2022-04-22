@@ -8,7 +8,7 @@ import thorpe.luke.network.packet.NetworkCondition;
 import thorpe.luke.network.packet.NetworkEvent;
 import thorpe.luke.network.packet.Packet;
 import thorpe.luke.network.packet.PacketPipeline;
-import thorpe.luke.network.simulation.DistributedNetworkSimulation;
+import thorpe.luke.network.simulation.PacketCourierSimulation;
 import thorpe.luke.network.simulation.node.NodeAddress;
 import thorpe.luke.network.simulation.worker.WorkerManager;
 import thorpe.luke.network.simulation.worker.WorkerTask;
@@ -69,8 +69,8 @@ public class SimpleExample5 {
   public static void main(String[] args) {
     // Packet pipeline goes through phases of either dropping all packets or adding a uniformly distributed delay.
     Random random = new Random();
-    DistributedNetworkSimulation<SimpleExample5NodeInfo> distributedNetworkSimulation =
-        DistributedNetworkSimulation.configuration(
+    PacketCourierSimulation<SimpleExample5NodeInfo> packetCourierSimulation =
+        PacketCourierSimulation.configuration(
                 (address, topology, clock) -> new SimpleExample5NodeInfo())
             .addNode(NODE_A_NAME, SimpleExample5::runNodeA)
             .addNode(NODE_B_NAME, SimpleExample5::runNodeB)
@@ -97,7 +97,7 @@ public class SimpleExample5 {
             .usingWallClock()
             .start();
     try {
-      distributedNetworkSimulation.waitFor();
+      packetCourierSimulation.waitFor();
     } catch (InterruptedException e) {
       e.printStackTrace();
       System.exit(1);

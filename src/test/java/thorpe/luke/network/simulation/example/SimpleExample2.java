@@ -7,7 +7,7 @@ import thorpe.luke.log.ConsoleLogger;
 import thorpe.luke.network.packet.NetworkCondition;
 import thorpe.luke.network.packet.Packet;
 import thorpe.luke.network.packet.PacketPipeline;
-import thorpe.luke.network.simulation.DistributedNetworkSimulation;
+import thorpe.luke.network.simulation.PacketCourierSimulation;
 import thorpe.luke.network.simulation.node.DefaultNodeInfo;
 import thorpe.luke.network.simulation.node.NodeAddress;
 import thorpe.luke.network.simulation.worker.WorkerManager;
@@ -67,28 +67,27 @@ public class SimpleExample2 {
     Random random = new Random();
     PacketPipeline.Parameters lossyNetworkParameters =
         PacketPipeline.parameters(NetworkCondition.uniformPacketDrop(1.0 / N, random));
-    DistributedNetworkSimulation.Configuration<DefaultNodeInfo>
-        distributedNetworkSimulationConfiguration =
-            DistributedNetworkSimulation.configuration().addLogger(ConsoleLogger.out());
+    PacketCourierSimulation.Configuration<DefaultNodeInfo> packetCourierSimulationConfiguration =
+        PacketCourierSimulation.configuration().addLogger(ConsoleLogger.out());
 
     String[] nodeNames = new String[N];
     for (int i = 0; i < N; i++) {
       String nodeName = "#" + i;
       nodeNames[i] = nodeName;
-      distributedNetworkSimulationConfiguration.addNode(nodeName, SimpleExample2::runNode);
+      packetCourierSimulationConfiguration.addNode(nodeName, SimpleExample2::runNode);
     }
 
     for (int i = 0; i < N; i++) {
       String currentNodeName = nodeNames[i];
       String nextNodeName = nodeNames[(i + 1) % N];
-      distributedNetworkSimulationConfiguration.addConnection(
+      packetCourierSimulationConfiguration.addConnection(
           currentNodeName, nextNodeName, lossyNetworkParameters);
     }
 
-    DistributedNetworkSimulation<DefaultNodeInfo> distributedNetworkSimulation =
-        distributedNetworkSimulationConfiguration.start();
+    PacketCourierSimulation<DefaultNodeInfo> packetCourierSimulation =
+        packetCourierSimulationConfiguration.start();
     try {
-      distributedNetworkSimulation.waitFor();
+      packetCourierSimulation.waitFor();
     } catch (InterruptedException e) {
       e.printStackTrace();
       System.exit(1);

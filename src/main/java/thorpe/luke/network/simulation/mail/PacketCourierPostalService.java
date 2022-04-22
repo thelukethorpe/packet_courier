@@ -15,11 +15,11 @@ import thorpe.luke.network.simulation.node.NodeAddress;
 import thorpe.luke.network.simulation.node.NodeConnection;
 import thorpe.luke.network.simulation.worker.WorkerAddress;
 
-public class NetworkSimulatorPostalService<NodeInfo> implements PostalService {
+public class PacketCourierPostalService<NodeInfo> implements PostalService {
   private final Map<NodeAddress, Node<NodeInfo>> nodeToAddressMap;
   private final ConcurrentMap<NodeConnection<NodeInfo>, PacketPipeline<Mail>> networkConditions;
 
-  public NetworkSimulatorPostalService(
+  public PacketCourierPostalService(
       Collection<Node<NodeInfo>> nodes,
       Map<NodeConnection<NodeInfo>, PacketPipeline<Mail>> networkConditions) {
     this.nodeToAddressMap =
