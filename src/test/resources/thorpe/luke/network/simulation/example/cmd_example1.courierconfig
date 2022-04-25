@@ -1,0 +1,43 @@
+{
+  "port": 4444,
+  "datagramBufferSize": 32,
+  "wallClockEnabled": true,
+  "processLoggingEnabled": true,
+  "loggers": [
+    {
+      "console": "STDOUT"
+    }
+  ],
+  "commandsNodes": [
+    {
+      "name": "Alice",
+      "command": "python3 src/test/resources/thorpe/luke/network/simulation/example/simple_client.py ${NODE_NAME} ${PRIVATE_IP} 4444 ${NEIGHBOUR_IPS}"
+    },
+    {
+      "name": "Bob",
+      "command": "python3 src/test/resources/thorpe/luke/network/simulation/example/simple_server.py ${NODE_NAME} ${PRIVATE_IP} 4444"
+    }
+  ],
+  "connections": [
+    {
+      "sourceNodeName": "Alice",
+      "destinationNodeName": "Bob",
+      "networkConditions": [
+        {
+          "packetDropParameters": {
+            "probability": 0.5
+          }
+        },
+        {
+          "packetLatencyParameters": {
+            "timeUnit": "MILLI_SECONDS",
+            "uniform": {
+              "minimum": 35.0,
+              "maximum": 50.0
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

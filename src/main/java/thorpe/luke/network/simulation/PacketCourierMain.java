@@ -73,6 +73,6 @@ public class PacketCourierMain {
 
     // Simulation complete.
     print("############### FINISH ###############");
-    exit(EXIT_CODE_SUCCESS, "Success: Packet Courier simulation has completed.");
+    exit(EXIT_CODE_SUCCESS, "Success: Packet Courier simulation has finished.");
   }
 }
