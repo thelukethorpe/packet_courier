@@ -64,6 +64,12 @@ public class PacketCourierSimulationConfigurationProtoParser<NodeInfo> {
 
   private static PacketCourierSimulationConfigurationProto readProtobufFile(File protobufFile)
       throws IOException {
+    if (!protobufFile.getName().endsWith(PacketCourierSimulation.CONFIGURATION_FILE_EXTENSION)) {
+      throw new IOException(
+          protobufFile.getName()
+              + " does not have file extension "
+              + PacketCourierSimulation.CONFIGURATION_FILE_EXTENSION);
+    }
     PacketCourierSimulationConfigurationProto.Builder protoBuilder =
         PacketCourierSimulationConfigurationProto.newBuilder();
     JsonFormat.parser().ignoringUnknownFields().merge(new FileReader(protobufFile), protoBuilder);

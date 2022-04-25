@@ -24,6 +24,9 @@ import thorpe.luke.util.UniqueLoopbackIpv4AddressGenerator;
 
 public class PacketCourierSimulation<NodeInfo> {
 
+  public static final String CONFIGURATION_FILE_EXTENSION = ".courierconfig";
+  public static final String CRASH_DUMP_FILE_EXTENSION = ".couriercrashdump";
+
   private final Thread simulator;
 
   private PacketCourierSimulation(

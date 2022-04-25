@@ -69,7 +69,7 @@ public class ProtoExample1 {
 
   public static void main(String[] args) throws URISyntaxException {
     File configurationProtobufFile =
-        Paths.get(ProtoExample1.class.getResource("example1.protobuf").toURI()).toFile();
+        Paths.get(ProtoExample1.class.getResource("example1.courierconfig").toURI()).toFile();
     PacketCourierSimulation<ProtoExample1NodeInfo> packetCourierSimulation =
         PacketCourierSimulationConfigurationProtoParser.parse(
                 configurationProtobufFile,
