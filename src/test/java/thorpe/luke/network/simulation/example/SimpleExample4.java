@@ -8,7 +8,7 @@ import thorpe.luke.log.ConsoleLogger;
 import thorpe.luke.network.packet.NetworkCondition;
 import thorpe.luke.network.packet.Packet;
 import thorpe.luke.network.packet.PacketPipeline;
-import thorpe.luke.network.simulation.DistributedNetworkSimulation;
+import thorpe.luke.network.simulation.PacketCourierSimulation;
 import thorpe.luke.network.simulation.node.NodeAddress;
 import thorpe.luke.network.simulation.worker.WorkerAddress;
 import thorpe.luke.network.simulation.worker.WorkerManager;
@@ -58,8 +58,8 @@ public class SimpleExample4 {
   public static void main(String[] args) {
     // Packet pipeline corrupts 75% of the packets that travel through it.
     Random random = new Random();
-    DistributedNetworkSimulation<SimpleExample4NodeInfo> distributedNetworkSimulation =
-        DistributedNetworkSimulation.configuration(
+    PacketCourierSimulation<SimpleExample4NodeInfo> packetCourierSimulation =
+        PacketCourierSimulation.configuration(
                 (address, topology, clock) -> new SimpleExample4NodeInfo())
             .addNode(NODE_A_NAME, SimpleExample4::runNodeA)
             .addNode(NODE_B_NAME, SimpleExample4::runNodeB)
@@ -70,7 +70,7 @@ public class SimpleExample4 {
             .addLogger(ConsoleLogger.out())
             .start();
     try {
-      distributedNetworkSimulation.waitFor();
+      packetCourierSimulation.waitFor();
     } catch (InterruptedException e) {
       e.printStackTrace();
       System.exit(1);

@@ -7,9 +7,9 @@ import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 import thorpe.luke.log.ConsoleLogger;
 import thorpe.luke.network.packet.Packet;
-import thorpe.luke.network.simulation.DistributedNetworkSimulation;
-import thorpe.luke.network.simulation.DistributedNetworkSimulationConfigurationProtoParser;
+import thorpe.luke.network.simulation.PacketCourierSimulation;
 import thorpe.luke.network.simulation.node.NodeAddress;
+import thorpe.luke.network.simulation.proto.PacketCourierSimulationConfigurationProtoParser;
 import thorpe.luke.network.simulation.worker.WorkerManager;
 import thorpe.luke.network.simulation.worker.WorkerScript;
 import thorpe.luke.network.simulation.worker.WorkerTask;
@@ -69,9 +69,9 @@ public class ProtoExample1 {
 
   public static void main(String[] args) throws URISyntaxException {
     File configurationProtobufFile =
-        Paths.get(ProtoExample1.class.getResource("example1.protobuf").toURI()).toFile();
-    DistributedNetworkSimulation<ProtoExample1NodeInfo> distributedNetworkSimulation =
-        DistributedNetworkSimulationConfigurationProtoParser.parse(
+        Paths.get(ProtoExample1.class.getResource("example1.courierconfig").toURI()).toFile();
+    PacketCourierSimulation<ProtoExample1NodeInfo> packetCourierSimulation =
+        PacketCourierSimulationConfigurationProtoParser.parse(
                 configurationProtobufFile,
                 (address, topology, clock) -> new ProtoExample1NodeInfo(),
                 new HashMap<String, WorkerScript<ProtoExample1NodeInfo>>() {
@@ -83,7 +83,7 @@ public class ProtoExample1 {
             .addLogger(ConsoleLogger.out())
             .start();
     try {
-      distributedNetworkSimulation.waitFor();
+      packetCourierSimulation.waitFor();
     } catch (InterruptedException e) {
       e.printStackTrace();
       System.exit(1);

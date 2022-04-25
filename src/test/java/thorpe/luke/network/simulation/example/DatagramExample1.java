@@ -8,7 +8,7 @@ import java.util.Random;
 import thorpe.luke.log.ConsoleLogger;
 import thorpe.luke.network.packet.NetworkCondition;
 import thorpe.luke.network.packet.PacketPipeline;
-import thorpe.luke.network.simulation.DistributedNetworkSimulation;
+import thorpe.luke.network.simulation.PacketCourierSimulation;
 import thorpe.luke.network.simulation.worker.WorkerProcessConfiguration;
 
 public class DatagramExample1 {
@@ -27,8 +27,8 @@ public class DatagramExample1 {
         Paths.get(ProtoExample1.class.getResource("simple_server.py").toURI()).toFile();
     // Packet pipeline drops half of the packets that travel through it.
     Random random = new Random();
-    DistributedNetworkSimulation<DatagramExample1NodeInfo> distributedNetworkSimulation =
-        DistributedNetworkSimulation.configuration(
+    PacketCourierSimulation<DatagramExample1NodeInfo> packetCourierSimulation =
+        PacketCourierSimulation.configuration(
                 (address, topology, clock) -> new DatagramExample1NodeInfo())
             .addNode(
                 NODE_A_NAME,
@@ -57,7 +57,7 @@ public class DatagramExample1 {
             .withProcessLoggingEnabled()
             .start();
     try {
-      distributedNetworkSimulation.waitFor();
+      packetCourierSimulation.waitFor();
     } catch (InterruptedException e) {
       e.printStackTrace();
       System.exit(1);

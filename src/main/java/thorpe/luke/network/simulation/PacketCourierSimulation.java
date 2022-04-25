@@ -13,7 +13,7 @@ import thorpe.luke.network.packet.Packet;
 import thorpe.luke.network.packet.PacketPipeline;
 import thorpe.luke.network.packet.PacketPipeline.Parameters;
 import thorpe.luke.network.simulation.mail.Mail;
-import thorpe.luke.network.simulation.mail.NetworkSimulatorPostalService;
+import thorpe.luke.network.simulation.mail.PacketCourierPostalService;
 import thorpe.luke.network.simulation.mail.PostalService;
 import thorpe.luke.network.simulation.node.*;
 import thorpe.luke.network.simulation.worker.*;
@@ -22,14 +22,17 @@ import thorpe.luke.time.VirtualClock;
 import thorpe.luke.time.WallClock;
 import thorpe.luke.util.UniqueLoopbackIpv4AddressGenerator;
 
-public class DistributedNetworkSimulation<NodeInfo> {
+public class PacketCourierSimulation<NodeInfo> {
+
+  public static final String CONFIGURATION_FILE_EXTENSION = ".courierconfig";
+  public static final String CRASH_DUMP_FILE_EXTENSION = ".couriercrashdump";
 
   private final Thread simulator;
 
-  private DistributedNetworkSimulation(
+  private PacketCourierSimulation(
       Map<String, RunnableNode<NodeInfo>> nodes,
       Topology topology,
-      NetworkSimulatorPostalService<NodeInfo> postalService,
+      PacketCourierPostalService<NodeInfo> postalService,
       Clock clock,
       Collection<Logger> loggers,
       Path crashDumpLocation,
@@ -67,7 +70,7 @@ public class DistributedNetworkSimulation<NodeInfo> {
   private void run(
       Map<String, RunnableNode<NodeInfo>> nodes,
       Topology topology,
-      NetworkSimulatorPostalService<NodeInfo> postalService,
+      PacketCourierPostalService<NodeInfo> postalService,
       Clock clock,
       Collection<Logger> loggers,
       Path crashDumpLocation,
@@ -169,7 +172,7 @@ public class DistributedNetworkSimulation<NodeInfo> {
           return;
         }
       } catch (IOException e) {
-        throw new SimulationDatagramRoutingException(e);
+        throw new PacketCourierSimulationDatagramRoutingException(e);
       }
       if (datagramPacket.getAddress() == null) {
         continue;
@@ -266,11 +269,12 @@ public class DistributedNetworkSimulation<NodeInfo> {
 
     private void addNode(String name, WorkerScriptFactory<NodeInfo> workerScriptFactory) {
       if (name == null) {
-        throw new InvalidSimulationConfigurationException("Node name cannot be null.");
+        throw new InvalidPacketCourierSimulationConfigurationException("Node name cannot be null.");
       } else if (isBlank(name)) {
-        throw new InvalidSimulationConfigurationException("Node name cannot be blank.");
+        throw new InvalidPacketCourierSimulationConfigurationException(
+            "Node name cannot be blank.");
       } else if (nameToNodeMap.containsKey(name)) {
-        throw new InvalidSimulationConfigurationException(
+        throw new InvalidPacketCourierSimulationConfigurationException(
             "Node with name \"" + name + "\" has already been added.");
       }
 
@@ -285,7 +289,8 @@ public class DistributedNetworkSimulation<NodeInfo> {
 
     public Configuration<NodeInfo> addNode(String name, WorkerScript<NodeInfo> workerScript) {
       if (workerScript == null) {
-        throw new InvalidSimulationConfigurationException("Node script cannot be null.");
+        throw new InvalidPacketCourierSimulationConfigurationException(
+            "Node script cannot be null.");
       }
       addNode(
           name,
@@ -304,7 +309,7 @@ public class DistributedNetworkSimulation<NodeInfo> {
         String name, WorkerProcessConfiguration workerProcessConfiguration) {
       hasDatagramRoutingLayer = true;
       if (workerProcessConfiguration == null) {
-        throw new InvalidSimulationConfigurationException(
+        throw new InvalidPacketCourierSimulationConfigurationException(
             "Node process configuration cannot be null.");
       }
       addNode(
@@ -335,21 +340,26 @@ public class DistributedNetworkSimulation<NodeInfo> {
     public Configuration<NodeInfo> addConnection(
         String sourceName, String destinationName, Parameters packetPipelineParameters) {
       if (sourceName == null) {
-        throw new InvalidSimulationConfigurationException("Source node name cannot be null.");
+        throw new InvalidPacketCourierSimulationConfigurationException(
+            "Source node name cannot be null.");
       } else if (isBlank(sourceName)) {
-        throw new InvalidSimulationConfigurationException("Source node name cannot be blank.");
+        throw new InvalidPacketCourierSimulationConfigurationException(
+            "Source node name cannot be blank.");
       } else if (!nameToNodeMap.containsKey(sourceName)) {
-        throw new InvalidSimulationConfigurationException(
+        throw new InvalidPacketCourierSimulationConfigurationException(
             "Node with name \"" + sourceName + "\" has not been added yet.");
       } else if (destinationName == null) {
-        throw new InvalidSimulationConfigurationException("Destination node name cannot be null.");
+        throw new InvalidPacketCourierSimulationConfigurationException(
+            "Destination node name cannot be null.");
       } else if (isBlank(destinationName)) {
-        throw new InvalidSimulationConfigurationException("Destination node name cannot be blank.");
+        throw new InvalidPacketCourierSimulationConfigurationException(
+            "Destination node name cannot be blank.");
       } else if (!nameToNodeMap.containsKey(destinationName)) {
-        throw new InvalidSimulationConfigurationException(
+        throw new InvalidPacketCourierSimulationConfigurationException(
             "Node with name \"" + destinationName + "\" has not been added yet.");
       } else if (sourceName.equals(destinationName)) {
-        throw new InvalidSimulationConfigurationException("A node cannot be connected to itself.");
+        throw new InvalidPacketCourierSimulationConfigurationException(
+            "A node cannot be connected to itself.");
       }
 
       Node<NodeInfo> sourceNode = nameToNodeMap.get(sourceName);
@@ -357,7 +367,8 @@ public class DistributedNetworkSimulation<NodeInfo> {
       NodeConnection<NodeInfo> nodeConnection = new NodeConnection<>(sourceNode, destinationNode);
 
       if (nodeConnectionToPacketPipelineFactoryMap.containsKey(nodeConnection)) {
-        throw new InvalidSimulationConfigurationException("Connection has already been added.");
+        throw new InvalidPacketCourierSimulationConfigurationException(
+            "Connection has already been added.");
       }
 
       nodeConnectionToPacketPipelineFactoryMap.put(
@@ -395,7 +406,7 @@ public class DistributedNetworkSimulation<NodeInfo> {
       return this;
     }
 
-    public DistributedNetworkSimulation<NodeInfo> start() {
+    public PacketCourierSimulation<NodeInfo> start() {
       // Configure topology logic.
       Map<String, Collection<String>> nodeToNeighboursMap = new HashMap<>();
       nameToNodeMap.keySet().forEach(name -> nodeToNeighboursMap.put(name, new HashSet<>()));
@@ -420,7 +431,7 @@ public class DistributedNetworkSimulation<NodeInfo> {
                 node,
                 new DatagramSocket(port, uniqueIpAddressGenerator.generateUniqueIpv4Address()));
           } catch (SocketException e) {
-            throw new SimulationStartupException(e);
+            throw new PacketCourierSimulationStartupException(e);
           }
         }
       }
@@ -483,11 +494,11 @@ public class DistributedNetworkSimulation<NodeInfo> {
                               .getPacketPipeline(startTime)));
 
       // Configure simulation logic.
-      NetworkSimulatorPostalService<NodeInfo> postalService =
-          new NetworkSimulatorPostalService<>(nameToNodeMap.values(), networkConditions);
+      PacketCourierPostalService<NodeInfo> postalService =
+          new PacketCourierPostalService<>(nameToNodeMap.values(), networkConditions);
 
-      DistributedNetworkSimulation<NodeInfo> distributedNetworkSimulation =
-          new DistributedNetworkSimulation<>(
+      PacketCourierSimulation<NodeInfo> packetCourierSimulation =
+          new PacketCourierSimulation<>(
               nameToRunnableNodeMap,
               topology,
               postalService,
@@ -498,8 +509,8 @@ public class DistributedNetworkSimulation<NodeInfo> {
               privateIpAddressToWorkerAddressMap,
               nodeToPublicSocketMap);
 
-      distributedNetworkSimulation.start();
-      return distributedNetworkSimulation;
+      packetCourierSimulation.start();
+      return packetCourierSimulation;
     }
   }
 
@@ -511,11 +522,12 @@ public class DistributedNetworkSimulation<NodeInfo> {
       try {
         InetAddress ipAddress = uniqueLoopbackIpv4AddressGenerator.generateUniqueIpv4Address();
         if (ipAddress == null) {
-          throw new SimulationStartupException("The Kernel has run out of fresh ip addresses.");
+          throw new PacketCourierSimulationStartupException(
+              "The Kernel has run out of fresh ip addresses.");
         }
         return ipAddress;
       } catch (UnknownHostException e) {
-        throw new SimulationStartupException(e);
+        throw new PacketCourierSimulationStartupException(e);
       }
     }
   }

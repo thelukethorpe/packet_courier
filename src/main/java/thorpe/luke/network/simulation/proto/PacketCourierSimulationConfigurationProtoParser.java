@@ -1,4 +1,4 @@
-package thorpe.luke.network.simulation;
+package thorpe.luke.network.simulation.proto;
 
 import com.google.protobuf.util.JsonFormat;
 import java.io.File;
@@ -17,19 +17,20 @@ import thorpe.luke.log.Logger;
 import thorpe.luke.network.packet.NetworkCondition;
 import thorpe.luke.network.packet.NetworkEvent;
 import thorpe.luke.network.packet.PacketPipeline;
+import thorpe.luke.network.simulation.*;
 import thorpe.luke.network.simulation.node.DefaultNodeInfo;
 import thorpe.luke.network.simulation.node.NodeInfoGenerator;
 import thorpe.luke.network.simulation.worker.WorkerProcessConfiguration;
 import thorpe.luke.network.simulation.worker.WorkerScript;
 
-public class DistributedNetworkSimulationConfigurationProtoParser<NodeInfo> {
+public class PacketCourierSimulationConfigurationProtoParser<NodeInfo> {
 
-  private final DistributedNetworkSimulation.Configuration<NodeInfo> configuration;
+  private final PacketCourierSimulation.Configuration<NodeInfo> configuration;
   private final Map<String, WorkerScript<NodeInfo>> nodeNameToWorkerScriptWorkList;
   private final Random random;
 
-  private DistributedNetworkSimulationConfigurationProtoParser(
-      DistributedNetworkSimulation.Configuration<NodeInfo> configuration,
+  private PacketCourierSimulationConfigurationProtoParser(
+      PacketCourierSimulation.Configuration<NodeInfo> configuration,
       Map<String, WorkerScript<NodeInfo>> nodeNameToWorkerScriptWorkList,
       Random random) {
     this.configuration = configuration;
@@ -37,41 +38,46 @@ public class DistributedNetworkSimulationConfigurationProtoParser<NodeInfo> {
     this.random = random;
   }
 
-  public static DistributedNetworkSimulation.Configuration<DefaultNodeInfo> parse(
-      File protobufFile) {
+  public static PacketCourierSimulation.Configuration<DefaultNodeInfo> parse(File protobufFile) {
     return parse(protobufFile, DefaultNodeInfo.generator(), new HashMap<>());
   }
 
-  public static <NodeInfo> DistributedNetworkSimulation.Configuration<NodeInfo> parse(
+  public static <NodeInfo> PacketCourierSimulation.Configuration<NodeInfo> parse(
       File protobufFile,
       NodeInfoGenerator<NodeInfo> nodeInfoGenerator,
       Map<String, WorkerScript<NodeInfo>> nodeNameToWorkerScriptMap) {
-    DistributedNetworkSimulationConfigurationProto configurationProto;
+    PacketCourierSimulationConfigurationProto configurationProto;
     try {
       configurationProto = readProtobufFile(protobufFile);
     } catch (IOException e) {
-      throw new DistributedNetworkSimulationConfigurationProtoParserException(e);
+      throw new PacketCourierSimulationConfigurationProtoParserException(e);
     }
-    DistributedNetworkSimulation.Configuration<NodeInfo> configuration =
-        DistributedNetworkSimulation.configuration(nodeInfoGenerator);
+    PacketCourierSimulation.Configuration<NodeInfo> configuration =
+        PacketCourierSimulation.configuration(nodeInfoGenerator);
     Random random =
         configurationProto.hasSeed() ? new Random(configurationProto.getSeed()) : new Random();
-    DistributedNetworkSimulationConfigurationProtoParser<NodeInfo> parser =
-        new DistributedNetworkSimulationConfigurationProtoParser<>(
+    PacketCourierSimulationConfigurationProtoParser<NodeInfo> parser =
+        new PacketCourierSimulationConfigurationProtoParser<>(
             configuration, new HashMap<>(nodeNameToWorkerScriptMap), random);
     return parser.parseConfiguration(configurationProto);
   }
 
-  private static DistributedNetworkSimulationConfigurationProto readProtobufFile(File protobufFile)
+  private static PacketCourierSimulationConfigurationProto readProtobufFile(File protobufFile)
       throws IOException {
-    DistributedNetworkSimulationConfigurationProto.Builder protoBuilder =
-        DistributedNetworkSimulationConfigurationProto.newBuilder();
+    if (!protobufFile.getName().endsWith(PacketCourierSimulation.CONFIGURATION_FILE_EXTENSION)) {
+      throw new IOException(
+          protobufFile.getName()
+              + " does not have file extension "
+              + PacketCourierSimulation.CONFIGURATION_FILE_EXTENSION);
+    }
+    PacketCourierSimulationConfigurationProto.Builder protoBuilder =
+        PacketCourierSimulationConfigurationProto.newBuilder();
     JsonFormat.parser().ignoringUnknownFields().merge(new FileReader(protobufFile), protoBuilder);
     return protoBuilder.build();
   }
 
-  private DistributedNetworkSimulation.Configuration<NodeInfo> parseConfiguration(
-      DistributedNetworkSimulationConfigurationProto configurationProto) {
+  private PacketCourierSimulation.Configuration<NodeInfo> parseConfiguration(
+      PacketCourierSimulationConfigurationProto configurationProto) {
     for (CommandNodeProto commandNodeProto : configurationProto.getCommandsNodesList()) {
       String name = commandNodeProto.getName();
       String command = commandNodeProto.getCommand();
@@ -132,7 +138,7 @@ public class DistributedNetworkSimulationConfigurationProtoParser<NodeInfo> {
       case FILE:
         return parseFileLogger(loggerProto.getFile());
     }
-    throw new DistributedNetworkSimulationConfigurationProtoParserException(
+    throw new PacketCourierSimulationConfigurationProtoParserException(
         "Logger Proto is missing parameters.");
   }
 
@@ -143,7 +149,7 @@ public class DistributedNetworkSimulationConfigurationProtoParser<NodeInfo> {
       case STDERR:
         return ConsoleLogger.err();
     }
-    throw new DistributedNetworkSimulationConfigurationProtoParserException(
+    throw new PacketCourierSimulationConfigurationProtoParserException(
         "Console Logger Proto not recognized.");
   }
 
@@ -151,7 +157,7 @@ public class DistributedNetworkSimulationConfigurationProtoParser<NodeInfo> {
     try {
       return new BufferedFileLogger(Paths.get(fileLoggerProto.getPath()).toFile());
     } catch (IOException e) {
-      throw new DistributedNetworkSimulationConfigurationProtoParserException(e);
+      throw new PacketCourierSimulationConfigurationProtoParserException(e);
     }
   }
 
@@ -174,7 +180,7 @@ public class DistributedNetworkSimulationConfigurationProtoParser<NodeInfo> {
       case EVENTPIPELINEPARAMETERS:
         return parseEventPipelineParameters(networkConditionProto.getEventPipelineParameters());
     }
-    throw new DistributedNetworkSimulationConfigurationProtoParserException(
+    throw new PacketCourierSimulationConfigurationProtoParserException(
         "Network Condition Proto is missing parameters.");
   }
 
@@ -234,7 +240,7 @@ public class DistributedNetworkSimulationConfigurationProtoParser<NodeInfo> {
             timeUnit,
             random);
     }
-    throw new DistributedNetworkSimulationConfigurationProtoParserException(
+    throw new PacketCourierSimulationConfigurationProtoParserException(
         "Packet Latency Proto is missing distribution.");
   }
 
@@ -303,7 +309,7 @@ public class DistributedNetworkSimulationConfigurationProtoParser<NodeInfo> {
       case FOREVER:
         return ChronoUnit.FOREVER;
     }
-    throw new DistributedNetworkSimulationConfigurationProtoParserException(
+    throw new PacketCourierSimulationConfigurationProtoParserException(
         "Time Unit Proto not recognized.");
   }
 }

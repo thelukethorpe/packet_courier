@@ -10,6 +10,7 @@ import java.util.List;
 import thorpe.luke.log.BufferedFileLogger;
 import thorpe.luke.log.Logger;
 import thorpe.luke.network.packet.Packet;
+import thorpe.luke.network.simulation.PacketCourierSimulation;
 import thorpe.luke.network.simulation.mail.Mailbox;
 import thorpe.luke.network.simulation.mail.PostalService;
 
@@ -89,7 +90,7 @@ public class WorkerManager<NodeInfo> {
         address.getHostingNodeAddress().getName()
             + "__"
             + CRASH_DUMP_DATE_FORMAT.format(now)
-            + ".simdump";
+            + PacketCourierSimulation.CRASH_DUMP_FILE_EXTENSION;
     File crashDumpFile = crashDumpLocation.resolve(crashDumpFileName).toFile();
     BufferedFileLogger crashDumpFileLogger;
     try {
