@@ -52,8 +52,8 @@ public class PacketCourierMain {
     }
 
     // Start the simulation.
-    print("Starting Packet Courier simulation...");
-    print("############### START ###############");
+    print("Info: Starting Packet Courier simulation...");
+    print("#################### START ####################");
     PacketCourierSimulation<DefaultNodeInfo> packetCourierSimulation;
     try {
       packetCourierSimulation = packetCourierSimulationConfiguration.start();
@@ -72,7 +72,7 @@ public class PacketCourierMain {
     }
 
     // Simulation complete.
-    print("############### FINISH ###############");
+    print("#################### FINISH ####################");
     exit(EXIT_CODE_SUCCESS, "Success: Packet Courier simulation has finished.");
   }
 }
