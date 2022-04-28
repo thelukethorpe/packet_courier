@@ -25,15 +25,15 @@
       "networkConditions": [
         {
           "packetDropParameters": {
-            "probability": 0.5
+            "dropProbability": 0.5
           }
         },
         {
           "packetLatencyParameters": {
             "timeUnit": "MILLI_SECONDS",
             "uniform": {
-              "minimum": 35.0,
-              "maximum": 50.0
+              "minimum": 150.0,
+              "maximum": 500.0
             }
           }
         }

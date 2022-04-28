@@ -60,7 +60,11 @@ public class WorkerManager<NodeInfo> {
   }
 
   public Packet waitForMail() {
-    return mailbox.waitForMail();
+    try {
+      return mailbox.waitForMail();
+    } catch (InterruptedException e) {
+      throw new WorkerException(e);
+    }
   }
 
   public Worker<NodeInfo> spawnChildWorker(WorkerScript<NodeInfo> workerScript) {
