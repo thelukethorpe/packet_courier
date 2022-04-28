@@ -7,9 +7,11 @@ import java.io.InputStreamReader;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import thorpe.luke.network.packet.Packet;
 
 public class WorkerDatagramForwardingScript<NodeInfo> implements WorkerScript<NodeInfo> {
@@ -47,7 +49,12 @@ public class WorkerDatagramForwardingScript<NodeInfo> implements WorkerScript<No
             () -> {
               byte[] buffer = new byte[datagramBufferSize];
               do {
-                Packet packet = workerManager.waitForMail();
+                Packet packet;
+                try {
+                  packet = workerManager.waitForMail();
+                } catch (WorkerException e) {
+                  return;
+                }
                 List<Byte> data = packet.getData();
                 for (int i = 0; i < buffer.length; i++) {
                   buffer[i] = data.get(i);
@@ -64,7 +71,12 @@ public class WorkerDatagramForwardingScript<NodeInfo> implements WorkerScript<No
                           InetAddress.getByAddress(sourceIpAddress));
                   publicSocket.send(forwardingDatagramPacket);
                 } catch (IOException e) {
-                  throw new WorkerException(e);
+                  List<String> stackTraceErrors =
+                      Arrays.stream(e.getStackTrace())
+                          .map(StackTraceElement::toString)
+                          .collect(Collectors.toList());
+                  workerManager.generateCrashDump(stackTraceErrors);
+                  return;
                 }
               } while (true);
             });
