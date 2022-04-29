@@ -8,36 +8,40 @@
       "console": "STDOUT"
     }
   ],
-  "commandsNodes": [
-    {
-      "name": "Alice",
-      "command": "python3 src/test/resources/thorpe/luke/network/simulation/example/simple_client.py ${NODE_NAME} ${PRIVATE_IP} 4444 ${NEIGHBOUR_IPS}"
-    },
-    {
-      "name": "Bob",
-      "command": "python3 src/test/resources/thorpe/luke/network/simulation/example/simple_server.py ${NODE_NAME} ${PRIVATE_IP} 4444"
-    }
-  ],
-  "connections": [
-    {
-      "sourceNodeName": "Alice",
-      "destinationNodeName": "Bob",
-      "networkConditions": [
+  "topology": {
+    "custom": {
+      "commandsNodes": [
         {
-          "packetDropParameters": {
-            "dropProbability": 0.5
-          }
+          "name": "Alice",
+          "command": "python3 src/test/resources/thorpe/luke/network/simulation/example/simple_client.py ${NODE_NAME} ${PRIVATE_IP} ${PORT} ${NEIGHBOUR_IPS} 250"
         },
         {
-          "packetLatencyParameters": {
-            "timeUnit": "MILLI_SECONDS",
-            "uniform": {
-              "minimum": 150.0,
-              "maximum": 500.0
+          "name": "Bob",
+          "command": "python3 src/test/resources/thorpe/luke/network/simulation/example/simple_server.py ${NODE_NAME} ${PRIVATE_IP} ${PORT} ${DATAGRAM_BUFFER_SIZE}"
+        }
+      ],
+      "connections": [
+        {
+          "sourceNodeName": "Alice",
+          "destinationNodeName": "Bob",
+          "networkConditions": [
+            {
+              "packetDropParameters": {
+                "dropProbability": 0.5
+              }
+            },
+            {
+              "packetLatencyParameters": {
+                "timeUnit": "MILLI_SECONDS",
+                "uniform": {
+                  "minimum": 150.0,
+                  "maximum": 500.0
+                }
+              }
             }
-          }
+          ]
         }
       ]
     }
-  ]
+  }
 }

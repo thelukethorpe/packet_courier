@@ -1,45 +1,49 @@
 {
   "wallClockEnabled": true,
-  "connections": [
-    {
-      "sourceNodeName": "Alice",
-      "destinationNodeName": "Bob",
-      "networkConditions": [
+  "topology" : {
+    "custom" : {
+      "connections": [
         {
-          "eventPipelineParameters": {
-            "timeUnit": "MILLI_SECONDS",
-            "defaultNetworkConditions": [],
-            "networkEvents": [
-              {
-                "meanInterval": 400.0,
-                "meanDuration": 650.0,
-                "networkConditions": [
+          "sourceNodeName": "Alice",
+          "destinationNodeName": "Bob",
+          "networkConditions": [
+            {
+              "eventPipelineParameters": {
+                "timeUnit": "MILLI_SECONDS",
+                "defaultNetworkConditions": [],
+                "networkEvents": [
                   {
-                    "packetDropParameters": {
-                      "dropProbability": 1.0
-                    }
-                  }
-                ]
-              },
-              {
-                "meanInterval": 175.0,
-                "meanDuration": 250.0,
-                "networkConditions": [
-                  {
-                    "packetLatencyParameters": {
-                      "timeUnit": "MILLI_SECONDS",
-                      "uniform": {
-                        "minimum": 35.0,
-                        "maximum": 50.0
+                    "meanInterval": 400.0,
+                    "meanDuration": 650.0,
+                    "networkConditions": [
+                      {
+                        "packetDropParameters": {
+                          "dropProbability": 1.0
+                        }
                       }
-                    }
+                    ]
+                  },
+                  {
+                    "meanInterval": 175.0,
+                    "meanDuration": 250.0,
+                    "networkConditions": [
+                      {
+                        "packetLatencyParameters": {
+                          "timeUnit": "MILLI_SECONDS",
+                          "uniform": {
+                            "minimum": 35.0,
+                            "maximum": 50.0
+                          }
+                        }
+                      }
+                    ]
                   }
                 ]
               }
-            ]
-          }
+            }
+          ]
         }
       ]
     }
-  ]
+  }
 }

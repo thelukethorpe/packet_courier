@@ -6,10 +6,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.Collectors;
 import thorpe.luke.log.BufferedFileLogger;
 import thorpe.luke.log.ConsoleLogger;
@@ -22,12 +19,14 @@ import thorpe.luke.network.simulation.node.DefaultNodeInfo;
 import thorpe.luke.network.simulation.node.NodeInfoGenerator;
 import thorpe.luke.network.simulation.worker.WorkerProcessConfiguration;
 import thorpe.luke.network.simulation.worker.WorkerScript;
+import thorpe.luke.util.UniqueStringGenerator;
 
 public class PacketCourierSimulationConfigurationProtoParser<NodeInfo> {
 
   private final PacketCourierSimulation.Configuration<NodeInfo> configuration;
   private final Map<String, WorkerScript<NodeInfo>> nodeNameToWorkerScriptWorkList;
   private final Random random;
+  private final UniqueStringGenerator uniqueStringGenerator = new UniqueStringGenerator();
 
   private PacketCourierSimulationConfigurationProtoParser(
       PacketCourierSimulation.Configuration<NodeInfo> configuration,
@@ -78,12 +77,6 @@ public class PacketCourierSimulationConfigurationProtoParser<NodeInfo> {
 
   private PacketCourierSimulation.Configuration<NodeInfo> parseConfiguration(
       PacketCourierSimulationConfigurationProto configurationProto) {
-    for (CommandNodeProto commandNodeProto : configurationProto.getCommandsNodesList()) {
-      String name = commandNodeProto.getName();
-      String command = commandNodeProto.getCommand();
-      configuration.addNode(name, WorkerProcessConfiguration.fromCommand(command));
-    }
-
     if (configurationProto.getWallClockEnabled()) {
       configuration.usingWallClock();
     }
@@ -104,7 +97,39 @@ public class PacketCourierSimulationConfigurationProtoParser<NodeInfo> {
         .getLoggersList()
         .forEach(loggerProto -> configuration.addLogger(parseLogger(loggerProto)));
 
-    for (ConnectionProto connectionProto : configurationProto.getConnectionsList()) {
+    parseTopology(configurationProto.getTopology());
+    return configuration;
+  }
+
+  private Optional<String> parseTopology(TopologyProto topologyProto) {
+    switch (topologyProto.getTopologyCase()) {
+      case CUSTOM:
+        return parseCustomTopology(topologyProto.getCustom());
+      case STAR:
+        return parseStarTopology(topologyProto.getStar());
+      case RING:
+        return parseRingTopology(topologyProto.getRing());
+      case LINEARDAISYCHAIN:
+        return parseLinearDaisyChainTopology(topologyProto.getLinearDaisyChain());
+      case FULLYCONNECTEDMESH:
+        return parseFullyConnectedMeshTopology(topologyProto.getFullyConnectedMesh());
+      case JOINTMESH:
+        return parseJointMeshTopology(topologyProto.getJointMesh());
+      case DISJOINTMESH:
+        return parseDisjointMeshTopology(topologyProto.getDisjointMesh());
+    }
+    throw new PacketCourierSimulationConfigurationProtoParserException(
+        "Topology Proto is missing parameters.");
+  }
+
+  private Optional<String> parseCustomTopology(CustomTopologyProto customTopologyProto) {
+    for (CommandNodeProto commandNodeProto : customTopologyProto.getCommandsNodesList()) {
+      String name = commandNodeProto.getName();
+      String command = commandNodeProto.getCommand();
+      configuration.addNode(name, WorkerProcessConfiguration.fromCommand(command));
+    }
+
+    for (ConnectionProto connectionProto : customTopologyProto.getConnectionsList()) {
       String sourceNodeName = connectionProto.getSourceNodeName();
       WorkerScript<NodeInfo> sourceNodeWorkerScript =
           nodeNameToWorkerScriptWorkList.get(sourceNodeName);
@@ -128,7 +153,183 @@ public class PacketCourierSimulationConfigurationProtoParser<NodeInfo> {
                   .collect(Collectors.toList()));
       configuration.addConnection(sourceNodeName, destinationNodeName, packetPipelineParameters);
     }
-    return configuration;
+
+    return Optional.ofNullable(
+        customTopologyProto.hasJoiningNodeName() ? customTopologyProto.getJoiningNodeName() : null);
+  }
+
+  private Optional<String> parseStarTopology(StarTopologyProto starTopologyProto) {
+    String serverName = "Star Server " + uniqueStringGenerator.generateUniqueString();
+    String serverCommand = starTopologyProto.getServerCommand();
+    configuration.addNode(serverName, WorkerProcessConfiguration.fromCommand(serverCommand));
+
+    if (starTopologyProto.getSize() <= 0) {
+      return Optional.of(serverName);
+    }
+
+    String clientCommand = starTopologyProto.getClientCommand();
+    PacketPipeline.Parameters packetPipelineParameters =
+        PacketPipeline.parameters(
+            starTopologyProto
+                .getNetworkConditionsList()
+                .stream()
+                .map(this::parseNetworkCondition)
+                .collect(Collectors.toList()));
+
+    for (int i = 0; i < starTopologyProto.getSize(); i++) {
+      String clientName =
+          "Star Client " + uniqueStringGenerator.generateUniqueString() + " of " + serverName;
+      configuration.addNode(clientName, WorkerProcessConfiguration.fromCommand(clientCommand));
+      configuration.addConnection(clientName, serverName, packetPipelineParameters);
+      if (!starTopologyProto.getUnidirectional()) {
+        configuration.addConnection(serverName, clientName, packetPipelineParameters);
+      }
+    }
+
+    return Optional.of(serverName);
+  }
+
+  private Optional<String> parseRingTopology(RingTopologyProto ringTopologyProto) {
+    if (ringTopologyProto.getSize() <= 0) {
+      return Optional.empty();
+    }
+
+    String command = ringTopologyProto.getCommand();
+    PacketPipeline.Parameters packetPipelineParameters =
+        PacketPipeline.parameters(
+            ringTopologyProto
+                .getNetworkConditionsList()
+                .stream()
+                .map(this::parseNetworkCondition)
+                .collect(Collectors.toList()));
+    List<String> names = new ArrayList<>(ringTopologyProto.getSize());
+
+    for (int i = 0; i < ringTopologyProto.getSize(); i++) {
+      String name = "Ring Client " + uniqueStringGenerator.generateUniqueString();
+      names.add(name);
+      configuration.addNode(name, WorkerProcessConfiguration.fromCommand(command));
+    }
+
+    for (int i = 0; i < names.size(); i++) {
+      String currentName = names.get(i);
+      String nextName = names.get((i + 1) % names.size());
+      configuration.addConnection(currentName, nextName, packetPipelineParameters);
+      if (!ringTopologyProto.getUnidirectional()) {
+        configuration.addConnection(nextName, currentName, packetPipelineParameters);
+      }
+    }
+
+    return Optional.of(names.get(0));
+  }
+
+  private Optional<String> parseLinearDaisyChainTopology(
+      LinearDaisyChainTopologyProto linearDaisyChainTopologyProto) {
+    if (linearDaisyChainTopologyProto.getSize() <= 0) {
+      return Optional.empty();
+    }
+
+    String command = linearDaisyChainTopologyProto.getCommand();
+    PacketPipeline.Parameters packetPipelineParameters =
+        PacketPipeline.parameters(
+            linearDaisyChainTopologyProto
+                .getNetworkConditionsList()
+                .stream()
+                .map(this::parseNetworkCondition)
+                .collect(Collectors.toList()));
+    List<String> names = new ArrayList<>(linearDaisyChainTopologyProto.getSize());
+
+    for (int i = 0; i < linearDaisyChainTopologyProto.getSize(); i++) {
+      String name = "Linear Daisy Chain Client " + uniqueStringGenerator.generateUniqueString();
+      names.add(name);
+      configuration.addNode(name, WorkerProcessConfiguration.fromCommand(command));
+    }
+
+    for (int i = 0; i < names.size() - 1; i++) {
+      String currentName = names.get(i);
+      String nextName = names.get(i + 1);
+      configuration.addConnection(currentName, nextName, packetPipelineParameters);
+      if (!linearDaisyChainTopologyProto.getUnidirectional()) {
+        configuration.addConnection(nextName, currentName, packetPipelineParameters);
+      }
+    }
+
+    String lastName = names.get(names.size() - 1);
+    return Optional.of(lastName);
+  }
+
+  private Optional<String> parseFullyConnectedMeshTopology(
+      FullyConnectedMeshTopologyProto fullyConnectedMeshTopologyProto) {
+    if (fullyConnectedMeshTopologyProto.getSize() <= 0) {
+      return Optional.empty();
+    }
+
+    String command = fullyConnectedMeshTopologyProto.getCommand();
+    PacketPipeline.Parameters packetPipelineParameters =
+        PacketPipeline.parameters(
+            fullyConnectedMeshTopologyProto
+                .getNetworkConditionsList()
+                .stream()
+                .map(this::parseNetworkCondition)
+                .collect(Collectors.toList()));
+    List<String> names = new ArrayList<>(fullyConnectedMeshTopologyProto.getSize());
+
+    for (int i = 0; i < fullyConnectedMeshTopologyProto.getSize(); i++) {
+      String name = "Fully Connected Mesh Client " + uniqueStringGenerator.generateUniqueString();
+      names.add(name);
+      configuration.addNode(name, WorkerProcessConfiguration.fromCommand(command));
+    }
+
+    for (int i = 0; i < names.size(); i++) {
+      for (int j = i + 1; j < names.size(); j++) {
+        String iName = names.get(i);
+        String jName = names.get(j);
+        configuration.addConnection(iName, jName, packetPipelineParameters);
+        configuration.addConnection(jName, iName, packetPipelineParameters);
+      }
+    }
+
+    return Optional.of(names.get(0));
+  }
+
+  private Optional<String> parseJointMeshTopology(JointMeshTopologyProto jointMeshTopologyProto) {
+    List<String> joiningMeshNames =
+        jointMeshTopologyProto
+            .getJointTopologiesList()
+            .stream()
+            .map(this::parseTopology)
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .collect(Collectors.toList());
+    PacketPipeline.Parameters packetPipelineParameters =
+        PacketPipeline.parameters(
+            jointMeshTopologyProto
+                .getNetworkConditionsList()
+                .stream()
+                .map(this::parseNetworkCondition)
+                .collect(Collectors.toList()));
+
+    for (int i = 0; i < joiningMeshNames.size(); i++) {
+      for (int j = i + 1; j < joiningMeshNames.size(); j++) {
+        String iName = joiningMeshNames.get(i);
+        String jName = joiningMeshNames.get(j);
+        configuration.addConnection(iName, jName, packetPipelineParameters);
+        configuration.addConnection(jName, iName, packetPipelineParameters);
+      }
+    }
+
+    return Optional.ofNullable(
+        jointMeshTopologyProto.hasJoiningNodeName()
+            ? jointMeshTopologyProto.getJoiningNodeName()
+            : null);
+  }
+
+  private Optional<String> parseDisjointMeshTopology(
+      DisjointMeshTopologyProto disjointMeshTopologyProto) {
+    disjointMeshTopologyProto.getDisjointTopologiesList().forEach(this::parseTopology);
+    return Optional.ofNullable(
+        disjointMeshTopologyProto.hasJoiningNodeName()
+            ? disjointMeshTopologyProto.getJoiningNodeName()
+            : null);
   }
 
   private static Logger parseLogger(LoggerProto loggerProto) {

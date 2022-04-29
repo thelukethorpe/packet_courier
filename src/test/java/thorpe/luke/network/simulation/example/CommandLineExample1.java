@@ -6,6 +6,8 @@ public class CommandLineExample1 {
 
   public static void main(String[] args) {
     PacketCourierMain.main(
-        new String[] {ProtoExample1.class.getResource("cmd_example1.courierconfig").getPath()});
+        new String[] {
+          CommandLineExample1.class.getResource("cmd_example1.courierconfig").getPath()
+        });
   }
 }
