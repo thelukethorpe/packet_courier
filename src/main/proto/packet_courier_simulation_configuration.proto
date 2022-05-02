@@ -7,15 +7,71 @@ option java_outer_classname = "PacketCourierSimulationConfigurationProtobuf";
 option java_package = "thorpe.luke.network.simulation";
 
 message PacketCourierSimulationConfigurationProto {
+  TopologyProto topology = 1;
+  bool wallClockEnabled = 2;
+  bool processLoggingEnabled = 3;
+  optional string crashDumpLocation = 4;
+  optional int32 port = 5;
+  optional int32 datagramBufferSize = 6;
+  repeated LoggerProto loggers = 7;
+  optional int32 seed = 8;
+}
+
+message TopologyProto {
+  oneof topology {
+    CustomTopologyProto custom = 1;
+    StarTopologyProto star = 2;
+    RingTopologyProto ring = 3;
+    LinearDaisyChainTopologyProto linearDaisyChain = 4;
+    FullyConnectedMeshTopologyProto fullyConnectedMesh = 5;
+    JointMeshTopologyProto jointMesh = 6;
+    DisjointMeshTopologyProto disjointMesh = 7;
+  }
+}
+
+message CustomTopologyProto {
   repeated CommandNodeProto commandsNodes = 1;
   repeated ConnectionProto connections = 2;
-  bool wallClockEnabled = 3;
-  bool processLoggingEnabled = 4;
-  optional string crashDumpLocation = 5;
-  optional int32 port = 6;
-  optional int32 datagramBufferSize = 7;
-  repeated LoggerProto loggers = 8;
-  optional int32 seed = 9;
+  optional string joiningNodeName = 3;
+}
+
+message StarTopologyProto {
+  string serverCommand = 1;
+  string clientCommand = 2;
+  bool unidirectional = 3;
+  int32 size = 4;
+  repeated NetworkConditionProto networkConditions = 5;
+}
+
+message RingTopologyProto {
+  string command = 1;
+  bool unidirectional = 2;
+  int32 size = 3;
+  repeated NetworkConditionProto networkConditions = 4;
+}
+
+message LinearDaisyChainTopologyProto {
+  string command = 1;
+  bool unidirectional = 2;
+  int32 size = 3;
+  repeated NetworkConditionProto networkConditions = 4;
+}
+
+message FullyConnectedMeshTopologyProto {
+  string command = 1;
+  int32 size = 2;
+  repeated NetworkConditionProto networkConditions = 3;
+}
+
+message JointMeshTopologyProto {
+  repeated TopologyProto jointTopologies = 1;
+  repeated NetworkConditionProto networkConditions = 2;
+  optional string joiningNodeName = 3;
+}
+
+message DisjointMeshTopologyProto {
+  repeated TopologyProto disjointTopologies = 1;
+  optional string joiningNodeName = 3;
 }
 
 message CommandNodeProto {

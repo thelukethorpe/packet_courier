@@ -324,7 +324,12 @@ public class PacketCourierSimulation<NodeInfo> {
               processLoggingEnabled) -> {
             WorkerProcessFactory workerProcessFactory =
                 workerProcessConfiguration.buildFactory(
-                    address, topology, privateIpAddress, workerAddressToPublicIpMap);
+                    address,
+                    topology,
+                    port,
+                    privateIpAddress,
+                    workerAddressToPublicIpMap,
+                    datagramBufferSize);
             return WorkerDatagramForwardingScript.builder()
                 .withWorkerProcessFactory(workerProcessFactory)
                 .withPort(port)

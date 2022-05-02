@@ -17,6 +17,7 @@ public class DatagramExample1 {
   public static final String NODE_B_NAME = "Bob";
   public static final int PORT = 4444;
   public static final int DATAGRAM_BUFFER_SIZE = 32;
+  public static final int NUMBER_OF_MESSAGES_SENT = 250;
 
   public static class DatagramExample1NodeInfo {}
 
@@ -34,14 +35,14 @@ public class DatagramExample1 {
                 NODE_A_NAME,
                 WorkerProcessConfiguration.fromCommand(
                     String.format(
-                        "python3 %s ${NODE_NAME} ${PRIVATE_IP} %s ${NEIGHBOUR_IPS}",
-                        simpleClientScript.getAbsolutePath(), PORT)))
+                        "python3 %s ${NODE_NAME} ${PRIVATE_IP} ${PORT} ${NEIGHBOUR_IPS} %s",
+                        simpleClientScript.getAbsolutePath(), NUMBER_OF_MESSAGES_SENT)))
             .addNode(
                 NODE_B_NAME,
                 WorkerProcessConfiguration.fromCommand(
                     String.format(
-                        "python3 %s ${NODE_NAME} ${PRIVATE_IP} %s",
-                        simpleServerScript.getAbsolutePath(), PORT)))
+                        "python3 %s ${NODE_NAME} ${PRIVATE_IP} ${PORT} ${DATAGRAM_BUFFER_SIZE}",
+                        simpleServerScript.getAbsolutePath())))
             .addConnection(
                 NODE_A_NAME,
                 NODE_B_NAME,

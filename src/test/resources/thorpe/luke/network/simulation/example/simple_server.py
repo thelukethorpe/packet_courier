@@ -3,7 +3,7 @@ import socket
 import sys
 
 if __name__ == "__main__":
-    if len(sys.argv) != 4:
+    if len(sys.argv) != 5:
         exit(1)
 
     # Get node name from arg 1.
@@ -12,6 +12,8 @@ if __name__ == "__main__":
     private_ip = sys.argv[2]
     # Get port from arg 3.
     port = int(sys.argv[3])
+    # Get datagram buffer size from arg 4.
+    datagram_buffer_size = int(sys.argv[4])
 
     # Create datagram socket.
     private_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -25,7 +27,7 @@ if __name__ == "__main__":
 
     def listen_and_print():
         while True:
-            data, address = private_socket.recvfrom(32)
+            data, address = private_socket.recvfrom(datagram_buffer_size)
             log(node_name + " has received data from " + str(address) + ": " + data.decode("utf-8"))
 
 

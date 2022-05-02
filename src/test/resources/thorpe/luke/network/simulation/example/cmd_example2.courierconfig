@@ -1,0 +1,34 @@
+{
+  "port": 4444,
+  "datagramBufferSize": 64,
+  "wallClockEnabled": true,
+  "processLoggingEnabled": true,
+  "loggers": [
+    {
+      "console": "STDOUT"
+    }
+  ],
+  "topology": {
+    "star": {
+      "serverCommand": "python3 src/test/resources/thorpe/luke/network/simulation/example/simple_server.py ${NODE_NAME} ${PRIVATE_IP} ${PORT} ${DATAGRAM_BUFFER_SIZE}",
+      "clientCommand": "python3 src/test/resources/thorpe/luke/network/simulation/example/simple_client.py ${NODE_NAME} ${PRIVATE_IP} ${PORT} ${NEIGHBOUR_IPS} 10",
+      "size": 25,
+      "networkConditions": [
+        {
+          "packetDropParameters": {
+            "dropProbability": 0.5
+          }
+        },
+        {
+          "packetLatencyParameters": {
+            "timeUnit": "MILLI_SECONDS",
+            "uniform": {
+              "minimum": 150.0,
+              "maximum": 500.0
+            }
+          }
+        }
+      ]
+    }
+  }
+}
