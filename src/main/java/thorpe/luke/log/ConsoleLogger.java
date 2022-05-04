@@ -4,6 +4,9 @@ import java.io.PrintStream;
 
 public class ConsoleLogger implements Logger {
 
+  private static final ConsoleLogger OUT = new ConsoleLogger(System.out);
+  private static final ConsoleLogger ERR = new ConsoleLogger(System.err);
+
   private final PrintStream printStream;
 
   private ConsoleLogger(PrintStream printStream) {
@@ -11,11 +14,11 @@ public class ConsoleLogger implements Logger {
   }
 
   public static ConsoleLogger out() {
-    return new ConsoleLogger(System.out);
+    return OUT;
   }
 
   public static ConsoleLogger err() {
-    return new ConsoleLogger(System.err);
+    return ERR;
   }
 
   @Override
