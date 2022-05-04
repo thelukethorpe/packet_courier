@@ -92,10 +92,17 @@ public class PacketCourierSimulationConfigurationProtoParser<NodeInfo> {
     if (configurationProto.hasDatagramBufferSize()) {
       configuration.withDatagramBufferSize(configurationProto.getDatagramBufferSize());
     }
+    if (configurationProto.hasSimulationName()) {
+      configuration.withSimulationName(configurationProto.getSimulationName());
+    }
 
     configurationProto
         .getLoggersList()
         .forEach(loggerProto -> configuration.addLogger(parseLogger(loggerProto)));
+
+    configurationProto
+        .getMetaLoggersList()
+        .forEach(loggerProto -> configuration.addMetaLogger(parseLogger(loggerProto)));
 
     parseTopology(configurationProto.getTopology());
     return configuration;

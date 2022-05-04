@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.*;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -20,6 +21,7 @@ import thorpe.luke.network.simulation.worker.*;
 import thorpe.luke.time.Clock;
 import thorpe.luke.time.VirtualClock;
 import thorpe.luke.time.WallClock;
+import thorpe.luke.util.ExceptionListener;
 import thorpe.luke.util.UniqueLoopbackIpv4AddressGenerator;
 
 public class PacketCourierSimulation<NodeInfo> {
@@ -27,18 +29,28 @@ public class PacketCourierSimulation<NodeInfo> {
   public static final String CONFIGURATION_FILE_EXTENSION = ".courierconfig";
   public static final String CRASH_DUMP_FILE_EXTENSION = ".couriercrashdump";
 
+  private static final DateTimeFormatter META_LOG_DATE_FORMAT =
+      DateTimeFormatter.ofPattern("dd/MM/yyyy-hh:mm:ss");
+
+  private final String simulationName;
+  private final Collection<Logger> metaLoggers;
   private final Thread simulator;
 
   private PacketCourierSimulation(
+      String simulationName,
       Map<String, RunnableNode<NodeInfo>> nodes,
       Topology topology,
       PacketCourierPostalService<NodeInfo> postalService,
       Clock clock,
       Collection<Logger> loggers,
+      Collection<Logger> metaLoggers,
       Path crashDumpLocation,
+      int port,
       int datagramBufferSize,
       Map<InetAddress, WorkerAddress> privateIpAddressToWorkerAddressMap,
       Map<Node<NodeInfo>, DatagramSocket> nodeToPublicSocketMap) {
+    this.simulationName = simulationName;
+    this.metaLoggers = metaLoggers;
     this.simulator =
         new Thread(
             () ->
@@ -48,7 +60,9 @@ public class PacketCourierSimulation<NodeInfo> {
                     postalService,
                     clock,
                     loggers,
+                    metaLoggers,
                     crashDumpLocation,
+                    port,
                     datagramBufferSize,
                     privateIpAddressToWorkerAddressMap,
                     nodeToPublicSocketMap));
@@ -63,8 +77,28 @@ public class PacketCourierSimulation<NodeInfo> {
     return new Configuration<>(DefaultNodeInfo.generator());
   }
 
-  private void start() {
-    simulator.start();
+  public void start() {
+    try {
+      simulator.start();
+    } catch (IllegalThreadStateException e) {
+      throw new PacketCourierSimulationStartupException(
+          "Packet Courier Simulation has already started.");
+    }
+  }
+
+  private void metaLog(String message) {
+    LocalDateTime now = LocalDateTime.now();
+    String datedAndNamedMessage =
+        String.format("%s-%s: %s.", META_LOG_DATE_FORMAT.format(now), simulationName, message);
+    metaLoggers.forEach(metaLogger -> metaLogger.log(datedAndNamedMessage));
+  }
+
+  private void metaLog(Exception exception) {
+    String exceptionStackTrace =
+        Arrays.stream(exception.getStackTrace())
+            .map(StackTraceElement::toString)
+            .collect(Collectors.joining("\n"));
+    metaLog("Internal simulation exception; stack trace:" + exceptionStackTrace);
   }
 
   private void run(
@@ -73,23 +107,32 @@ public class PacketCourierSimulation<NodeInfo> {
       PacketCourierPostalService<NodeInfo> postalService,
       Clock clock,
       Collection<Logger> loggers,
+      Collection<Logger> metaLoggers,
       Path crashDumpLocation,
+      int port,
       int datagramBufferSize,
       Map<InetAddress, WorkerAddress> privateIpAddressToWorkerAddressMap,
       Map<Node<NodeInfo>, DatagramSocket> nodeToPublicSocketMap) {
     // Configure simulation logic.
+    metaLog("Preprocessing simulation");
     AtomicBoolean simulationComplete = new AtomicBoolean(false);
-    Collection<Thread> nodeThreads =
+    Map<Node<NodeInfo>, Thread> nodeThreads =
         nodes
             .values()
             .stream()
-            .map(
-                runnableNode ->
-                    new Thread(
-                        () ->
-                            runnableNode.run(
-                                topology, postalService, clock, loggers, crashDumpLocation)))
-            .collect(Collectors.toList());
+            .collect(
+                Collectors.toMap(
+                    RunnableNode::getNode,
+                    runnableNode ->
+                        new Thread(
+                            () ->
+                                runnableNode.run(
+                                    topology,
+                                    postalService,
+                                    clock,
+                                    loggers,
+                                    this::metaLog,
+                                    crashDumpLocation))));
     Thread simulationManagerThread =
         new Thread(
             () -> {
@@ -127,28 +170,49 @@ public class PacketCourierSimulation<NodeInfo> {
             .collect(Collectors.toList());
 
     // Start threads.
-    datagramRoutingThreads.forEach(Thread::start);
-    nodeThreads.forEach(Thread::start);
+    if (!datagramRoutingThreads.isEmpty()) {
+      datagramRoutingThreads.forEach(Thread::start);
+      metaLog("Now listening on port " + port);
+    }
+
+    for (Map.Entry<Node<NodeInfo>, Thread> nodeThreadEntry : nodeThreads.entrySet()) {
+      Node<NodeInfo> node = nodeThreadEntry.getKey();
+      Thread nodeThread = nodeThreadEntry.getValue();
+      nodeThread.start();
+      metaLog("Node \"" + node.getAddress().getName() + "\" has been set to work");
+    }
+
     simulationManagerThread.start();
+    metaLog("Simulation is now fully operational");
 
     // Wait for threads.
-    joinAll(nodeThreads);
+    joinAll(nodeThreads.values());
+    metaLog("All nodes have completed their work; simulation is now cleaning up resources");
     simulationComplete.set(true);
     joinAll(datagramRoutingThreads);
 
     try {
       simulationManagerThread.join();
     } catch (InterruptedException e) {
-      e.printStackTrace();
+      metaLog(e);
     }
+
+    metaLog("Simulation complete");
+
+    // Flush and close loggers.
+    metaLog("Flushing and closing loggers");
+    loggers.forEach(Logger::flush);
+    loggers.forEach(Logger::close);
+    metaLoggers.forEach(Logger::flush);
+    metaLoggers.forEach(Logger::close);
   }
 
-  private static void joinAll(Collection<Thread> threads) {
+  private void joinAll(Collection<Thread> threads) {
     for (Thread thread : threads) {
       try {
         thread.join();
       } catch (InterruptedException e) {
-        e.printStackTrace();
+        metaLog(e);
       }
     }
   }
@@ -212,12 +276,14 @@ public class PacketCourierSimulation<NodeInfo> {
         PostalService postalService,
         Clock clock,
         Collection<Logger> loggers,
+        ExceptionListener exceptionListener,
         Path crashDumpLocation) {
       node.doWork(
           workerScript,
           nodeInfoGenerator.generateInfo(node.getAddress(), topology, clock),
           postalService,
           loggers,
+          exceptionListener,
           crashDumpLocation);
     }
 
@@ -228,6 +294,7 @@ public class PacketCourierSimulation<NodeInfo> {
 
   @FunctionalInterface
   private interface WorkerScriptFactory<NodeInfo> {
+
     WorkerScript<NodeInfo> getWorkerScript(
         NodeAddress address,
         Topology topology,
@@ -245,13 +312,17 @@ public class PacketCourierSimulation<NodeInfo> {
   }
 
   public static class Configuration<NodeInfo> {
+    private final UniqueIpAddressGeneratorAdaptor uniqueIpAddressGenerator =
+        new UniqueIpAddressGeneratorAdaptor();
     private final Map<String, Node<NodeInfo>> nameToNodeMap = new HashMap<>();
     private final Map<Node<NodeInfo>, WorkerScriptFactory<NodeInfo>> nodeToWorkerScriptFactoryMap =
         new HashMap<>();
     private final Map<NodeConnection<NodeInfo>, PacketPipelineFactory>
         nodeConnectionToPacketPipelineFactoryMap = new HashMap<>();
     private final Collection<Logger> loggers = new LinkedList<>();
+    private final Collection<Logger> metaLoggers = new LinkedList<>();
     private final NodeInfoGenerator<NodeInfo> nodeInfoGenerator;
+    private String simulationName = "Packet Courier Simulation";
     private Clock clock = new VirtualClock(ChronoUnit.MILLIS);
     private boolean hasDatagramRoutingLayer = false;
     private Path crashDumpLocation = null;
@@ -269,12 +340,11 @@ public class PacketCourierSimulation<NodeInfo> {
 
     private void addNode(String name, WorkerScriptFactory<NodeInfo> workerScriptFactory) {
       if (name == null) {
-        throw new InvalidPacketCourierSimulationConfigurationException("Node name cannot be null.");
+        throw new PacketCourierSimulationConfigurationException("Node name cannot be null.");
       } else if (isBlank(name)) {
-        throw new InvalidPacketCourierSimulationConfigurationException(
-            "Node name cannot be blank.");
+        throw new PacketCourierSimulationConfigurationException("Node name cannot be blank.");
       } else if (nameToNodeMap.containsKey(name)) {
-        throw new InvalidPacketCourierSimulationConfigurationException(
+        throw new PacketCourierSimulationConfigurationException(
             "Node with name \"" + name + "\" has already been added.");
       }
 
@@ -289,8 +359,7 @@ public class PacketCourierSimulation<NodeInfo> {
 
     public Configuration<NodeInfo> addNode(String name, WorkerScript<NodeInfo> workerScript) {
       if (workerScript == null) {
-        throw new InvalidPacketCourierSimulationConfigurationException(
-            "Node script cannot be null.");
+        throw new PacketCourierSimulationConfigurationException("Node script cannot be null.");
       }
       addNode(
           name,
@@ -309,7 +378,7 @@ public class PacketCourierSimulation<NodeInfo> {
         String name, WorkerProcessConfiguration workerProcessConfiguration) {
       hasDatagramRoutingLayer = true;
       if (workerProcessConfiguration == null) {
-        throw new InvalidPacketCourierSimulationConfigurationException(
+        throw new PacketCourierSimulationConfigurationException(
             "Node process configuration cannot be null.");
       }
       addNode(
@@ -345,25 +414,24 @@ public class PacketCourierSimulation<NodeInfo> {
     public Configuration<NodeInfo> addConnection(
         String sourceName, String destinationName, Parameters packetPipelineParameters) {
       if (sourceName == null) {
-        throw new InvalidPacketCourierSimulationConfigurationException(
-            "Source node name cannot be null.");
+        throw new PacketCourierSimulationConfigurationException("Source node name cannot be null.");
       } else if (isBlank(sourceName)) {
-        throw new InvalidPacketCourierSimulationConfigurationException(
+        throw new PacketCourierSimulationConfigurationException(
             "Source node name cannot be blank.");
       } else if (!nameToNodeMap.containsKey(sourceName)) {
-        throw new InvalidPacketCourierSimulationConfigurationException(
+        throw new PacketCourierSimulationConfigurationException(
             "Node with name \"" + sourceName + "\" has not been added yet.");
       } else if (destinationName == null) {
-        throw new InvalidPacketCourierSimulationConfigurationException(
+        throw new PacketCourierSimulationConfigurationException(
             "Destination node name cannot be null.");
       } else if (isBlank(destinationName)) {
-        throw new InvalidPacketCourierSimulationConfigurationException(
+        throw new PacketCourierSimulationConfigurationException(
             "Destination node name cannot be blank.");
       } else if (!nameToNodeMap.containsKey(destinationName)) {
-        throw new InvalidPacketCourierSimulationConfigurationException(
+        throw new PacketCourierSimulationConfigurationException(
             "Node with name \"" + destinationName + "\" has not been added yet.");
       } else if (sourceName.equals(destinationName)) {
-        throw new InvalidPacketCourierSimulationConfigurationException(
+        throw new PacketCourierSimulationConfigurationException(
             "A node cannot be connected to itself.");
       }
 
@@ -372,7 +440,7 @@ public class PacketCourierSimulation<NodeInfo> {
       NodeConnection<NodeInfo> nodeConnection = new NodeConnection<>(sourceNode, destinationNode);
 
       if (nodeConnectionToPacketPipelineFactoryMap.containsKey(nodeConnection)) {
-        throw new InvalidPacketCourierSimulationConfigurationException(
+        throw new PacketCourierSimulationConfigurationException(
             "Connection has already been added.");
       }
 
@@ -381,8 +449,18 @@ public class PacketCourierSimulation<NodeInfo> {
       return this;
     }
 
+    public Configuration<NodeInfo> withSimulationName(String simulationName) {
+      this.simulationName = simulationName;
+      return this;
+    }
+
     public Configuration<NodeInfo> addLogger(Logger logger) {
       loggers.add(logger);
+      return this;
+    }
+
+    public Configuration<NodeInfo> addMetaLogger(Logger metaLogger) {
+      metaLoggers.add(metaLogger);
       return this;
     }
 
@@ -411,7 +489,7 @@ public class PacketCourierSimulation<NodeInfo> {
       return this;
     }
 
-    public PacketCourierSimulation<NodeInfo> start() {
+    public PacketCourierSimulation<NodeInfo> configure() {
       // Configure topology logic.
       Map<String, Collection<String>> nodeToNeighboursMap = new HashMap<>();
       nameToNodeMap.keySet().forEach(name -> nodeToNeighboursMap.put(name, new HashSet<>()));
@@ -426,8 +504,6 @@ public class PacketCourierSimulation<NodeInfo> {
       Topology topology = Topology.of(nodeToNeighboursMap);
 
       // Configure datagram socket logic.
-      UniqueIpAddressGeneratorAdaptor uniqueIpAddressGenerator =
-          new UniqueIpAddressGeneratorAdaptor();
       Map<Node<NodeInfo>, DatagramSocket> nodeToPublicSocketMap = new HashMap<>();
       if (this.hasDatagramRoutingLayer) {
         for (Node<NodeInfo> node : nameToNodeMap.values()) {
@@ -436,7 +512,7 @@ public class PacketCourierSimulation<NodeInfo> {
                 node,
                 new DatagramSocket(port, uniqueIpAddressGenerator.generateUniqueIpv4Address()));
           } catch (SocketException e) {
-            throw new PacketCourierSimulationStartupException(e);
+            throw new PacketCourierSimulationConfigurationException(e);
           }
         }
       }
@@ -502,20 +578,19 @@ public class PacketCourierSimulation<NodeInfo> {
       PacketCourierPostalService<NodeInfo> postalService =
           new PacketCourierPostalService<>(nameToNodeMap.values(), networkConditions);
 
-      PacketCourierSimulation<NodeInfo> packetCourierSimulation =
-          new PacketCourierSimulation<>(
-              nameToRunnableNodeMap,
-              topology,
-              postalService,
-              clock,
-              loggers,
-              crashDumpLocation,
-              datagramBufferSize,
-              privateIpAddressToWorkerAddressMap,
-              nodeToPublicSocketMap);
-
-      packetCourierSimulation.start();
-      return packetCourierSimulation;
+      return new PacketCourierSimulation<>(
+          simulationName,
+          nameToRunnableNodeMap,
+          topology,
+          postalService,
+          clock,
+          loggers,
+          metaLoggers,
+          crashDumpLocation,
+          port,
+          datagramBufferSize,
+          privateIpAddressToWorkerAddressMap,
+          nodeToPublicSocketMap);
     }
   }
 
@@ -527,12 +602,12 @@ public class PacketCourierSimulation<NodeInfo> {
       try {
         InetAddress ipAddress = uniqueLoopbackIpv4AddressGenerator.generateUniqueIpv4Address();
         if (ipAddress == null) {
-          throw new PacketCourierSimulationStartupException(
+          throw new PacketCourierSimulationConfigurationException(
               "The Kernel has run out of fresh ip addresses.");
         }
         return ipAddress;
       } catch (UnknownHostException e) {
-        throw new PacketCourierSimulationStartupException(e);
+        throw new PacketCourierSimulationConfigurationException(e);
       }
     }
   }

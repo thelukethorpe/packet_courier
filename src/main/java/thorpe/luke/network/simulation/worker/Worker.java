@@ -6,6 +6,7 @@ import thorpe.luke.log.Logger;
 import thorpe.luke.network.packet.Packet;
 import thorpe.luke.network.simulation.mail.Mailbox;
 import thorpe.luke.network.simulation.mail.PostalService;
+import thorpe.luke.util.ExceptionListener;
 
 public class Worker<NodeInfo> {
 
@@ -21,25 +22,24 @@ public class Worker<NodeInfo> {
       Mailbox mailbox,
       PostalService postalService,
       Collection<Logger> loggers,
+      ExceptionListener exceptionListener,
       Path crashDumpLocation,
       WorkerAddressGenerator workerAddressGenerator,
       WorkerAddressBook<NodeInfo> workerAddressBook) {
     this.workerThread =
         new Thread(
-            () -> {
-              workerScript.run(
-                  new WorkerManager<>(
-                      address,
-                      nodeInfo,
-                      mailbox,
-                      postalService,
-                      loggers,
-                      crashDumpLocation,
-                      workerAddressGenerator,
-                      workerAddressBook));
-              loggers.forEach(Logger::flush);
-              loggers.forEach(Logger::close);
-            });
+            () ->
+                workerScript.run(
+                    new WorkerManager<>(
+                        address,
+                        nodeInfo,
+                        mailbox,
+                        postalService,
+                        loggers,
+                        exceptionListener,
+                        crashDumpLocation,
+                        workerAddressGenerator,
+                        workerAddressBook)));
     this.address = address;
     this.mailbox = mailbox;
     this.state = State.READY;

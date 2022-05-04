@@ -6,6 +6,7 @@ import thorpe.luke.log.Logger;
 import thorpe.luke.network.simulation.mail.Mail;
 import thorpe.luke.network.simulation.mail.PostalService;
 import thorpe.luke.network.simulation.worker.*;
+import thorpe.luke.util.ExceptionListener;
 
 public class Node<NodeInfo> {
   private final NodeAddress address;
@@ -27,6 +28,7 @@ public class Node<NodeInfo> {
       NodeInfo nodeInfo,
       PostalService postalService,
       Collection<Logger> loggers,
+      ExceptionListener exceptionListener,
       Path crashDumpLocation) {
     WorkerAddress workerAddress = address.asRootWorkerAddress();
     Worker<NodeInfo> worker =
@@ -36,6 +38,7 @@ public class Node<NodeInfo> {
             nodeInfo,
             postalService,
             loggers,
+            exceptionListener,
             crashDumpLocation,
             workerAddressGenerator,
             workerAddressBook);

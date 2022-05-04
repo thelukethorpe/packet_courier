@@ -14,7 +14,9 @@ message PacketCourierSimulationConfigurationProto {
   optional int32 port = 5;
   optional int32 datagramBufferSize = 6;
   repeated LoggerProto loggers = 7;
-  optional int32 seed = 8;
+  repeated LoggerProto metaLoggers = 8;
+  optional string simulationName = 9;
+  optional int32 seed = 10;
 }
 
 message TopologyProto {

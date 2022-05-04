@@ -8,6 +8,7 @@ import java.util.concurrent.ConcurrentMap;
 import thorpe.luke.log.Logger;
 import thorpe.luke.network.simulation.mail.Mailbox;
 import thorpe.luke.network.simulation.mail.PostalService;
+import thorpe.luke.util.ExceptionListener;
 import thorpe.luke.util.GarbageCollector;
 import thorpe.luke.util.Prunable;
 
@@ -34,6 +35,7 @@ public class WorkerAddressBook<NodeInfo> implements Prunable {
       NodeInfo nodeInfo,
       PostalService postalService,
       Collection<Logger> loggers,
+      ExceptionListener exceptionListener,
       Path crashDumpLocation,
       WorkerAddressGenerator workerAddressGenerator,
       WorkerAddressBook<NodeInfo> workerAddressBook) {
@@ -45,6 +47,7 @@ public class WorkerAddressBook<NodeInfo> implements Prunable {
             new Mailbox(),
             postalService,
             loggers,
+            exceptionListener,
             crashDumpLocation,
             workerAddressGenerator,
             workerAddressBook);

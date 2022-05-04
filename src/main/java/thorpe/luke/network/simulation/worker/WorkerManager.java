@@ -13,6 +13,7 @@ import thorpe.luke.network.packet.Packet;
 import thorpe.luke.network.simulation.PacketCourierSimulation;
 import thorpe.luke.network.simulation.mail.Mailbox;
 import thorpe.luke.network.simulation.mail.PostalService;
+import thorpe.luke.util.ExceptionListener;
 
 public class WorkerManager<NodeInfo> {
 
@@ -24,6 +25,7 @@ public class WorkerManager<NodeInfo> {
   private final Mailbox mailbox;
   private final PostalService postalService;
   private final Collection<Logger> loggers;
+  private final ExceptionListener exceptionListener;
   private final Path crashDumpLocation;
   private final WorkerAddressGenerator workerAddressGenerator;
   private final WorkerAddressBook<NodeInfo> workerAddressBook;
@@ -34,6 +36,7 @@ public class WorkerManager<NodeInfo> {
       Mailbox mailbox,
       PostalService postalService,
       Collection<Logger> loggers,
+      ExceptionListener exceptionListener,
       Path crashDumpLocation,
       WorkerAddressGenerator workerAddressGenerator,
       WorkerAddressBook<NodeInfo> workerAddressBook) {
@@ -42,6 +45,7 @@ public class WorkerManager<NodeInfo> {
     this.mailbox = mailbox;
     this.postalService = postalService;
     this.loggers = loggers;
+    this.exceptionListener = exceptionListener;
     this.crashDumpLocation = crashDumpLocation;
     this.workerAddressGenerator = workerAddressGenerator;
     this.workerAddressBook = workerAddressBook;
@@ -76,6 +80,7 @@ public class WorkerManager<NodeInfo> {
         nodeInfo,
         postalService,
         loggers,
+        exceptionListener,
         crashDumpLocation,
         workerAddressGenerator,
         workerAddressBook);
@@ -100,7 +105,7 @@ public class WorkerManager<NodeInfo> {
     try {
       crashDumpFileLogger = new BufferedFileLogger(crashDumpFile);
     } catch (IOException e) {
-      e.printStackTrace();
+      exceptionListener.invoke(e);
       return;
     }
     crashDumpContents.forEach(crashDumpFileLogger::log);

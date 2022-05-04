@@ -56,7 +56,8 @@ public class DatagramExample1 {
             .withDatagramBufferSize(DATAGRAM_BUFFER_SIZE)
             .withCrashDumpLocation(Paths.get("."))
             .withProcessLoggingEnabled()
-            .start();
+            .configure();
+    packetCourierSimulation.start();
     try {
       packetCourierSimulation.waitFor();
     } catch (InterruptedException e) {

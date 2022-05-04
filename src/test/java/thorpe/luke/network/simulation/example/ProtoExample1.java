@@ -81,7 +81,8 @@ public class ProtoExample1 {
                   }
                 })
             .addLogger(ConsoleLogger.out())
-            .start();
+            .configure();
+    packetCourierSimulation.start();
     try {
       packetCourierSimulation.waitFor();
     } catch (InterruptedException e) {

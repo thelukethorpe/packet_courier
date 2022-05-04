@@ -84,6 +84,7 @@ public class WorkerDatagramForwardingScript<NodeInfo> implements WorkerScript<No
     try {
       Process process = workerProcessFactory.start();
       int exitStatus = process.waitFor();
+
       forwardingThread.interrupt();
       forwardingThread.join();
       if (exitStatus != 0) {

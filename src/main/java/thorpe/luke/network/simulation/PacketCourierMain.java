@@ -40,27 +40,31 @@ public class PacketCourierMain {
     File packetCourierSimulationConfigurationFile = new File(args[0]);
 
     // Parse simulation configuration from file.
+    print("Info: Processing Packet Courier configuration file...");
     PacketCourierSimulation.Configuration<DefaultNodeInfo> packetCourierSimulationConfiguration;
     try {
       packetCourierSimulationConfiguration =
           PacketCourierSimulationConfigurationProtoParser.parse(
               packetCourierSimulationConfigurationFile);
     } catch (PacketCourierSimulationConfigurationProtoParserException
-        | InvalidPacketCourierSimulationConfigurationException e) {
-      exit(EXIT_CODE_FAILURE, "Invalid configuration: " + e.getMessage());
+        | PacketCourierSimulationConfigurationException e) {
+      exit(EXIT_CODE_FAILURE, "Configuration error: " + e.getMessage());
+      return;
+    }
+
+    // Configure the simulation.
+    PacketCourierSimulation<DefaultNodeInfo> packetCourierSimulation;
+    try {
+      packetCourierSimulation = packetCourierSimulationConfiguration.configure();
+    } catch (PacketCourierSimulationConfigurationException e) {
+      exit(EXIT_CODE_FAILURE, "Configuration error: " + e.getMessage());
       return;
     }
 
     // Start the simulation.
     print("Info: Starting Packet Courier simulation...");
     print("#################### START ####################");
-    PacketCourierSimulation<DefaultNodeInfo> packetCourierSimulation;
-    try {
-      packetCourierSimulation = packetCourierSimulationConfiguration.start();
-    } catch (PacketCourierSimulationStartupException e) {
-      exit(EXIT_CODE_FAILURE, "Simulation startup failure: " + e.getMessage());
-      return;
-    }
+    packetCourierSimulation.start();
 
     // Wait for the simulation to complete.
     try {
