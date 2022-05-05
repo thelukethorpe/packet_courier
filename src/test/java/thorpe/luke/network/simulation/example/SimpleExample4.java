@@ -68,7 +68,8 @@ public class SimpleExample4 {
                 NODE_B_NAME,
                 PacketPipeline.parameters(NetworkCondition.uniformPacketCorruption(0.75, random)))
             .addLogger(ConsoleLogger.out())
-            .start();
+            .configure();
+    packetCourierSimulation.start();
     try {
       packetCourierSimulation.waitFor();
     } catch (InterruptedException e) {

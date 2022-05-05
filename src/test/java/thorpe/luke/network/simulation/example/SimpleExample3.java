@@ -73,7 +73,8 @@ public class SimpleExample3 {
             .addConnection(NODE_A_NAME, NODE_B_NAME, PacketPipeline.perfectParameters())
             .addConnection(NODE_B_NAME, NODE_A_NAME, PacketPipeline.perfectParameters())
             .addLogger(ConsoleLogger.out())
-            .start();
+            .configure();
+    packetCourierSimulation.start();
     try {
       packetCourierSimulation.waitFor();
     } catch (InterruptedException e) {

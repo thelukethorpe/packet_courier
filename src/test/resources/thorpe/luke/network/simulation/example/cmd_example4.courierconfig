@@ -1,0 +1,86 @@
+{
+  "port": 4444,
+  "datagramBufferSize": 64,
+  "wallClockEnabled": true,
+  "processLoggingEnabled": true,
+  "processMonitorEnabled": true,
+  "loggers": [
+    {
+      "console": "STDOUT"
+    }
+  ],
+  "metaLoggers": [
+    {
+      "console": "STDOUT"
+    }
+  ],
+  "topology": {
+    "jointMesh": {
+      "jointTopologies": [
+        {
+          "ring": {
+            "command": "python3 src/test/resources/thorpe/luke/network/simulation/example/flood_script.py ${NODE_NAME} ${PRIVATE_IP} ${PORT} ${NEIGHBOUR_IPS} ${DATAGRAM_BUFFER_SIZE} 100 \"Ring 1\"",
+            "unidirectional": true,
+            "size": 25,
+            "networkConditions": [
+              {
+                "packetDropParameters": {
+                  "dropProbability": 0.5
+                }
+              },
+              {
+                "packetLatencyParameters": {
+                  "timeUnit": "MILLI_SECONDS",
+                  "uniform": {
+                    "minimum": 150.0,
+                    "maximum": 500.0
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "ring": {
+            "command": "python3 src/test/resources/thorpe/luke/network/simulation/example/flood_script.py ${NODE_NAME} ${PRIVATE_IP} ${PORT} ${NEIGHBOUR_IPS} ${DATAGRAM_BUFFER_SIZE} 100 \"Ring 2\"",
+            "unidirectional": true,
+            "size": 25,
+            "networkConditions": [
+              {
+                "packetDropParameters": {
+                  "dropProbability": 0.5
+                }
+              },
+              {
+                "packetLatencyParameters": {
+                  "timeUnit": "MILLI_SECONDS",
+                  "uniform": {
+                    "minimum": 150.0,
+                    "maximum": 500.0
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "size": 25,
+      "networkConditions": [
+        {
+          "packetDropParameters": {
+            "dropProbability": 0.9
+          }
+        },
+        {
+          "packetLatencyParameters": {
+            "timeUnit": "MILLI_SECONDS",
+            "uniform": {
+              "minimum": 150.0,
+              "maximum": 500.0
+            }
+          }
+        }
+      ]
+    }
+  }
+}

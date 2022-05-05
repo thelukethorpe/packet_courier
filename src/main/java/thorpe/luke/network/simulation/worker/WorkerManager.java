@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Collection;
 import java.util.List;
 import thorpe.luke.log.BufferedFileLogger;
 import thorpe.luke.log.Logger;
@@ -13,6 +12,7 @@ import thorpe.luke.network.packet.Packet;
 import thorpe.luke.network.simulation.PacketCourierSimulation;
 import thorpe.luke.network.simulation.mail.Mailbox;
 import thorpe.luke.network.simulation.mail.PostalService;
+import thorpe.luke.util.ExceptionListener;
 
 public class WorkerManager<NodeInfo> {
 
@@ -23,7 +23,8 @@ public class WorkerManager<NodeInfo> {
   private final NodeInfo nodeInfo;
   private final Mailbox mailbox;
   private final PostalService postalService;
-  private final Collection<Logger> loggers;
+  private final Logger logger;
+  private final ExceptionListener exceptionListener;
   private final Path crashDumpLocation;
   private final WorkerAddressGenerator workerAddressGenerator;
   private final WorkerAddressBook<NodeInfo> workerAddressBook;
@@ -33,7 +34,8 @@ public class WorkerManager<NodeInfo> {
       NodeInfo nodeInfo,
       Mailbox mailbox,
       PostalService postalService,
-      Collection<Logger> loggers,
+      Logger logger,
+      ExceptionListener exceptionListener,
       Path crashDumpLocation,
       WorkerAddressGenerator workerAddressGenerator,
       WorkerAddressBook<NodeInfo> workerAddressBook) {
@@ -41,7 +43,8 @@ public class WorkerManager<NodeInfo> {
     this.nodeInfo = nodeInfo;
     this.mailbox = mailbox;
     this.postalService = postalService;
-    this.loggers = loggers;
+    this.logger = logger;
+    this.exceptionListener = exceptionListener;
     this.crashDumpLocation = crashDumpLocation;
     this.workerAddressGenerator = workerAddressGenerator;
     this.workerAddressBook = workerAddressBook;
@@ -75,14 +78,15 @@ public class WorkerManager<NodeInfo> {
         childWorkerAddress,
         nodeInfo,
         postalService,
-        loggers,
+        logger,
+        exceptionListener,
         crashDumpLocation,
         workerAddressGenerator,
         workerAddressBook);
   }
 
   public void log(String message) {
-    loggers.forEach(logger -> logger.log(message));
+    logger.log(message);
   }
 
   public void generateCrashDump(List<String> crashDumpContents) {
@@ -100,7 +104,7 @@ public class WorkerManager<NodeInfo> {
     try {
       crashDumpFileLogger = new BufferedFileLogger(crashDumpFile);
     } catch (IOException e) {
-      e.printStackTrace();
+      exceptionListener.invoke(e);
       return;
     }
     crashDumpContents.forEach(crashDumpFileLogger::log);

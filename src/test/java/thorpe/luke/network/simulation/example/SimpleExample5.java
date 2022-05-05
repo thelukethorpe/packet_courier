@@ -95,7 +95,8 @@ public class SimpleExample5 {
                                     35.0, 50.0, ChronoUnit.MILLIS, random)))))
             .addLogger(ConsoleLogger.out())
             .usingWallClock()
-            .start();
+            .configure();
+    packetCourierSimulation.start();
     try {
       packetCourierSimulation.waitFor();
     } catch (InterruptedException e) {

@@ -85,7 +85,8 @@ public class SimpleExample2 {
     }
 
     PacketCourierSimulation<DefaultNodeInfo> packetCourierSimulation =
-        packetCourierSimulationConfiguration.start();
+        packetCourierSimulationConfiguration.configure();
+    packetCourierSimulation.start();
     try {
       packetCourierSimulation.waitFor();
     } catch (InterruptedException e) {

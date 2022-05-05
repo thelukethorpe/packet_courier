@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import thorpe.luke.network.packet.Packet;
+import thorpe.luke.util.ProcessMonitor;
 
 public class WorkerDatagramForwardingScript<NodeInfo> implements WorkerScript<NodeInfo> {
 
@@ -22,6 +23,7 @@ public class WorkerDatagramForwardingScript<NodeInfo> implements WorkerScript<No
   private final int datagramBufferSize;
   private final Map<InetAddress, DatagramSocket> privateIpAddressToPublicSocketMap;
   private final boolean processLoggingEnabled;
+  private final ProcessMonitor processMonitor;
 
   private WorkerDatagramForwardingScript(
       WorkerProcessFactory workerProcessFactory,
@@ -29,13 +31,15 @@ public class WorkerDatagramForwardingScript<NodeInfo> implements WorkerScript<No
       InetAddress privateIpAddress,
       int datagramBufferSize,
       Map<InetAddress, DatagramSocket> privateIpAddressToPublicSocketMap,
-      boolean processLoggingEnabled) {
+      boolean processLoggingEnabled,
+      ProcessMonitor processMonitor) {
     this.workerProcessFactory = workerProcessFactory;
     this.port = port;
     this.privateIpAddress = privateIpAddress;
     this.datagramBufferSize = datagramBufferSize;
     this.privateIpAddressToPublicSocketMap = privateIpAddressToPublicSocketMap;
     this.processLoggingEnabled = processLoggingEnabled;
+    this.processMonitor = processMonitor;
   }
 
   public static Builder builder() {
@@ -82,7 +86,9 @@ public class WorkerDatagramForwardingScript<NodeInfo> implements WorkerScript<No
             });
     forwardingThread.start();
     try {
+      String processName = workerManager.getAddress().getHostingNodeAddress().getName();
       Process process = workerProcessFactory.start();
+      processMonitor.addProcess(processName, process);
       int exitStatus = process.waitFor();
       forwardingThread.interrupt();
       forwardingThread.join();
@@ -115,6 +121,7 @@ public class WorkerDatagramForwardingScript<NodeInfo> implements WorkerScript<No
     private int datagramBufferSize;
     private Map<InetAddress, DatagramSocket> privateIpAddressToPublicSocketMap;
     private boolean processLoggingEnabled;
+    private ProcessMonitor processMonitor;
 
     private Builder() {}
 
@@ -149,6 +156,11 @@ public class WorkerDatagramForwardingScript<NodeInfo> implements WorkerScript<No
       return this;
     }
 
+    public Builder withProcessMonitor(ProcessMonitor processMonitor) {
+      this.processMonitor = processMonitor;
+      return this;
+    }
+
     public <NodeInfo> WorkerDatagramForwardingScript<NodeInfo> build() {
       return new WorkerDatagramForwardingScript<>(
           workerProcessFactory,
@@ -156,7 +168,8 @@ public class WorkerDatagramForwardingScript<NodeInfo> implements WorkerScript<No
           privateIpAddress,
           datagramBufferSize,
           privateIpAddressToPublicSocketMap,
-          processLoggingEnabled);
+          processLoggingEnabled,
+          processMonitor);
     }
   }
 }

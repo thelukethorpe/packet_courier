@@ -1,11 +1,11 @@
 package thorpe.luke.network.simulation.node;
 
 import java.nio.file.Path;
-import java.util.Collection;
 import thorpe.luke.log.Logger;
 import thorpe.luke.network.simulation.mail.Mail;
 import thorpe.luke.network.simulation.mail.PostalService;
 import thorpe.luke.network.simulation.worker.*;
+import thorpe.luke.util.ExceptionListener;
 
 public class Node<NodeInfo> {
   private final NodeAddress address;
@@ -26,7 +26,8 @@ public class Node<NodeInfo> {
       WorkerScript<NodeInfo> workerScript,
       NodeInfo nodeInfo,
       PostalService postalService,
-      Collection<Logger> loggers,
+      Logger logger,
+      ExceptionListener exceptionListener,
       Path crashDumpLocation) {
     WorkerAddress workerAddress = address.asRootWorkerAddress();
     Worker<NodeInfo> worker =
@@ -35,7 +36,8 @@ public class Node<NodeInfo> {
             workerAddress,
             nodeInfo,
             postalService,
-            loggers,
+            logger,
+            exceptionListener,
             crashDumpLocation,
             workerAddressGenerator,
             workerAddressBook);

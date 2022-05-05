@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -83,6 +84,13 @@ public class PacketCourierSimulationConfigurationProtoParser<NodeInfo> {
     if (configurationProto.getProcessLoggingEnabled()) {
       configuration.withProcessLoggingEnabled();
     }
+    if (configurationProto.getProcessMonitorEnabled()) {
+      configuration.withProcessMonitorEnabled();
+    }
+    if (configurationProto.hasProcessMonitorCheckupFrequency()) {
+      configuration.withProcessMonitorCheckupFrequency(
+          parseDuration(configurationProto.getProcessMonitorCheckupFrequency()));
+    }
     if (configurationProto.hasCrashDumpLocation()) {
       configuration.withCrashDumpLocation(Paths.get(configurationProto.getCrashDumpLocation()));
     }
@@ -92,13 +100,24 @@ public class PacketCourierSimulationConfigurationProtoParser<NodeInfo> {
     if (configurationProto.hasDatagramBufferSize()) {
       configuration.withDatagramBufferSize(configurationProto.getDatagramBufferSize());
     }
+    if (configurationProto.hasSimulationName()) {
+      configuration.withSimulationName(configurationProto.getSimulationName());
+    }
 
     configurationProto
         .getLoggersList()
         .forEach(loggerProto -> configuration.addLogger(parseLogger(loggerProto)));
 
+    configurationProto
+        .getMetaLoggersList()
+        .forEach(loggerProto -> configuration.addMetaLogger(parseLogger(loggerProto)));
+
     parseTopology(configurationProto.getTopology());
     return configuration;
+  }
+
+  private Duration parseDuration(DurationProto durationProto) {
+    return Duration.of(durationProto.getDuration(), parseTimeUnit(durationProto.getTimeUnit()));
   }
 
   private Optional<String> parseTopology(TopologyProto topologyProto) {
