@@ -10,13 +10,20 @@ message PacketCourierSimulationConfigurationProto {
   TopologyProto topology = 1;
   bool wallClockEnabled = 2;
   bool processLoggingEnabled = 3;
-  optional string crashDumpLocation = 4;
-  optional int32 port = 5;
-  optional int32 datagramBufferSize = 6;
-  repeated LoggerProto loggers = 7;
-  repeated LoggerProto metaLoggers = 8;
-  optional string simulationName = 9;
-  optional int32 seed = 10;
+  bool processMonitorEnabled = 4;
+  optional DurationProto processMonitorCheckupFrequency = 5;
+  optional string crashDumpLocation = 6;
+  optional int32 port = 7;
+  optional int32 datagramBufferSize = 8;
+  repeated LoggerProto loggers = 9;
+  repeated LoggerProto metaLoggers = 10;
+  optional string simulationName = 11;
+  optional int32 seed = 12;
+}
+
+message DurationProto {
+  int64 duration = 1;
+  TimeUnitProto timeUnit = 2;
 }
 
 message TopologyProto {

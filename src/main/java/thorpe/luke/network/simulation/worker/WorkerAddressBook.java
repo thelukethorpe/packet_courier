@@ -1,7 +1,6 @@
 package thorpe.luke.network.simulation.worker;
 
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -34,7 +33,7 @@ public class WorkerAddressBook<NodeInfo> implements Prunable {
       WorkerAddress workerAddress,
       NodeInfo nodeInfo,
       PostalService postalService,
-      Collection<Logger> loggers,
+      Logger logger,
       ExceptionListener exceptionListener,
       Path crashDumpLocation,
       WorkerAddressGenerator workerAddressGenerator,
@@ -46,7 +45,7 @@ public class WorkerAddressBook<NodeInfo> implements Prunable {
             nodeInfo,
             new Mailbox(),
             postalService,
-            loggers,
+            logger,
             exceptionListener,
             crashDumpLocation,
             workerAddressGenerator,

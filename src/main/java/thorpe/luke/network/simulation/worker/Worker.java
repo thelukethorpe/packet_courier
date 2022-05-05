@@ -1,7 +1,6 @@
 package thorpe.luke.network.simulation.worker;
 
 import java.nio.file.Path;
-import java.util.Collection;
 import thorpe.luke.log.Logger;
 import thorpe.luke.network.packet.Packet;
 import thorpe.luke.network.simulation.mail.Mailbox;
@@ -21,7 +20,7 @@ public class Worker<NodeInfo> {
       NodeInfo nodeInfo,
       Mailbox mailbox,
       PostalService postalService,
-      Collection<Logger> loggers,
+      Logger logger,
       ExceptionListener exceptionListener,
       Path crashDumpLocation,
       WorkerAddressGenerator workerAddressGenerator,
@@ -35,7 +34,7 @@ public class Worker<NodeInfo> {
                         nodeInfo,
                         mailbox,
                         postalService,
-                        loggers,
+                        logger,
                         exceptionListener,
                         crashDumpLocation,
                         workerAddressGenerator,
