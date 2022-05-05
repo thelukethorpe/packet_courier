@@ -6,6 +6,7 @@ import thorpe.luke.network.packet.Packet;
 import thorpe.luke.network.simulation.mail.Mailbox;
 import thorpe.luke.network.simulation.mail.PostalService;
 import thorpe.luke.util.ExceptionListener;
+import thorpe.luke.util.ThreadNameGenerator;
 
 public class Worker<NodeInfo> {
 
@@ -38,7 +39,8 @@ public class Worker<NodeInfo> {
                         exceptionListener,
                         crashDumpLocation,
                         workerAddressGenerator,
-                        workerAddressBook)));
+                        workerAddressBook)),
+            ThreadNameGenerator.generateThreadName(address.getName()));
     this.address = address;
     this.mailbox = mailbox;
     this.state = State.READY;

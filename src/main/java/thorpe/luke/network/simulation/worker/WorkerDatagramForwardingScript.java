@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import thorpe.luke.network.packet.Packet;
 import thorpe.luke.util.ProcessMonitor;
+import thorpe.luke.util.ThreadNameGenerator;
 
 public class WorkerDatagramForwardingScript<NodeInfo> implements WorkerScript<NodeInfo> {
 
@@ -46,44 +47,47 @@ public class WorkerDatagramForwardingScript<NodeInfo> implements WorkerScript<No
     return new Builder();
   }
 
+  private void waitForAndForwardPackets(WorkerManager<NodeInfo> workerManager) {
+    byte[] buffer = new byte[datagramBufferSize];
+    do {
+      Packet packet;
+      try {
+        packet = workerManager.waitForMail();
+      } catch (WorkerException e) {
+        return;
+      }
+      List<Byte> data = packet.getData();
+      for (int i = 0; i < buffer.length; i++) {
+        buffer[i] = data.get(i);
+      }
+      byte[] sourceIpAddress = new byte[data.size() - datagramBufferSize];
+      for (int i = 0; i < sourceIpAddress.length; i++) {
+        sourceIpAddress[i] = data.get(datagramBufferSize + i);
+      }
+      DatagramPacket forwardingDatagramPacket =
+          new DatagramPacket(buffer, buffer.length, privateIpAddress, port);
+      try {
+        DatagramSocket publicSocket =
+            privateIpAddressToPublicSocketMap.get(InetAddress.getByAddress(sourceIpAddress));
+        publicSocket.send(forwardingDatagramPacket);
+      } catch (IOException e) {
+        List<String> stackTraceErrors =
+            Arrays.stream(e.getStackTrace())
+                .map(StackTraceElement::toString)
+                .collect(Collectors.toList());
+        workerManager.generateCrashDump(stackTraceErrors);
+        return;
+      }
+    } while (true);
+  }
+
   @Override
   public void run(WorkerManager<NodeInfo> workerManager) {
     Thread forwardingThread =
         new Thread(
-            () -> {
-              byte[] buffer = new byte[datagramBufferSize];
-              do {
-                Packet packet;
-                try {
-                  packet = workerManager.waitForMail();
-                } catch (WorkerException e) {
-                  return;
-                }
-                List<Byte> data = packet.getData();
-                for (int i = 0; i < buffer.length; i++) {
-                  buffer[i] = data.get(i);
-                }
-                byte[] sourceIpAddress = new byte[data.size() - datagramBufferSize];
-                for (int i = 0; i < sourceIpAddress.length; i++) {
-                  sourceIpAddress[i] = data.get(datagramBufferSize + i);
-                }
-                DatagramPacket forwardingDatagramPacket =
-                    new DatagramPacket(buffer, buffer.length, privateIpAddress, port);
-                try {
-                  DatagramSocket publicSocket =
-                      privateIpAddressToPublicSocketMap.get(
-                          InetAddress.getByAddress(sourceIpAddress));
-                  publicSocket.send(forwardingDatagramPacket);
-                } catch (IOException e) {
-                  List<String> stackTraceErrors =
-                      Arrays.stream(e.getStackTrace())
-                          .map(StackTraceElement::toString)
-                          .collect(Collectors.toList());
-                  workerManager.generateCrashDump(stackTraceErrors);
-                  return;
-                }
-              } while (true);
-            });
+            () -> waitForAndForwardPackets(workerManager),
+            ThreadNameGenerator.generateThreadName(
+                "Packet Forwarder at " + workerManager.getAddress().getName()));
     forwardingThread.start();
     try {
       String processName = workerManager.getAddress().getHostingNodeAddress().getName();

@@ -17,9 +17,9 @@ public class ProcessMonitor {
   private final Duration checkupFrequency;
   private final Thread monitorThread;
 
-  public ProcessMonitor(Duration checkupFrequency) {
+  public ProcessMonitor(Duration checkupFrequency, String name) {
     this.checkupFrequency = checkupFrequency;
-    this.monitorThread = new Thread(this::run);
+    this.monitorThread = new Thread(this::run, ThreadNameGenerator.generateThreadName(name));
   }
 
   private void log(String message) {
