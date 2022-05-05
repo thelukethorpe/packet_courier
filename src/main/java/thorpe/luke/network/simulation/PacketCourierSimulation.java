@@ -26,6 +26,7 @@ import thorpe.luke.time.VirtualClock;
 import thorpe.luke.time.WallClock;
 import thorpe.luke.util.ExceptionListener;
 import thorpe.luke.util.ProcessMonitor;
+import thorpe.luke.util.ThreadNameGenerator;
 import thorpe.luke.util.UniqueLoopbackIpv4AddressGenerator;
 
 public class PacketCourierSimulation<NodeInfo> {
@@ -36,8 +37,9 @@ public class PacketCourierSimulation<NodeInfo> {
   private static final DateTimeFormatter META_LOG_DATE_FORMAT =
       DateTimeFormatter.ofPattern("dd/MM/yyyy-hh:mm:ss");
 
+  private final String simulationName;
   private final Logger metaLogger;
-  private final Thread simulator;
+  private final Thread simulationThread;
 
   private PacketCourierSimulation(
       String simulationName,
@@ -53,6 +55,7 @@ public class PacketCourierSimulation<NodeInfo> {
       int datagramBufferSize,
       Map<InetAddress, WorkerAddress> privateIpAddressToWorkerAddressMap,
       Map<Node<NodeInfo>, DatagramSocket> nodeToPublicSocketMap) {
+    this.simulationName = simulationName;
     this.metaLogger =
         new TemplateLogger(
             message -> {
@@ -61,7 +64,7 @@ public class PacketCourierSimulation<NodeInfo> {
                   "%s-%s: %s.", META_LOG_DATE_FORMAT.format(now), simulationName, message);
             },
             metaLogger);
-    this.simulator =
+    this.simulationThread =
         new Thread(
             () ->
                 this.run(
@@ -75,7 +78,8 @@ public class PacketCourierSimulation<NodeInfo> {
                     port,
                     datagramBufferSize,
                     privateIpAddressToWorkerAddressMap,
-                    nodeToPublicSocketMap));
+                    nodeToPublicSocketMap),
+            ThreadNameGenerator.generateThreadName(simulationName));
   }
 
   public static <NodeInfo> Configuration<NodeInfo> configuration(
@@ -89,7 +93,7 @@ public class PacketCourierSimulation<NodeInfo> {
 
   public void start() {
     try {
-      simulator.start();
+      simulationThread.start();
     } catch (IllegalThreadStateException e) {
       throw new PacketCourierSimulationStartupException(
           "Packet Courier Simulation has already started.");
@@ -135,7 +139,9 @@ public class PacketCourierSimulation<NodeInfo> {
                                     clock,
                                     logger,
                                     this::metaExceptionHandler,
-                                    crashDumpLocation))));
+                                    crashDumpLocation),
+                            ThreadNameGenerator.generateThreadName(
+                                runnableNode.getNode().getAddress().getName()))));
     Thread simulationManagerThread =
         new Thread(
             () -> {
@@ -143,7 +149,8 @@ public class PacketCourierSimulation<NodeInfo> {
                 clock.tick();
                 postalService.tick(clock.now());
               }
-            });
+            },
+            ThreadNameGenerator.generateThreadName(simulationName + " Manager"));
 
     // Configure datagram routing layer logic.
     Map<InetAddress, WorkerAddress> publicIpAddressToWorkerAddressMap =
@@ -169,7 +176,9 @@ public class PacketCourierSimulation<NodeInfo> {
                                 privateIpAddressToWorkerAddressMap,
                                 publicIpAddressToWorkerAddressMap,
                                 postalService,
-                                simulationComplete)))
+                                simulationComplete),
+                        ThreadNameGenerator.generateThreadName(
+                            "Datagram Router at " + publicSocket.getLocalAddress())))
             .collect(Collectors.toList());
 
     // Start threads.
@@ -270,7 +279,7 @@ public class PacketCourierSimulation<NodeInfo> {
   }
 
   public void waitFor() throws InterruptedException {
-    simulator.join();
+    simulationThread.join();
   }
 
   private static class RunnableNode<NodeInfo> {
@@ -561,7 +570,8 @@ public class PacketCourierSimulation<NodeInfo> {
                           nodeToPublicSocketEntry.getValue().getLocalAddress()));
 
       // Configure worker script and private socket logic.
-      ProcessMonitor processMonitor = new ProcessMonitor(processMonitorCheckupFrequency);
+      ProcessMonitor processMonitor =
+          new ProcessMonitor(processMonitorCheckupFrequency, simulationName + " Process Monitor");
       Map<InetAddress, DatagramSocket> privateIpAddressToPublicSocketMap = new HashMap<>();
       Map<InetAddress, WorkerAddress> privateIpAddressToWorkerAddressMap = new HashMap<>();
       Map<String, RunnableNode<NodeInfo>> nameToRunnableNodeMap =
