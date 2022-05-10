@@ -1,0 +1,186 @@
+\documentclass[a4paper, 12pt, oneside,apa]{report}
+
+\usepackage{blindtext}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\usepackage[numbers]{natbib}
+\bibliographystyle{unsrtnat}
+\usepackage{setspace}
+
+\usepackage{dirtytalk}
+\usepackage{multicol}
+
+\usepackage{listings}
+\usepackage{xcolor}
+\lstset
+{
+    basicstyle=\footnotesize,
+    numbers=left,
+    xleftmargin=2em,
+    frame=single,
+    framexleftmargin=1.5em,
+    stepnumber=1,
+    showstringspaces=false,
+    tabsize=2,
+    breaklines=true,
+    breakatwhitespace=false,
+}
+
+\usepackage[font=footnotesize,labelfont=bf]{caption}
+\usepackage{fancyhdr}
+\usepackage{lettrine}
+\usepackage[utf8]{inputenc}
+\usepackage{erewhon}
+\usepackage{lipsum}
+\usepackage{GoudyIn}
+
+\renewcommand{\LettrineFontHook}{\GoudyInfamily{}}
+\LettrineTextFont{\itshape}
+\setcounter{DefaultLines}{3}
+\setlength{\DefaultNindent}{0pt}
+\setlength{\DefaultFindent}{1pt}
+
+\setlength{\topmargin}{-0.5in}
+\setlength{\oddsidemargin}{20pt}
+\setlength{\evensidemargin}{15pt}
+\setlength{\textheight}{9.5in}
+\setlength{\textwidth}{6.25in}
+\setlength{\parindent}{3em}
+\setlength{\parskip}{1em}
+\renewcommand{\baselinestretch}{1.5}
+
+\makeatother
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,
+    urlcolor=cyan,
+    pdftitle={Overleaf Example},
+    pdfpagemode=FullScreen,
+}
+
+\begin{document}
+    \pagenumbering{gobble}
+    \include{cover}
+    \null\clearpage
+
+    \include{abstract}
+    \pagenumbering{roman}
+    \singlespacing
+    \tableofcontents
+
+
+    \null\clearpage
+    \pagenumbering{arabic}
+
+%chapter 1 formatting
+
+
+    \chapter{Introduction}
+    \pagestyle{fancy}
+    \fancyhf{}
+    \rhead{\small Introduction}
+    \lhead{\small Chapter 1}
+    \rfoot{\thepage}
+    \lfoot{\small MEng Project}
+    \renewcommand{\headrulewidth}{2pt}
+    \renewcommand{\footrulewidth}{2pt}
+    \input{chapter_1_introduction.tex}
+
+
+%chapter 2 formatting
+
+
+    \chapter{Background}
+    \pagestyle{fancy}
+    \fancyhf{}
+    \rhead{\small Background}
+    \lhead{\small Chapter 2}
+    \rfoot{\thepage}
+    \lfoot{\small MEng Project}
+    \renewcommand{\headrulewidth}{2pt}
+    \renewcommand{\footrulewidth}{2pt}
+    \input{chapter_2_background.tex}
+
+
+%chapter 3 formatting
+
+
+    \chapter{Design}
+    \pagestyle{fancy}
+    \fancyhf{}
+    \rhead{\small Design}
+    \lhead{\small Chapter 3}
+    \rfoot{\thepage}
+    \lfoot{\small MEng Project}
+    \renewcommand{\headrulewidth}{2pt}
+    \renewcommand{\footrulewidth}{2pt}
+    \input{chapter_3_design.tex}
+
+
+%chapter 4 formatting
+
+
+    \chapter{Implementation}
+    \pagestyle{fancy}
+    \fancyhf{}
+    \rhead{\small Implementation}
+    \lhead{\small Chapter 4}
+    \rfoot{\thepage}
+    \lfoot{\small MEng Project}
+    \renewcommand{\headrulewidth}{2pt}
+    \renewcommand{\footrulewidth}{2pt}
+    \input{chapter_4_implementation.tex}
+
+
+%chapter 5 formatting
+
+
+    \chapter{Evaluation}
+    \pagestyle{fancy}
+    \fancyhf{}
+    \rhead{\small Evaluation}
+    \lhead{\small Chapter 5}
+    \rfoot{\thepage}
+    \lfoot{\small MEng Project}
+    \renewcommand{\headrulewidth}{2pt}
+    \renewcommand{\footrulewidth}{2pt}
+    \input{chapter_5_evaluation.tex}
+
+
+%chapter 6 formatting
+
+
+    \chapter{Conclusion}
+    \pagestyle{fancy}
+    \fancyhf{}
+    \rhead{\small Conclusion}
+    \lhead{\small Chapter 6}
+    \rfoot{\thepage}
+    \lfoot{\small MEng Project}
+    \renewcommand{\headrulewidth}{2pt}
+    \renewcommand{\footrulewidth}{2pt}
+    \input{chapter_6_conclusion.tex}
+
+%%chapter x formatting
+%    \chapter{Write Your Xth Chapter's Name}
+%    \pagestyle{fancy}
+%    \fancyhf{}
+%    \rhead{\small Write Your Xth Chapter's Name}
+%    \lhead{\small Chapter X}
+%    \rfoot{\thepage}
+%    \lfoot{\small MEng Project}
+%    \renewcommand{\headrulewidth}{2pt}
+%    \renewcommand{\footrulewidth}{2pt}
+%    \input{chapter_x}
+
+
+    \bibliography{bibliography}
+
+\end{document}

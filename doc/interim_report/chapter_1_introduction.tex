@@ -1,0 +1,53 @@
+\section{Motivation}
+
+\lettrine{D}{istributed} computing is naturally a field that explores non-trivial levels of parallelism on a large
+scale, and as such, any fledgling distributed system demands a testbed that epitomizes these properties. It then
+follows that network simulation is likely to be the apparatus of choice, notwithstanding the possibility of expending
+serious resource to conduct ``live'' tests over an existing physical topology, perhaps even the internet itself.
+
+In spite of this, designing and building a simulation tool is an inherently multivariate and sophisticated undertaking
+in its own right. A packet can experience a great deal during its lifetime. Indeed, most packets are ultimately
+buffered, serialized into bits, sent over a wire and are then thrust into a hellish domain whereby they can be
+subject to the horrors of corruption, duplication, reordering, delay and possibly even outright elimination. To boot,
+they can sometimes go airborne during this process, having been shot out of a wireless router, only to land right
+back into the terror-laden realm that we so innocently call ``the internet''.
+
+It is in this way that good simulation software should be capable of accurately mimicking the these behaviours
+according to any arbitrary configuration. In fact, the potential for accute granularity that a simulator offers makes
+it far superior to any ``real'' test scenario, insofar as it can be moulded to investigate specific nuances within a
+particular algorithm or protocol. For example, most low-level distributed technologies must find ways to overcome
+both packet loss and corruption. Although these are independant issues, they tend to co-exist in practice and are
+often correlated phenomena, which makes isolated testing difficult. This problem is absent in a simulated context
+however, since virtual environments can be tuned to boast whatever characteristics are deemed necessary for
+the given exercise. In resolution of the aforementioned example, two simulations can be run at the descretion of the
+developers, one where corruption is the only danger present, along with a similar configuration that drops packets
+instead.
+
+Another clear advantage of simulated methods is their scalability; an advantage that becomes especially lucrative for
+any accounting department. A simulation's scope is typically bounded by the capacity and processing capabilities of
+the machine on which it runs. Even if a machine was only able to emulate two nodes effectively, then this still
+delivers the possibility of a two-fold cost saving. Nonetheless, most high-end commericial computer systems should be
+capable of simulating topologies containing hundreds if not \emph{thousands} of nodes, given a sufficiently
+intelligent framework. It could well be the case that much of the virtual space simulation occupies is untouchable by
+any real-world network; that is to say that simulated techniques could explore strictly hypothetical territory,
+furnishing insights into distributed algorithms that reality never could.
+
+
+\section{Objectives}
+
+\lettrine{G}{iven} that this project will culminate in the creation of some software, the overall objectives are best
+framed with respect to what users can expect, i.e.:
+\begin{enumerate}
+    \item An interface to design an arbitrary network topology.
+    \item A configuration suite to define how packets are manipulated during message-passing.
+    \item A mechanism to run a distributed algorithm across the virtual topology.
+\end{enumerate}
+
+Ideally each of these criteria should be met in the most general way possible to ensure that the prospective tool is
+accessible to the widest range of users. By way of example, users should not be pigeonholed into working with a
+particular programming language in order to simulate their solution.
+
+
+\section{Contributions}
+
+TODO
