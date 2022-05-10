@@ -9,7 +9,7 @@
 \lettrine{M}{odern} day infrastructure is almost entirely built upon concepts of long-range communication. If any of
 us wish to contact a family member, friend or colleague on the other side of the globe, then we scarcely hesitate to
 use one of the many services that enable us to do so. In fact, it is nuisance if we encounter technical issues along
-the way. This is somewhat of a social paradox, however, because the various algorithms and interweaving components
+the way. Yet, this is somewhat of a social paradox, since the various algorithms and interweaving components
 that underpin such powerful technologies are enormously complex. These fundamental protocols are expected to reliably
 deliver a lengthy contract of communicative obligations, whilst deftly navigating the various pitfalls and obstacles
 that are characteristic of the internet. Indeed, such implementations are difficult to test; finding a virtual
@@ -18,12 +18,26 @@ internet itself, setting up machines based in London, Paris and Amsterdam, say. 
 and one that is inflexible, with limited scope for a satisfying variety of test cases. Thus, there is a clear need for
 simulation-based testing.
 
-This project endeavours to build a high-calibre tool that can be used to run distributed computing solutions in a
-highly configurable simulated environment. In turn, the end product will enable developers, network engineers and
-students alike to fine tune a network exactly to their liking and let their algorithms loose in a way that is
-self-contained, realistic and resource inexpensive. The ultimate goal is to provide those with a curisoity for
-distributed computer systems with the means to tinker around with the technologies as though they were running in the
-real world.
+This project has endeavoured to provide those with a curiosity for distributed computer systems with the means to
+tinker around with network technologies as though they were running in the real world. More specifically, this has
+involved building what will hopefully be seen as a high-calibre tool that can be used to run distributed computing
+solutions in a highly configurable simulated environment. In turn, the end product aspires to enable developers,
+network engineers and students alike to fine tune a network exactly to their liking and let their algorithms loose in
+a way that is self-contained, realistic and resource inexpensive.
+
+The proposed solution produced by this thesis comes in the form of \emph{Packet Courier}, a Java library that doubles
+up as both a Java simulation framework and a standalone emulator. In this way, a prospective user can either
+configure a distributed network simulation programmatically using Java, or they can run the compiled Jar like an
+executable in conjunction with a JSON style configuration file to emulate a distributed network. The benefit of
+Packet Courier's emulation component is that it allows users to run arbitrary network code: their distributed
+algorithm can leverage any processes that can be run from the command line, whether that be a Python script, a
+C++ program or a high-level tool such as Kubernetes.
+
+Packet Courier is able to manipulate packets during transit by creating an intermediate routing layer between nodes
+in the network. For example, if Alice sent a packet to Bob, then the Packet Courier framework would silently
+intercept this packet and process it as per the given configuration. Users can define network conditions that will
+govern how packets behave when travelling from node to node, including properties such as packet latency, loss and
+corruption.
 
 
 \vfill
