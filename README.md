@@ -109,6 +109,14 @@ listed as Alice's _public_ IP.
 
 ![Public vs Private IP Diagram](/doc/readme/emulation_semantics_diagram.jpg)
 
+One potential issue with this approach is that nodes could (accidentally or otherwise) simply pass on their private IP
+address and have other nodes bypass the emulator entirely. There is of course nothing that can realistically be done to
+stop this, in the same way that there is nothing stopping users from hard coding IP addresses into their protocols which
+would have a similar effect. Ideally Packet Courier would manipulate packets at the level of the kernel, bypassing the
+need for this architecture in the first place, however this just isn't very feasible in Java, let alone in a way that is
+portable, containerised and platform-agnostic. Thus, users are encouraged to bear these limitations in mind when using
+the tool.
+
 ### Courier Config File Specification
 
 TODO  
