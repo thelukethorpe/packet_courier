@@ -111,9 +111,9 @@ public class PacketCourierSimulationConfigurationProtoParser<NodeInfo> {
     if (debugProto.getProcessMonitorEnabled()) {
       configuration.withProcessMonitorEnabled();
     }
-    if (debugProto.hasProcessMonitorCheckupFrequency()) {
-      configuration.withProcessMonitorCheckupFrequency(
-          parseDuration(debugProto.getProcessMonitorCheckupFrequency()));
+    if (debugProto.hasProcessMonitorCheckupInterval()) {
+      configuration.withProcessMonitorCheckupInterval(
+          parseDuration(debugProto.getProcessMonitorCheckupInterval()));
     }
     if (debugProto.hasTickDurationSampleSize()) {
       configuration.withTickDurationSampleSize(debugProto.getTickDurationSampleSize());

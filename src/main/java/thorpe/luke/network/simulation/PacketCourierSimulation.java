@@ -375,7 +375,7 @@ public class PacketCourierSimulation<NodeInfo> {
     private int datagramBufferSize = 1024;
     private boolean processLoggingEnabled = false;
     private boolean processMonitorEnabled = false;
-    private Duration processMonitorCheckupFrequency = Duration.of(10, ChronoUnit.SECONDS);
+    private Duration processMonitorCheckupInterval = Duration.of(10, ChronoUnit.SECONDS);
     private int tickDurationSampleSize = DEFAULT_TICK_DURATION_SAMPLE_SIZE;
 
     public Configuration(NodeInfoGenerator<NodeInfo> nodeInfoGenerator) {
@@ -545,9 +545,9 @@ public class PacketCourierSimulation<NodeInfo> {
       return this;
     }
 
-    public Configuration<NodeInfo> withProcessMonitorCheckupFrequency(
-        Duration processMonitorCheckupFrequency) {
-      this.processMonitorCheckupFrequency = processMonitorCheckupFrequency;
+    public Configuration<NodeInfo> withProcessMonitorCheckupInterval(
+        Duration processMonitorCheckupInterval) {
+      this.processMonitorCheckupInterval = processMonitorCheckupInterval;
       return this;
     }
 
@@ -597,7 +597,7 @@ public class PacketCourierSimulation<NodeInfo> {
       // Configure worker script and private socket logic.
       WorkerProcessMonitor workerProcessMonitor =
           new WorkerProcessMonitor(
-              processMonitorCheckupFrequency, simulationName + " Process Monitor");
+              processMonitorCheckupInterval, simulationName + " Process Monitor");
       Map<InetAddress, DatagramSocket> privateIpAddressToPublicSocketMap = new HashMap<>();
       Map<InetAddress, WorkerAddress> privateIpAddressToWorkerAddressMap = new HashMap<>();
       Map<String, RunnableNode<NodeInfo>> nameToRunnableNodeMap =

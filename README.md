@@ -2,6 +2,8 @@
 
 ## A Distributed Network Simulation Tool
 
+---
+
 ### Introduction
 
 Packet Courier is a Java library that doubles up as both a Java simulation framework and a standalone emulator,
@@ -117,6 +119,59 @@ need for this architecture in the first place, however this just isn't very feas
 portable, containerised and platform-agnostic. Thus, users are encouraged to bear these limitations in mind when using
 the tool.
 
+---
+
 ### Courier Config File Specification
 
-TODO  
+`topology :: Topology` ~ the arrangement of nodes and edges in the emulated network.
+
+`wallClockEnabled :: boolean` ~ if set to `true`, then any time-based semantics such as latency use the wall clock 
+(better for _emulations_), as opposed to a virtual clock that ticks with each round of CPU scheduling (better for
+_simulations_).
+
+`processLoggingEnabled :: boolean` ~ if set to `true`, then the console output of each process will be logged upon the
+process exiting with code zero.
+
+`port :: int32` ~ _optional field_: the port that Packet Courier should listen on.
+
+`datagramBufferSize :: int32` ~ _optional field_: the buffer size of the UDP sockets that Packet Courier is listening
+on.
+
+`loggers :: [Logger]` ~ the channels on which Packet Courier should log activity.
+
+`simulationName :: string` ~ _optional field_: the name associated with this particular configuration; used in meta
+logging, etc.
+
+`seed :: int32` ~ _optional field_: the seed used by the Packet Courier's random number generators; useful for testing.
+
+`debug :: Debug` ~ specifies options which are useful when debugging, such as configuring a crash dump location, meta
+logging and process monitoring.
+
+---
+
+#### Debug
+
+`processMonitorEnabled :: boolean` ~ if set to `true`, then the status of each running process will be periodically
+meta-logged.
+
+`processMonitorCheckupInterval :: Duration` ~ _optional field_: the interval between process monitor checkups.
+
+`tickDurationSampleSize :: int32` ~ _optional field_: a Packet Courier **tick** corresponds to **one round of packet
+processing**. For example, if Alice sends a packet to Bob via Packet Courier, then the packet will arrive at one of
+Packet Courier's UDP sockets and wait to be processed. When Packet Courier next ticks over, the packet will be pulled
+from its residing socket and pushed one stage through the packet pipeline associated with Alice's connection with Bob.
+If this pipeline consisted of a latency and a corruption component, then it would take 2 ticks for the packet to be sent
+to Bob.
+
+As part of the debugging process, the time spent processing each Packet Courier tick is measured, namely by taking an
+average over a number of samples. This option specifies the number of samples taken for each computation of the average
+tick duration.
+
+This is an important statistic to consider when building an emulation; if a tick is taking over a millisecond on
+average, then milliseconds are unlikely to be a suitable unit for latency, for instance.
+
+`crashDumpLocation :: string` ~ _optional field_: where crash dump files will be written in the event that a process
+exits with a non-zero code.
+
+`metaLoggers :: [Logger]` ~ the channels on which Packet Courier should log meta activity.
+

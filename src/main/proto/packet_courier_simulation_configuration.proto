@@ -16,12 +16,11 @@ message PacketCourierSimulationConfigurationProto {
   optional string simulationName = 7;
   optional int32 seed = 8;
   DebugProto debug = 9;
-
 }
 
 message DebugProto {
   bool processMonitorEnabled = 1;
-  optional DurationProto processMonitorCheckupFrequency = 2;
+  optional DurationProto processMonitorCheckupInterval = 2;
   optional int32 tickDurationSampleSize = 3;
   optional string crashDumpLocation = 4;
   repeated LoggerProto metaLoggers = 5;
