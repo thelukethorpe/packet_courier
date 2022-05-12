@@ -77,7 +77,7 @@ supported environment variables:
 For example, if Alice and Bob were configured to be bidirectionally connected, listening on port 1234 with a datagram
 buffer size of 128, then Alice's
 command `python3 server.py ${NODE_NAME} ${PORT} ${DATAGRAM_BUFFER_SIZE} ${PRIVATE_IP} ${PUBLIC_IP} ${NEIGHBOUR_IPS}`
-would translate to something like `python3 server.py Alice 1234 128 127.0.0.2 127.0.0.3 {"Bob": "127.0.0.4"}` at
+would translate to something like `python3 server.py Alice 1234 128 127.0.0.3 127.0.0.4 {"Bob": "127.0.0.6"}` at
 runtime.
 
 Note that this feature uses environment variable notation as an easy convention, but these are not actually environment
@@ -87,7 +87,25 @@ translated into something like `/usr/lib/jvm/java-8-oracle` at runtime.
 ### Emulation Semantics
 
 Packet Courier uses an abstraction of public vs private IP addresses in order to slot the emulated network inbetween
-running processes.
+running processes. Each node is assigned a _private_ IP address which corresponds to the address it should be sending
+and receiving packets on. Whilst nodes could just communicate purely using these IP addresses, they would simply be
+passing messages using UDP as a protocol and the operating system kernel as a wire; there would be no scope for
+manipulating the transmission of packets in a way that mimics a particular type of internet connection.
+
+To solve this problem, Packet Courier introduces the notion of a _public_ IP address, which allows Packet Courier to
+intercept packets and modify them as per the user configuration. By way of analogy, one could think of a private IP as a
+home address and a public IP as a [PO Box](https://en.wikipedia.org/wiki/Post_office_box). Suppose someone doesn't want
+mail to be sent directly to their home for whatever reason; in this instance they can open a PO Box, whereby they
+collect parcels and letters that they know are intended for them in an environment where they can be screened and
+processed.
+
+For example, consider bidirectionally connected nodes Alice and Bob. Alice is told at runtime that her private IP
+is `127.0.0.3`, her public IP is `127.0.0.4` and she is neighboured with Bob who has a public IP of `127.0.0.6`. When
+Alice wants to send a packet to Bob, she should send it from her _private_ UDP socket with address `127.0.0.3` to the
+destination of `127.0.0.6`. Alice will in fact be sending her packet to the Packet Courier routing layer, which will
+determine that this is Alice attempting to send a packet to Bob, in turn applying any network conditions such as
+latency, loss and corruption to the packet, before forwarding it on to Bob's _private_ IP, ensuring that the source is
+listed as Alice's _public_ IP.
 
 ### Courier Config File Specification
 
