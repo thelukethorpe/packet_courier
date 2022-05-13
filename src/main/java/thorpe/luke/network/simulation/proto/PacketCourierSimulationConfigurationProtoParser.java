@@ -144,8 +144,9 @@ public class PacketCourierSimulationConfigurationProtoParser<NodeInfo> {
   private Optional<String> parseCustomTopology(CustomTopologyProto customTopologyProto) {
     for (CommandNodeProto commandNodeProto : customTopologyProto.getCommandsNodesList()) {
       String name = commandNodeProto.getName();
-      String command = commandNodeProto.getCommand();
-      configuration.addNode(name, WorkerProcessConfiguration.fromCommand(command));
+      WorkerProcessConfiguration workerProcessConfiguration =
+          parseScript(commandNodeProto.getScript());
+      configuration.addNode(name, workerProcessConfiguration);
     }
 
     for (ConnectionProto connectionProto : customTopologyProto.getConnectionsList()) {
@@ -179,14 +180,16 @@ public class PacketCourierSimulationConfigurationProtoParser<NodeInfo> {
 
   private Optional<String> parseStarTopology(StarTopologyProto starTopologyProto) {
     String serverName = "Star Server " + uniqueStringGenerator.generateUniqueString();
-    String serverCommand = starTopologyProto.getServerCommand();
-    configuration.addNode(serverName, WorkerProcessConfiguration.fromCommand(serverCommand));
+    WorkerProcessConfiguration serverProcessConfiguration =
+        parseScript(starTopologyProto.getServerScript());
+    configuration.addNode(serverName, serverProcessConfiguration);
 
     if (starTopologyProto.getSize() <= 0) {
       return Optional.of(serverName);
     }
 
-    String clientCommand = starTopologyProto.getClientCommand();
+    WorkerProcessConfiguration clientWorkerProcessConfiguration =
+        parseScript(starTopologyProto.getClientScript());
     PacketPipeline.Parameters packetPipelineParameters =
         PacketPipeline.parameters(
             starTopologyProto
@@ -198,7 +201,7 @@ public class PacketCourierSimulationConfigurationProtoParser<NodeInfo> {
     for (int i = 0; i < starTopologyProto.getSize(); i++) {
       String clientName =
           "Star Client " + uniqueStringGenerator.generateUniqueString() + " of " + serverName;
-      configuration.addNode(clientName, WorkerProcessConfiguration.fromCommand(clientCommand));
+      configuration.addNode(clientName, clientWorkerProcessConfiguration);
       configuration.addConnection(clientName, serverName, packetPipelineParameters);
       if (!starTopologyProto.getUnidirectional()) {
         configuration.addConnection(serverName, clientName, packetPipelineParameters);
@@ -213,7 +216,8 @@ public class PacketCourierSimulationConfigurationProtoParser<NodeInfo> {
       return Optional.empty();
     }
 
-    String command = ringTopologyProto.getCommand();
+    WorkerProcessConfiguration workerProcessConfiguration =
+        parseScript(ringTopologyProto.getScript());
     PacketPipeline.Parameters packetPipelineParameters =
         PacketPipeline.parameters(
             ringTopologyProto
@@ -226,7 +230,7 @@ public class PacketCourierSimulationConfigurationProtoParser<NodeInfo> {
     for (int i = 0; i < ringTopologyProto.getSize(); i++) {
       String name = "Ring Client " + uniqueStringGenerator.generateUniqueString();
       names.add(name);
-      configuration.addNode(name, WorkerProcessConfiguration.fromCommand(command));
+      configuration.addNode(name, workerProcessConfiguration);
     }
 
     for (int i = 0; i < names.size(); i++) {
@@ -247,7 +251,8 @@ public class PacketCourierSimulationConfigurationProtoParser<NodeInfo> {
       return Optional.empty();
     }
 
-    String command = linearDaisyChainTopologyProto.getCommand();
+    WorkerProcessConfiguration workerProcessConfiguration =
+        parseScript(linearDaisyChainTopologyProto.getScript());
     PacketPipeline.Parameters packetPipelineParameters =
         PacketPipeline.parameters(
             linearDaisyChainTopologyProto
@@ -260,7 +265,7 @@ public class PacketCourierSimulationConfigurationProtoParser<NodeInfo> {
     for (int i = 0; i < linearDaisyChainTopologyProto.getSize(); i++) {
       String name = "Linear Daisy Chain Client " + uniqueStringGenerator.generateUniqueString();
       names.add(name);
-      configuration.addNode(name, WorkerProcessConfiguration.fromCommand(command));
+      configuration.addNode(name, workerProcessConfiguration);
     }
 
     for (int i = 0; i < names.size() - 1; i++) {
@@ -282,7 +287,8 @@ public class PacketCourierSimulationConfigurationProtoParser<NodeInfo> {
       return Optional.empty();
     }
 
-    String command = fullyConnectedMeshTopologyProto.getCommand();
+    WorkerProcessConfiguration workerProcessConfiguration =
+        parseScript(fullyConnectedMeshTopologyProto.getScript());
     PacketPipeline.Parameters packetPipelineParameters =
         PacketPipeline.parameters(
             fullyConnectedMeshTopologyProto
@@ -295,7 +301,7 @@ public class PacketCourierSimulationConfigurationProtoParser<NodeInfo> {
     for (int i = 0; i < fullyConnectedMeshTopologyProto.getSize(); i++) {
       String name = "Fully Connected Mesh Client " + uniqueStringGenerator.generateUniqueString();
       names.add(name);
-      configuration.addNode(name, WorkerProcessConfiguration.fromCommand(command));
+      configuration.addNode(name, workerProcessConfiguration);
     }
 
     for (int i = 0; i < names.size(); i++) {
@@ -349,6 +355,15 @@ public class PacketCourierSimulationConfigurationProtoParser<NodeInfo> {
         disjointMeshTopologyProto.hasJoiningNodeName()
             ? disjointMeshTopologyProto.getJoiningNodeName()
             : null);
+  }
+
+  private WorkerProcessConfiguration parseScript(ScriptProto scriptProto) {
+    String command = scriptProto.getCommand();
+    if (scriptProto.hasTimeout()) {
+      Duration timeout = parseDuration(scriptProto.getTimeout());
+      return WorkerProcessConfiguration.fromCommand(command, timeout);
+    }
+    return WorkerProcessConfiguration.fromCommand(command);
   }
 
   private static Logger parseLogger(LoggerProto loggerProto) {

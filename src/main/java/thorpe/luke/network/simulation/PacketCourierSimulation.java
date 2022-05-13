@@ -21,11 +21,11 @@ import thorpe.luke.network.simulation.mail.PacketCourierPostalService;
 import thorpe.luke.network.simulation.mail.PostalService;
 import thorpe.luke.network.simulation.node.*;
 import thorpe.luke.network.simulation.worker.*;
+import thorpe.luke.network.simulation.worker.WorkerProcessMonitor;
 import thorpe.luke.time.Clock;
 import thorpe.luke.time.VirtualClock;
 import thorpe.luke.time.WallClock;
 import thorpe.luke.util.ExceptionListener;
-import thorpe.luke.util.ProcessMonitor;
 import thorpe.luke.util.ThreadNameGenerator;
 import thorpe.luke.util.UniqueLoopbackIpv4AddressGenerator;
 
@@ -49,7 +49,7 @@ public class PacketCourierSimulation<NodeInfo> {
       Clock clock,
       Logger logger,
       Logger metaLogger,
-      Optional<ProcessMonitor> optionalProcessMonitor,
+      Optional<WorkerProcessMonitor> optionalProcessMonitor,
       Path crashDumpLocation,
       int port,
       int datagramBufferSize,
@@ -114,7 +114,7 @@ public class PacketCourierSimulation<NodeInfo> {
       PacketCourierPostalService<NodeInfo> postalService,
       Clock clock,
       Logger logger,
-      Optional<ProcessMonitor> optionalProcessMonitor,
+      Optional<WorkerProcessMonitor> optionalProcessMonitor,
       Path crashDumpLocation,
       int port,
       int datagramBufferSize,
@@ -183,9 +183,9 @@ public class PacketCourierSimulation<NodeInfo> {
 
     // Start threads.
     optionalProcessMonitor.ifPresent(
-        processMonitor -> {
-          processMonitor.addLogger(metaLogger);
-          processMonitor.start();
+        workerProcessMonitor -> {
+          workerProcessMonitor.addLogger(metaLogger);
+          workerProcessMonitor.start();
         });
     if (!datagramRoutingThreads.isEmpty()) {
       datagramRoutingThreads.forEach(Thread::start);
@@ -208,9 +208,9 @@ public class PacketCourierSimulation<NodeInfo> {
     simulationComplete.set(true);
     joinAll(datagramRoutingThreads);
     optionalProcessMonitor.ifPresent(
-        processMonitor -> {
+        workerProcessMonitor -> {
           try {
-            processMonitor.shutdown();
+            workerProcessMonitor.shutdown();
           } catch (InterruptedException e) {
             metaExceptionHandler(e);
           }
@@ -329,7 +329,7 @@ public class PacketCourierSimulation<NodeInfo> {
         int datagramBufferSize,
         Map<InetAddress, DatagramSocket> privateIpAddressToPublicSocketMap,
         boolean processLoggingEnabled,
-        ProcessMonitor processMonitor);
+        WorkerProcessMonitor workerProcessMonitor);
   }
 
   @FunctionalInterface
@@ -399,7 +399,7 @@ public class PacketCourierSimulation<NodeInfo> {
               datagramBufferSize,
               privateIpAddressToPublicSocketMap,
               processLoggingEnabled,
-              processMonitor) -> workerScript);
+              workerProcessMonitor) -> workerScript);
       return this;
     }
 
@@ -420,8 +420,8 @@ public class PacketCourierSimulation<NodeInfo> {
               datagramBufferSize,
               privateIpAddressToPublicSocketMap,
               processLoggingEnabled,
-              processMonitor) -> {
-            WorkerProcessFactory workerProcessFactory =
+              workerProcessMonitor) -> {
+            WorkerProcess.Factory workerProcessFactory =
                 workerProcessConfiguration.buildFactory(
                     address,
                     topology,
@@ -436,7 +436,7 @@ public class PacketCourierSimulation<NodeInfo> {
                 .withDatagramBufferSize(datagramBufferSize)
                 .withPrivateIpAddressToPublicSocketMap(privateIpAddressToPublicSocketMap)
                 .withProcessLoggingEnabled(processLoggingEnabled)
-                .withProcessMonitor(processMonitor)
+                .withProcessMonitor(workerProcessMonitor)
                 .build();
           });
       return this;
@@ -570,8 +570,9 @@ public class PacketCourierSimulation<NodeInfo> {
                           nodeToPublicSocketEntry.getValue().getLocalAddress()));
 
       // Configure worker script and private socket logic.
-      ProcessMonitor processMonitor =
-          new ProcessMonitor(processMonitorCheckupFrequency, simulationName + " Process Monitor");
+      WorkerProcessMonitor workerProcessMonitor =
+          new WorkerProcessMonitor(
+              processMonitorCheckupFrequency, simulationName + " Process Monitor");
       Map<InetAddress, DatagramSocket> privateIpAddressToPublicSocketMap = new HashMap<>();
       Map<InetAddress, WorkerAddress> privateIpAddressToWorkerAddressMap = new HashMap<>();
       Map<String, RunnableNode<NodeInfo>> nameToRunnableNodeMap =
@@ -601,7 +602,7 @@ public class PacketCourierSimulation<NodeInfo> {
                                 datagramBufferSize,
                                 privateIpAddressToPublicSocketMap,
                                 processLoggingEnabled,
-                                processMonitor);
+                                workerProcessMonitor);
                         return new RunnableNode<>(node, workerScript, nodeInfoGenerator);
                       }));
 
@@ -631,7 +632,7 @@ public class PacketCourierSimulation<NodeInfo> {
           clock,
           new MultiLogger(loggers),
           new MultiLogger(metaLoggers),
-          processMonitorEnabled ? Optional.of(processMonitor) : Optional.empty(),
+          processMonitorEnabled ? Optional.of(workerProcessMonitor) : Optional.empty(),
           crashDumpLocation,
           port,
           datagramBufferSize,

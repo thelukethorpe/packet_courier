@@ -45,29 +45,29 @@ message CustomTopologyProto {
 }
 
 message StarTopologyProto {
-  string serverCommand = 1;
-  string clientCommand = 2;
+  ScriptProto serverScript = 1;
+  ScriptProto clientScript = 2;
   bool unidirectional = 3;
   int32 size = 4;
   repeated NetworkConditionProto networkConditions = 5;
 }
 
 message RingTopologyProto {
-  string command = 1;
+  ScriptProto script = 1;
   bool unidirectional = 2;
   int32 size = 3;
   repeated NetworkConditionProto networkConditions = 4;
 }
 
 message LinearDaisyChainTopologyProto {
-  string command = 1;
+  ScriptProto script = 1;
   bool unidirectional = 2;
   int32 size = 3;
   repeated NetworkConditionProto networkConditions = 4;
 }
 
 message FullyConnectedMeshTopologyProto {
-  string command = 1;
+  ScriptProto script = 1;
   int32 size = 2;
   repeated NetworkConditionProto networkConditions = 3;
 }
@@ -83,9 +83,14 @@ message DisjointMeshTopologyProto {
   optional string joiningNodeName = 3;
 }
 
+message ScriptProto {
+  string command = 1;
+  optional DurationProto timeout = 2;
+}
+
 message CommandNodeProto {
   string name = 1;
-  string command = 2;
+  ScriptProto script = 2;
 }
 
 message ConnectionProto {
