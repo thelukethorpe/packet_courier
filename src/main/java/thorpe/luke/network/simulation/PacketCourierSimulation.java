@@ -37,6 +37,8 @@ public class PacketCourierSimulation<NodeInfo> {
   private static final DateTimeFormatter META_LOG_DATE_FORMAT =
       DateTimeFormatter.ofPattern("dd/MM/yyyy-hh:mm:ss");
 
+  private static final int DEFAULT_TICK_DURATION_SAMPLE_SIZE = 1_000_000;
+
   private final String simulationName;
   private final Logger metaLogger;
   private final Thread simulationThread;
@@ -145,9 +147,26 @@ public class PacketCourierSimulation<NodeInfo> {
     Thread simulationManagerThread =
         new Thread(
             () -> {
+              long total_tick_duration_in_nanoseconds = 0;
+              int number_of_ticks_sampled = 0;
               while (!simulationComplete.get()) {
                 clock.tick();
+                long tick_start_in_nanoseconds = System.nanoTime();
                 postalService.tick(clock.now());
+                long tick_finish_in_nanoseconds = System.nanoTime();
+                total_tick_duration_in_nanoseconds +=
+                    tick_finish_in_nanoseconds - tick_start_in_nanoseconds;
+                number_of_ticks_sampled++;
+                if (number_of_ticks_sampled >= DEFAULT_TICK_DURATION_SAMPLE_SIZE) {
+                  double average_tick_duration_in_nanoseconds =
+                      total_tick_duration_in_nanoseconds / (double) number_of_ticks_sampled;
+                  metaLogger.log(
+                      String.format(
+                          "The last %d ticks have had an average duration of %.3f nanoseconds",
+                          number_of_ticks_sampled, average_tick_duration_in_nanoseconds));
+                  total_tick_duration_in_nanoseconds = 0;
+                  number_of_ticks_sampled = 0;
+                }
               }
             },
             ThreadNameGenerator.generateThreadName(simulationName + " Manager"));
@@ -357,6 +376,7 @@ public class PacketCourierSimulation<NodeInfo> {
     private boolean processLoggingEnabled = false;
     private boolean processMonitorEnabled = false;
     private Duration processMonitorCheckupFrequency = Duration.of(10, ChronoUnit.SECONDS);
+    private int tickDurationSampleSize = DEFAULT_TICK_DURATION_SAMPLE_SIZE;
 
     public Configuration(NodeInfoGenerator<NodeInfo> nodeInfoGenerator) {
       this.nodeInfoGenerator = nodeInfoGenerator;
@@ -528,6 +548,11 @@ public class PacketCourierSimulation<NodeInfo> {
     public Configuration<NodeInfo> withProcessMonitorCheckupFrequency(
         Duration processMonitorCheckupFrequency) {
       this.processMonitorCheckupFrequency = processMonitorCheckupFrequency;
+      return this;
+    }
+
+    public Configuration<NodeInfo> withTickDurationSampleSize(int tickDurationSampleSize) {
+      this.tickDurationSampleSize = tickDurationSampleSize;
       return this;
     }
 

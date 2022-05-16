@@ -3,17 +3,19 @@
   "datagramBufferSize": 64,
   "wallClockEnabled": true,
   "processLoggingEnabled": true,
-  "processMonitorEnabled": true,
   "loggers": [
     {
       "console": "STDOUT"
     }
   ],
-  "metaLoggers": [
-    {
-      "console": "STDOUT"
-    }
-  ],
+  "debug" : {
+    "processMonitorEnabled": true,
+    "metaLoggers": [
+      {
+        "console": "STDOUT"
+      }
+    ]
+  },
   "topology": {
     "jointMesh": {
       "jointTopologies": [

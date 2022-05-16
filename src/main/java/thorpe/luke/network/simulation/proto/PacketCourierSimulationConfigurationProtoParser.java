@@ -84,16 +84,6 @@ public class PacketCourierSimulationConfigurationProtoParser<NodeInfo> {
     if (configurationProto.getProcessLoggingEnabled()) {
       configuration.withProcessLoggingEnabled();
     }
-    if (configurationProto.getProcessMonitorEnabled()) {
-      configuration.withProcessMonitorEnabled();
-    }
-    if (configurationProto.hasProcessMonitorCheckupFrequency()) {
-      configuration.withProcessMonitorCheckupFrequency(
-          parseDuration(configurationProto.getProcessMonitorCheckupFrequency()));
-    }
-    if (configurationProto.hasCrashDumpLocation()) {
-      configuration.withCrashDumpLocation(Paths.get(configurationProto.getCrashDumpLocation()));
-    }
     if (configurationProto.hasPort()) {
       configuration.withPort(configurationProto.getPort());
     }
@@ -108,16 +98,33 @@ public class PacketCourierSimulationConfigurationProtoParser<NodeInfo> {
         .getLoggersList()
         .forEach(loggerProto -> configuration.addLogger(parseLogger(loggerProto)));
 
-    configurationProto
-        .getMetaLoggersList()
-        .forEach(loggerProto -> configuration.addMetaLogger(parseLogger(loggerProto)));
-
+    parseDebug(configurationProto.getDebug());
     parseTopology(configurationProto.getTopology());
     return configuration;
   }
 
   private Duration parseDuration(DurationProto durationProto) {
     return Duration.of(durationProto.getDuration(), parseTimeUnit(durationProto.getTimeUnit()));
+  }
+
+  private void parseDebug(DebugProto debugProto) {
+    if (debugProto.getProcessMonitorEnabled()) {
+      configuration.withProcessMonitorEnabled();
+    }
+    if (debugProto.hasProcessMonitorCheckupFrequency()) {
+      configuration.withProcessMonitorCheckupFrequency(
+          parseDuration(debugProto.getProcessMonitorCheckupFrequency()));
+    }
+    if (debugProto.hasTickDurationSampleSize()) {
+      configuration.withTickDurationSampleSize(debugProto.getTickDurationSampleSize());
+    }
+    if (debugProto.hasCrashDumpLocation()) {
+      configuration.withCrashDumpLocation(Paths.get(debugProto.getCrashDumpLocation()));
+    }
+
+    debugProto
+        .getMetaLoggersList()
+        .forEach(loggerProto -> configuration.addMetaLogger(parseLogger(loggerProto)));
   }
 
   private Optional<String> parseTopology(TopologyProto topologyProto) {
