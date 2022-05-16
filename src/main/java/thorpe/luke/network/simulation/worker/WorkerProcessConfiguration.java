@@ -1,6 +1,7 @@
 package thorpe.luke.network.simulation.worker;
 
 import java.net.InetAddress;
+import java.time.Duration;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -102,11 +103,15 @@ public class WorkerProcessConfiguration {
 
   private final List<String> commandWords;
   private final Map<Integer, WordGenerator> indexToWordGeneratorMap;
+  private final Duration timeout;
 
   private WorkerProcessConfiguration(
-      List<String> commandWords, Map<Integer, WordGenerator> indexToWordGeneratorMap) {
+      List<String> commandWords,
+      Map<Integer, WordGenerator> indexToWordGeneratorMap,
+      Duration timeout) {
     this.commandWords = commandWords;
     this.indexToWordGeneratorMap = indexToWordGeneratorMap;
+    this.timeout = timeout;
   }
 
   private static List<String> splitOnUnquotedWhitespace(String text) {
@@ -118,7 +123,7 @@ public class WorkerProcessConfiguration {
     return new ArrayList<>(split);
   }
 
-  public static WorkerProcessConfiguration fromCommand(String command) {
+  public static WorkerProcessConfiguration fromCommand(String command, Duration timeout) {
     List<String> commandWords = splitOnUnquotedWhitespace(command);
     Map<Integer, WordGenerator> indexToWordGeneratorMap = new HashMap<>();
     for (int i = 0; i < commandWords.size(); i++) {
@@ -144,10 +149,14 @@ public class WorkerProcessConfiguration {
         indexToWordGeneratorMap.put(i, TOPOLOGY_IPS_WORD_GENERATOR);
       }
     }
-    return new WorkerProcessConfiguration(commandWords, indexToWordGeneratorMap);
+    return new WorkerProcessConfiguration(commandWords, indexToWordGeneratorMap, timeout);
   }
 
-  public WorkerProcessFactory buildFactory(
+  public static WorkerProcessConfiguration fromCommand(String command) {
+    return fromCommand(command, null);
+  }
+
+  public WorkerProcess.Factory buildFactory(
       NodeAddress address,
       Topology topology,
       int port,
@@ -170,7 +179,7 @@ public class WorkerProcessConfiguration {
         command[i] = commandWords.get(i);
       }
     }
-    return new WorkerProcessFactory(new ProcessBuilder().command(command));
+    return WorkerProcess.factoryOf(new ProcessBuilder().command(command), timeout);
   }
 
   @FunctionalInterface

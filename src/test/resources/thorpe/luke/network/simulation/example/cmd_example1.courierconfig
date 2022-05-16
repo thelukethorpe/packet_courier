@@ -13,11 +13,15 @@
       "commandsNodes": [
         {
           "name": "Alice",
-          "command": "python3 src/test/resources/thorpe/luke/network/simulation/example/simple_client.py ${NODE_NAME} ${PRIVATE_IP} ${PORT} ${NEIGHBOUR_IPS} 250"
+          "script": {
+            "command": "python3 src/test/resources/thorpe/luke/network/simulation/example/simple_client.py ${NODE_NAME} ${PRIVATE_IP} ${PORT} ${NEIGHBOUR_IPS} 250"
+          }
         },
         {
           "name": "Bob",
-          "command": "python3 src/test/resources/thorpe/luke/network/simulation/example/simple_server.py ${NODE_NAME} ${PRIVATE_IP} ${PORT} ${DATAGRAM_BUFFER_SIZE}"
+          "script": {
+            "command": "python3 src/test/resources/thorpe/luke/network/simulation/example/simple_server.py ${NODE_NAME} ${PRIVATE_IP} ${PORT} ${DATAGRAM_BUFFER_SIZE}"
+          }
         }
       ],
       "connections": [

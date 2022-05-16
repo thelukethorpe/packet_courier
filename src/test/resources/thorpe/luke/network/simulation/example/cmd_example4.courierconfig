@@ -3,23 +3,27 @@
   "datagramBufferSize": 64,
   "wallClockEnabled": true,
   "processLoggingEnabled": true,
-  "processMonitorEnabled": true,
   "loggers": [
     {
       "console": "STDOUT"
     }
   ],
-  "metaLoggers": [
-    {
-      "console": "STDOUT"
-    }
-  ],
+  "debug" : {
+    "processMonitorEnabled": true,
+    "metaLoggers": [
+      {
+        "console": "STDOUT"
+      }
+    ]
+  },
   "topology": {
     "jointMesh": {
       "jointTopologies": [
         {
           "ring": {
-            "command": "python3 src/test/resources/thorpe/luke/network/simulation/example/flood_script.py ${NODE_NAME} ${PRIVATE_IP} ${PORT} ${NEIGHBOUR_IPS} ${DATAGRAM_BUFFER_SIZE} 100 \"Ring 1\"",
+            "script": {
+              "command": "python3 src/test/resources/thorpe/luke/network/simulation/example/flood_script.py ${NODE_NAME} ${PRIVATE_IP} ${PORT} ${NEIGHBOUR_IPS} ${DATAGRAM_BUFFER_SIZE} 100 \"Ring 1\""
+            },
             "unidirectional": true,
             "size": 25,
             "networkConditions": [
@@ -42,7 +46,9 @@
         },
         {
           "ring": {
-            "command": "python3 src/test/resources/thorpe/luke/network/simulation/example/flood_script.py ${NODE_NAME} ${PRIVATE_IP} ${PORT} ${NEIGHBOUR_IPS} ${DATAGRAM_BUFFER_SIZE} 100 \"Ring 2\"",
+            "script": {
+              "command": "python3 src/test/resources/thorpe/luke/network/simulation/example/flood_script.py ${NODE_NAME} ${PRIVATE_IP} ${PORT} ${NEIGHBOUR_IPS} ${DATAGRAM_BUFFER_SIZE} 100 \"Ring 2\""
+            },
             "unidirectional": true,
             "size": 25,
             "networkConditions": [
@@ -64,7 +70,6 @@
           }
         }
       ],
-      "size": 25,
       "networkConditions": [
         {
           "packetDropParameters": {

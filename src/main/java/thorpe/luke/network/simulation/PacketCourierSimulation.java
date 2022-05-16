@@ -21,11 +21,11 @@ import thorpe.luke.network.simulation.mail.PacketCourierPostalService;
 import thorpe.luke.network.simulation.mail.PostalService;
 import thorpe.luke.network.simulation.node.*;
 import thorpe.luke.network.simulation.worker.*;
+import thorpe.luke.network.simulation.worker.WorkerProcessMonitor;
 import thorpe.luke.time.Clock;
 import thorpe.luke.time.VirtualClock;
 import thorpe.luke.time.WallClock;
 import thorpe.luke.util.ExceptionListener;
-import thorpe.luke.util.ProcessMonitor;
 import thorpe.luke.util.ThreadNameGenerator;
 import thorpe.luke.util.UniqueLoopbackIpv4AddressGenerator;
 
@@ -36,6 +36,8 @@ public class PacketCourierSimulation<NodeInfo> {
 
   private static final DateTimeFormatter META_LOG_DATE_FORMAT =
       DateTimeFormatter.ofPattern("dd/MM/yyyy-hh:mm:ss");
+
+  private static final int DEFAULT_TICK_DURATION_SAMPLE_SIZE = 1_000_000;
 
   private final String simulationName;
   private final Logger metaLogger;
@@ -49,7 +51,7 @@ public class PacketCourierSimulation<NodeInfo> {
       Clock clock,
       Logger logger,
       Logger metaLogger,
-      Optional<ProcessMonitor> optionalProcessMonitor,
+      Optional<WorkerProcessMonitor> optionalProcessMonitor,
       Path crashDumpLocation,
       int port,
       int datagramBufferSize,
@@ -114,7 +116,7 @@ public class PacketCourierSimulation<NodeInfo> {
       PacketCourierPostalService<NodeInfo> postalService,
       Clock clock,
       Logger logger,
-      Optional<ProcessMonitor> optionalProcessMonitor,
+      Optional<WorkerProcessMonitor> optionalProcessMonitor,
       Path crashDumpLocation,
       int port,
       int datagramBufferSize,
@@ -145,9 +147,26 @@ public class PacketCourierSimulation<NodeInfo> {
     Thread simulationManagerThread =
         new Thread(
             () -> {
+              long total_tick_duration_in_nanoseconds = 0;
+              int number_of_ticks_sampled = 0;
               while (!simulationComplete.get()) {
                 clock.tick();
+                long tick_start_in_nanoseconds = System.nanoTime();
                 postalService.tick(clock.now());
+                long tick_finish_in_nanoseconds = System.nanoTime();
+                total_tick_duration_in_nanoseconds +=
+                    tick_finish_in_nanoseconds - tick_start_in_nanoseconds;
+                number_of_ticks_sampled++;
+                if (number_of_ticks_sampled >= DEFAULT_TICK_DURATION_SAMPLE_SIZE) {
+                  double average_tick_duration_in_nanoseconds =
+                      total_tick_duration_in_nanoseconds / (double) number_of_ticks_sampled;
+                  metaLogger.log(
+                      String.format(
+                          "The last %d ticks have had an average duration of %.3f nanoseconds",
+                          number_of_ticks_sampled, average_tick_duration_in_nanoseconds));
+                  total_tick_duration_in_nanoseconds = 0;
+                  number_of_ticks_sampled = 0;
+                }
               }
             },
             ThreadNameGenerator.generateThreadName(simulationName + " Manager"));
@@ -183,9 +202,9 @@ public class PacketCourierSimulation<NodeInfo> {
 
     // Start threads.
     optionalProcessMonitor.ifPresent(
-        processMonitor -> {
-          processMonitor.addLogger(metaLogger);
-          processMonitor.start();
+        workerProcessMonitor -> {
+          workerProcessMonitor.addLogger(metaLogger);
+          workerProcessMonitor.start();
         });
     if (!datagramRoutingThreads.isEmpty()) {
       datagramRoutingThreads.forEach(Thread::start);
@@ -208,9 +227,9 @@ public class PacketCourierSimulation<NodeInfo> {
     simulationComplete.set(true);
     joinAll(datagramRoutingThreads);
     optionalProcessMonitor.ifPresent(
-        processMonitor -> {
+        workerProcessMonitor -> {
           try {
-            processMonitor.shutdown();
+            workerProcessMonitor.shutdown();
           } catch (InterruptedException e) {
             metaExceptionHandler(e);
           }
@@ -329,7 +348,7 @@ public class PacketCourierSimulation<NodeInfo> {
         int datagramBufferSize,
         Map<InetAddress, DatagramSocket> privateIpAddressToPublicSocketMap,
         boolean processLoggingEnabled,
-        ProcessMonitor processMonitor);
+        WorkerProcessMonitor workerProcessMonitor);
   }
 
   @FunctionalInterface
@@ -357,6 +376,7 @@ public class PacketCourierSimulation<NodeInfo> {
     private boolean processLoggingEnabled = false;
     private boolean processMonitorEnabled = false;
     private Duration processMonitorCheckupFrequency = Duration.of(10, ChronoUnit.SECONDS);
+    private int tickDurationSampleSize = DEFAULT_TICK_DURATION_SAMPLE_SIZE;
 
     public Configuration(NodeInfoGenerator<NodeInfo> nodeInfoGenerator) {
       this.nodeInfoGenerator = nodeInfoGenerator;
@@ -399,7 +419,7 @@ public class PacketCourierSimulation<NodeInfo> {
               datagramBufferSize,
               privateIpAddressToPublicSocketMap,
               processLoggingEnabled,
-              processMonitor) -> workerScript);
+              workerProcessMonitor) -> workerScript);
       return this;
     }
 
@@ -420,8 +440,8 @@ public class PacketCourierSimulation<NodeInfo> {
               datagramBufferSize,
               privateIpAddressToPublicSocketMap,
               processLoggingEnabled,
-              processMonitor) -> {
-            WorkerProcessFactory workerProcessFactory =
+              workerProcessMonitor) -> {
+            WorkerProcess.Factory workerProcessFactory =
                 workerProcessConfiguration.buildFactory(
                     address,
                     topology,
@@ -436,7 +456,7 @@ public class PacketCourierSimulation<NodeInfo> {
                 .withDatagramBufferSize(datagramBufferSize)
                 .withPrivateIpAddressToPublicSocketMap(privateIpAddressToPublicSocketMap)
                 .withProcessLoggingEnabled(processLoggingEnabled)
-                .withProcessMonitor(processMonitor)
+                .withProcessMonitor(workerProcessMonitor)
                 .build();
           });
       return this;
@@ -531,6 +551,11 @@ public class PacketCourierSimulation<NodeInfo> {
       return this;
     }
 
+    public Configuration<NodeInfo> withTickDurationSampleSize(int tickDurationSampleSize) {
+      this.tickDurationSampleSize = tickDurationSampleSize;
+      return this;
+    }
+
     public PacketCourierSimulation<NodeInfo> configure() {
       // Configure topology logic.
       Map<String, Collection<String>> nodeToNeighboursMap = new HashMap<>();
@@ -570,8 +595,9 @@ public class PacketCourierSimulation<NodeInfo> {
                           nodeToPublicSocketEntry.getValue().getLocalAddress()));
 
       // Configure worker script and private socket logic.
-      ProcessMonitor processMonitor =
-          new ProcessMonitor(processMonitorCheckupFrequency, simulationName + " Process Monitor");
+      WorkerProcessMonitor workerProcessMonitor =
+          new WorkerProcessMonitor(
+              processMonitorCheckupFrequency, simulationName + " Process Monitor");
       Map<InetAddress, DatagramSocket> privateIpAddressToPublicSocketMap = new HashMap<>();
       Map<InetAddress, WorkerAddress> privateIpAddressToWorkerAddressMap = new HashMap<>();
       Map<String, RunnableNode<NodeInfo>> nameToRunnableNodeMap =
@@ -601,7 +627,7 @@ public class PacketCourierSimulation<NodeInfo> {
                                 datagramBufferSize,
                                 privateIpAddressToPublicSocketMap,
                                 processLoggingEnabled,
-                                processMonitor);
+                                workerProcessMonitor);
                         return new RunnableNode<>(node, workerScript, nodeInfoGenerator);
                       }));
 
@@ -631,7 +657,7 @@ public class PacketCourierSimulation<NodeInfo> {
           clock,
           new MultiLogger(loggers),
           new MultiLogger(metaLoggers),
-          processMonitorEnabled ? Optional.of(processMonitor) : Optional.empty(),
+          processMonitorEnabled ? Optional.of(workerProcessMonitor) : Optional.empty(),
           crashDumpLocation,
           port,
           datagramBufferSize,

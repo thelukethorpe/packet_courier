@@ -1,46 +1,42 @@
 package thorpe.luke.network.simulation.worker;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import thorpe.luke.log.SimpleLogger;
 import thorpe.luke.network.packet.Packet;
-import thorpe.luke.util.ProcessMonitor;
 import thorpe.luke.util.ThreadNameGenerator;
 
 public class WorkerDatagramForwardingScript<NodeInfo> implements WorkerScript<NodeInfo> {
 
-  private final WorkerProcessFactory workerProcessFactory;
+  private final WorkerProcess.Factory workerProcessFactory;
   private final int port;
   private final InetAddress privateIpAddress;
   private final int datagramBufferSize;
   private final Map<InetAddress, DatagramSocket> privateIpAddressToPublicSocketMap;
   private final boolean processLoggingEnabled;
-  private final ProcessMonitor processMonitor;
+  private final WorkerProcessMonitor workerProcessMonitor;
 
   private WorkerDatagramForwardingScript(
-      WorkerProcessFactory workerProcessFactory,
+      WorkerProcess.Factory workerProcessFactory,
       int port,
       InetAddress privateIpAddress,
       int datagramBufferSize,
       Map<InetAddress, DatagramSocket> privateIpAddressToPublicSocketMap,
       boolean processLoggingEnabled,
-      ProcessMonitor processMonitor) {
+      WorkerProcessMonitor workerProcessMonitor) {
     this.workerProcessFactory = workerProcessFactory;
     this.port = port;
     this.privateIpAddress = privateIpAddress;
     this.datagramBufferSize = datagramBufferSize;
     this.privateIpAddressToPublicSocketMap = privateIpAddressToPublicSocketMap;
     this.processLoggingEnabled = processLoggingEnabled;
-    this.processMonitor = processMonitor;
+    this.workerProcessMonitor = workerProcessMonitor;
   }
 
   public static Builder builder() {
@@ -90,46 +86,39 @@ public class WorkerDatagramForwardingScript<NodeInfo> implements WorkerScript<No
                 "Packet Forwarder at " + workerManager.getAddress().getName()));
     forwardingThread.start();
     try {
-      String processName = workerManager.getAddress().getHostingNodeAddress().getName();
-      Process process = workerProcessFactory.start();
-      processMonitor.addProcess(processName, process);
-      int exitStatus = process.waitFor();
+      String workerProcessName = workerManager.getAddress().getHostingNodeAddress().getName();
+      WorkerProcess workerProcess;
+      if (processLoggingEnabled) {
+        workerProcess = workerProcessFactory.start(new SimpleLogger(workerManager::log));
+      } else {
+        workerProcess = workerProcessFactory.start();
+      }
+      workerProcessMonitor.addProcess(workerProcessName, workerProcess);
+      WorkerProcessExitStatus workerProcessExitStatus = workerProcess.waitFor();
       forwardingThread.interrupt();
       forwardingThread.join();
-      if (exitStatus != 0) {
-        List<String> processErrors = collectStringsFromStream(process.getErrorStream());
-        workerManager.generateCrashDump(processErrors);
+      if (!workerProcessExitStatus.isSuccess()) {
+        workerManager.generateCrashDump(workerProcessExitStatus.getErrors());
       } else if (processLoggingEnabled) {
-        collectStringsFromStream(process.getInputStream()).forEach(workerManager::log);
+        workerProcessExitStatus.getErrors().forEach(workerManager::log);
       }
     } catch (IOException | InterruptedException e) {
       throw new WorkerException(e);
     }
   }
 
-  private static List<String> collectStringsFromStream(InputStream inputStream) throws IOException {
-    BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
-    List<String> strings = new LinkedList<>();
-    String line = bufferedReader.readLine();
-    while (line != null) {
-      strings.add(line);
-      line = bufferedReader.readLine();
-    }
-    return strings;
-  }
-
   public static class Builder {
-    private WorkerProcessFactory workerProcessFactory;
+    private WorkerProcess.Factory workerProcessFactory;
     private int port;
     private InetAddress privateIpAddress;
     private int datagramBufferSize;
     private Map<InetAddress, DatagramSocket> privateIpAddressToPublicSocketMap;
     private boolean processLoggingEnabled;
-    private ProcessMonitor processMonitor;
+    private WorkerProcessMonitor workerProcessMonitor;
 
     private Builder() {}
 
-    public Builder withWorkerProcessFactory(WorkerProcessFactory workerProcessFactory) {
+    public Builder withWorkerProcessFactory(WorkerProcess.Factory workerProcessFactory) {
       this.workerProcessFactory = workerProcessFactory;
       return this;
     }
@@ -160,8 +149,8 @@ public class WorkerDatagramForwardingScript<NodeInfo> implements WorkerScript<No
       return this;
     }
 
-    public Builder withProcessMonitor(ProcessMonitor processMonitor) {
-      this.processMonitor = processMonitor;
+    public Builder withProcessMonitor(WorkerProcessMonitor workerProcessMonitor) {
+      this.workerProcessMonitor = workerProcessMonitor;
       return this;
     }
 
@@ -173,7 +162,7 @@ public class WorkerDatagramForwardingScript<NodeInfo> implements WorkerScript<No
           datagramBufferSize,
           privateIpAddressToPublicSocketMap,
           processLoggingEnabled,
-          processMonitor);
+          workerProcessMonitor);
     }
   }
 }

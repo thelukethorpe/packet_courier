@@ -1,4 +1,4 @@
-package thorpe.luke.util;
+package thorpe.luke.network.simulation.worker;
 
 import java.time.Duration;
 import java.util.Collection;
@@ -9,15 +9,17 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import thorpe.luke.log.Logger;
+import thorpe.luke.util.ThreadNameGenerator;
 
-public class ProcessMonitor {
-  private final ConcurrentMap<String, Process> nameToProcessMap = new ConcurrentHashMap<>();
+public class WorkerProcessMonitor {
+  private final ConcurrentMap<String, WorkerProcess> nameToWorkerProcessMap =
+      new ConcurrentHashMap<>();
   private final AtomicBoolean hasShutdown = new AtomicBoolean(false);
   private final Collection<Logger> loggers = new LinkedList<>();
   private final Duration checkupFrequency;
   private final Thread monitorThread;
 
-  public ProcessMonitor(Duration checkupFrequency, String name) {
+  public WorkerProcessMonitor(Duration checkupFrequency, String name) {
     this.checkupFrequency = checkupFrequency;
     this.monitorThread = new Thread(this::run, ThreadNameGenerator.generateThreadName(name));
   }
@@ -29,18 +31,19 @@ public class ProcessMonitor {
   private void run() {
     while (!hasShutdown.get()) {
       log("Process monitor performing checkup");
-      List<String> deadProcessNames = new LinkedList<>();
-      for (Map.Entry<String, Process> nameToProcessEntry : nameToProcessMap.entrySet()) {
-        String processName = nameToProcessEntry.getKey();
-        Process process = nameToProcessEntry.getValue();
-        if (process.isAlive()) {
-          log("\"" + processName + "\" is alive");
+      List<String> deadWorkerProcessNames = new LinkedList<>();
+      for (Map.Entry<String, WorkerProcess> nameToWorkerProcessEntry :
+          nameToWorkerProcessMap.entrySet()) {
+        String workerProcessName = nameToWorkerProcessEntry.getKey();
+        WorkerProcess workerProcess = nameToWorkerProcessEntry.getValue();
+        if (workerProcess.isAlive()) {
+          log("\"" + workerProcessName + "\" is alive");
         } else {
-          log("\"" + processName + "\" has finished and is no longer being monitored");
-          deadProcessNames.add(processName);
+          log("\"" + workerProcessName + "\" has finished and is no longer being monitored");
+          deadWorkerProcessNames.add(workerProcessName);
         }
       }
-      deadProcessNames.forEach(nameToProcessMap::remove);
+      deadWorkerProcessNames.forEach(nameToWorkerProcessMap::remove);
       try {
         Thread.sleep(checkupFrequency.toMillis());
       } catch (InterruptedException e) {
@@ -53,9 +56,9 @@ public class ProcessMonitor {
     loggers.add(logger);
   }
 
-  public void addProcess(String processName, Process process) {
-    nameToProcessMap.put(processName, process);
-    log("\"" + processName + "\" is now up, running and being monitored");
+  public void addProcess(String workerProcessName, WorkerProcess workerProcess) {
+    nameToWorkerProcessMap.put(workerProcessName, workerProcess);
+    log("\"" + workerProcessName + "\" is now up, running and being monitored");
   }
 
   public void start() {

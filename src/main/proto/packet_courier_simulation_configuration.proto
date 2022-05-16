@@ -10,15 +10,21 @@ message PacketCourierSimulationConfigurationProto {
   TopologyProto topology = 1;
   bool wallClockEnabled = 2;
   bool processLoggingEnabled = 3;
-  bool processMonitorEnabled = 4;
-  optional DurationProto processMonitorCheckupFrequency = 5;
-  optional string crashDumpLocation = 6;
-  optional int32 port = 7;
-  optional int32 datagramBufferSize = 8;
-  repeated LoggerProto loggers = 9;
-  repeated LoggerProto metaLoggers = 10;
-  optional string simulationName = 11;
-  optional int32 seed = 12;
+  optional int32 port = 4;
+  optional int32 datagramBufferSize = 5;
+  repeated LoggerProto loggers = 6;
+  optional string simulationName = 7;
+  optional int32 seed = 8;
+  DebugProto debug = 9;
+
+}
+
+message DebugProto {
+  bool processMonitorEnabled = 1;
+  optional DurationProto processMonitorCheckupFrequency = 2;
+  optional int32 tickDurationSampleSize = 3;
+  optional string crashDumpLocation = 4;
+  repeated LoggerProto metaLoggers = 5;
 }
 
 message DurationProto {
@@ -45,29 +51,29 @@ message CustomTopologyProto {
 }
 
 message StarTopologyProto {
-  string serverCommand = 1;
-  string clientCommand = 2;
+  ScriptProto serverScript = 1;
+  ScriptProto clientScript = 2;
   bool unidirectional = 3;
   int32 size = 4;
   repeated NetworkConditionProto networkConditions = 5;
 }
 
 message RingTopologyProto {
-  string command = 1;
+  ScriptProto script = 1;
   bool unidirectional = 2;
   int32 size = 3;
   repeated NetworkConditionProto networkConditions = 4;
 }
 
 message LinearDaisyChainTopologyProto {
-  string command = 1;
+  ScriptProto script = 1;
   bool unidirectional = 2;
   int32 size = 3;
   repeated NetworkConditionProto networkConditions = 4;
 }
 
 message FullyConnectedMeshTopologyProto {
-  string command = 1;
+  ScriptProto script = 1;
   int32 size = 2;
   repeated NetworkConditionProto networkConditions = 3;
 }
@@ -83,9 +89,14 @@ message DisjointMeshTopologyProto {
   optional string joiningNodeName = 3;
 }
 
+message ScriptProto {
+  string command = 1;
+  optional DurationProto timeout = 2;
+}
+
 message CommandNodeProto {
   string name = 1;
-  string command = 2;
+  ScriptProto script = 2;
 }
 
 message ConnectionProto {
