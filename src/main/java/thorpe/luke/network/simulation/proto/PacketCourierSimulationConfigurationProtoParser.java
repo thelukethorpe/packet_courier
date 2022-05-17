@@ -428,7 +428,9 @@ public class PacketCourierSimulationConfigurationProtoParser<NodeInfo> {
 
   private NetworkCondition parsePacketLimitParameters(
       PacketLimitParametersProto packetLimitParametersProto) {
-    return NetworkCondition.packetLimit(packetLimitParametersProto.getPacketLimit());
+    return NetworkCondition.packetLimit(
+        packetLimitParametersProto.getPacketLimitRate(),
+        parseTimeUnit(packetLimitParametersProto.getTimeUnit()));
   }
 
   private NetworkCondition parsePacketThrottleParameters(

@@ -118,7 +118,8 @@ message NetworkConditionProto {
 }
 
 message PacketLimitParametersProto {
-  int32 packetLimit = 1;
+  int32 packetLimitRate = 1;
+  TimeUnitProto timeUnit = 2;
 }
 
 message PacketThrottleParametersProto {
