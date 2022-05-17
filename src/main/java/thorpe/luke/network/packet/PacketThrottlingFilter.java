@@ -26,8 +26,10 @@ public class PacketThrottlingFilter<Wrapper extends PacketWrapper<Wrapper>>
   @Override
   public void tick(LocalDateTime now) {
     long timeElapsed = timeUnit.between(this.now, now);
-    byteBudget += timeElapsed * byteThrottleRate;
-    this.now = now;
+    if (timeElapsed > 0) {
+      byteBudget = timeElapsed * byteThrottleRate;
+      this.now = now;
+    }
   }
 
   @Override
