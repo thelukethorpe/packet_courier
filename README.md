@@ -125,7 +125,7 @@ the tool.
 
 `topology :: Topology` ~ the arrangement of nodes and edges in the emulated network.
 
-`wallClockEnabled :: boolean` ~ if set to `true`, then any time-based semantics such as latency use the wall clock 
+`wallClockEnabled :: boolean` ~ if set to `true`, then any time-based semantics such as latency use the wall clock
 (better for _emulations_), as opposed to a virtual clock that ticks with each round of CPU scheduling (better for
 _simulations_).
 
@@ -182,3 +182,132 @@ exits with a non-zero code.
 `length :: int64` ~ the scalar value associated with the duration, i.e.: there are **60** minutes in an hour.
 
 `timeUnit :: TimeUnit` ~ the unit associated with the duration, i.e.: there are 60 **minutes** in an hour.
+
+---
+
+#### Topology
+
+Constitutes exactly one of the following:
+
+- `custom :: CustomTopology`
+
+- `star :: StarTopology`
+
+- `ring :: RingTopology`
+
+- `linearDaisyChain :: LinearDaisyTopology`
+
+- `fullyConnectedMesh :: FullyConnectedMeshTopology`
+
+- `jointMesh :: JointMeshTopology`
+
+- `disjointMesh :: DisjointMeshTopology`
+
+A _joint mesh_ is a topology that consists of multiple sub-topologies connected together, whereby each sub-topology
+joins the mesh at a specific "joining" node. By way of analogy, if three companies were going to merge, then at least
+one spokesperson from each company would be needed to initiate some kind of negotiation. In this way, a joint mesh
+consists of multiple otherwise separate topologies that boast mutual connections at specific points of entry.
+
+A _disjoint mesh_, on the other hand, is a topology that consists of multiple sub-topologies that are totally
+disconnected from one another.
+
+---
+
+#### CustomTopology
+
+A custom topology allows users to simply enter each and every node and edge by hand.
+
+`commandNodes :: [CommandNode]` ~ the nodes of the topology.
+
+`connections :: [Connection]` ~ the edges of the topology.
+
+`joiningNodeName :: string` ~ _optional field_: the name of the node which has been nominated to serve as a point of
+entry in a joint mesh. If this field is left empty, then this topology will remain isolated even if it is used in the
+context of a joint mesh.
+
+---
+
+#### StarTopology
+
+A topology that consists of a central server and clients which connect to it. Node names are procedurally generated.
+The "joining node" is always the server.
+
+`serverScript :: Script` ~ the script which gets run on the server node.
+
+`clientScript :: Script` ~ the script which gets run on the client node(s).
+
+`unidirectional :: boolean` ~ if set to `true`, then clients will be able to send packets to the server, but not the
+other way around.
+
+`size :: int32` ~ the number of clients in the topology. Even if set to zero, the server will still persist.
+
+`networkConditions :: [NetworkCondition]` ~ the server-client network conditions.
+
+---
+
+#### RingTopology
+
+A topology that consists of nodes connected in a linear, cyclic chain. Node names are procedurally generated. The
+"joining node" is chosen at random due to the symmetric nature of the topology.
+
+`script :: Script` ~ the script which gets run on each node.
+
+`unidrectional :: boolean` ~ if set to `true`, then nodes will only be able to pass packets in one direction around the
+ring.
+
+`size :: int32` ~ the number of nodes in the ring.
+
+`networkConditions :: [NetworkCondition]` ~ the network conditions between nodes in the ring.
+
+---
+
+#### LinearDaisyChainTopology
+
+A topology that consists of nodes connected in a linear, non-cyclic chain, i.e.: a ring with a link broken. Node names
+are procedurally generated. The "joining node" is the "last" node in the chain: in a bidirectional chain, this could be
+either end; in a unidirectional chain, this is the _sink node_, i.e.: where all packets will end up if the network is
+flooded.
+
+`script :: Script` ~ the script which gets run on each node.
+
+`unidrectional :: boolean` ~ if set to `true`, then nodes will only be able to pass packets in one direction down the
+chain.
+
+`size :: int32` ~ the number of nodes in the chain.
+
+`networkConditions :: [NetworkCondition]` ~ the network conditions between nodes in the chain.
+
+---
+
+#### FullyConnectedMeshTopology
+
+A topology where every node is connected to every other node. Node names are procedurally generated. The "joining node"
+is chosen at random due to the symmetric nature of the topology.
+
+`script :: Script` ~ the script which gets run on each node.
+
+`size :: int32` ~ the number of nodes in the mesh.
+
+`networkConditions :: [NetworkCondition]` ~ the network conditions between nodes in the mesh.
+
+---
+
+#### JointMeshTopology
+
+`jointTopologies :: [Topology]` ~ the topologies which are to be joint-up into a mesh.
+
+`networkConditions :: [NetworkCondition]` ~ the network conditions used in the connections between topologies.
+
+`joiningNodeName :: string` ~ _optional field_: the name of the node which has been nominated to serve as a point of
+entry in a _recursive_ joint mesh, i.e.: a joint mesh of joint meshes. If this field is left empty, then this topology
+will remain isolated even if it is used in the context of a joint mesh.
+
+---
+
+#### DisjointMeshTopology
+
+`disjointTopologies :: [Topology]` ~ the topologies which are to coexist in a disjoint mesh.
+
+`joiningNodeName :: string` ~ _optional field_: the name of the node which has been nominated to serve as a point of
+entry in a _recursive_ joint mesh, i.e.: a joint mesh of (dis)joint meshes. If this field is left empty, then this
+topology will remain isolated even if it is used in the context of a joint mesh.
