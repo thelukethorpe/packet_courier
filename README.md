@@ -311,3 +311,73 @@ will remain isolated even if it is used in the context of a joint mesh.
 `joiningNodeName :: string` ~ _optional field_: the name of the node which has been nominated to serve as a point of
 entry in a _recursive_ joint mesh, i.e.: a joint mesh of (dis)joint meshes. If this field is left empty, then this
 topology will remain isolated even if it is used in the context of a joint mesh.
+
+---
+
+#### Script
+
+`command :: string` ~ the command used to start the process associated with the node running this script.
+
+`timeout :: Duration` ~ _optional field_: the time-to-live of the process started by `command`.
+
+---
+
+#### CommandNodeProto
+
+`name :: string` ~ the name given to this node; must be unique.
+
+`script :: Script` ~ the script run by this node on startup.
+
+---
+
+#### Connection Proto
+
+`sourceNodeName :: string` ~ the name of the source node.
+
+`destinationNodeName :: string` ~ the name of the destination node.
+
+`networkConditions :: [NetworkCondition]` ~ the network conditions associated with this connection.
+
+---
+
+#### NetworkCondition
+
+Constitutes exactly one of the following:
+
+- `packetLimitParameters :: PacketLimitParameters`
+
+- `packetThrottleParameters :: PacketThrottleParameters`
+
+- `packetCorruptionParameters :: PacketCorruptionParameters`
+
+- `packetDropParameters :: PacketDropParameters`
+
+- `packetDuplicationParameters :: PacketDuplicationParameters`
+
+- `packetLatencyParameters :: PacketLatencyParameters`
+
+- `eventPipelineParameters :: EventPipelineParameters`
+
+Network conditions that encode for a packet processing pipeline are sensitive to the order in which they are presented.
+For example, if a list of network conditions `[NetworkCondition]` is specified as:
+
+```
+"networkConditions" : [
+  {
+    "packetLatencyParameters": {
+      ...
+    }
+  },
+  {
+    "packetDuplicationParameters": {
+      ...
+    }
+  }
+]
+```
+
+then this would correspond to a packet processing pipeline that delayed its packets before it duplicated them. This is
+likely to be suboptimal, however, since packet duplication does no reordering, but latency (usually) does. In addition,
+this will mean that duplicated packets will all boast the exact same latency. In most cases, this would be seen as
+rather strange network behaviour. Thus, if a user wishes for all of their packets to be reordered and subject to a
+bespoke latency, then duplication would be best put before latency.
