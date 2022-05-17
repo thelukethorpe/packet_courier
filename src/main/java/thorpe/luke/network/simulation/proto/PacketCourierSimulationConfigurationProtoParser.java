@@ -104,7 +104,7 @@ public class PacketCourierSimulationConfigurationProtoParser<NodeInfo> {
   }
 
   private Duration parseDuration(DurationProto durationProto) {
-    return Duration.of(durationProto.getDuration(), parseTimeUnit(durationProto.getTimeUnit()));
+    return Duration.of(durationProto.getLength(), parseTimeUnit(durationProto.getTimeUnit()));
   }
 
   private void parseDebug(DebugProto debugProto) {

@@ -175,3 +175,10 @@ exits with a non-zero code.
 
 `metaLoggers :: [Logger]` ~ the channels on which Packet Courier should log meta activity.
 
+---
+
+#### Duration
+
+`length :: int64` ~ the scalar value associated with the duration, i.e.: there are **60** minutes in an hour.
+
+`timeUnit :: TimeUnit` ~ the unit associated with the duration, i.e.: there are 60 **minutes** in an hour.
