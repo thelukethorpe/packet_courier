@@ -8,16 +8,16 @@ import java.util.Random;
 import thorpe.luke.distribution.*;
 
 public interface NetworkCondition {
-  static NetworkCondition packetLimit(int packetLimit) {
-    if (packetLimit < 0) {
+  static NetworkCondition packetLimit(int packetLimitRate, ChronoUnit timeUnit) {
+    if (packetLimitRate < 0) {
       throw new InvalidNetworkConditionException(
-          "Packet limit should be greater than or equal to 0.");
+          "Packet limit rate should be greater than or equal to 0.");
     }
     return new NetworkCondition() {
       @Override
       public <Wrapper extends PacketWrapper<Wrapper>>
           PacketFilter<Wrapper> asPacketFilterStartingAt(LocalDateTime startTime) {
-        return new PacketLimitingFilter<>(packetLimit);
+        return new PacketLimitingFilter<>(packetLimitRate, timeUnit, startTime);
       }
     };
   }
