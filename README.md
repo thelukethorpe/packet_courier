@@ -381,3 +381,177 @@ likely to be suboptimal, however, since packet duplication does no reordering, b
 this will mean that duplicated packets will all boast the exact same latency. In most cases, this would be seen as
 rather strange network behaviour. Thus, if a user wishes for all of their packets to be reordered and subject to a
 bespoke latency, then duplication would be best put before latency.
+
+---
+
+#### PacketLimitParameters
+
+Packet limiting involves only allowing a certain number of packets across a connection over a particular period of time,
+whereby excess packets are simply dropped.
+
+`packetLimitRate :: int32` ~ the maximum number of packets accepted per unit time.
+
+`timeUnit :: TimeUnit` ~ the unit of time associated with `packetLimitRate`.
+
+---
+
+#### PacketThrottleParameters
+
+Packet throttling involves controlling the number of bytes that can be transmitted across a connection over a particular
+period of time, whereby no packets are dropped; instead the bitrate of the connection is controlled. In this way, packet
+throttling does risk becoming a black hole with respect to memory, particularly in cases where a high-throughput
+connection is being heavily throttled over a long period of time. As such, packet throttling should mainly be used to
+smooth out connections that are prone to burst behaviours, rather than as a cheap and dirty bitrate control mechanism.
+
+`byteThrottleRate :: int32` ~ the maximum number of bytes transmitted per unit time.
+
+`timeUnit :: TimeUnit` ~ the unit of time associated with `byteThrottleRate`.
+
+---
+
+#### PacketCorruptionParameters
+
+`corruptionProbability :: double` ~ the probability that a packet will be corrupted, i.e.: have a random bit flipped.
+
+---
+
+#### PacketDropParameters
+
+`dropProbability :: double` ~ the probability that a packet will be dropped.
+
+---
+
+#### PacketDuplicationParameters
+
+`meanDuplications :: double` ~ the mean number of times a packet will be duplicated.
+
+---
+
+#### PacketLatencyParameters
+
+Constitutes exactly one of the following:
+
+- `exponential :: ExponentialDistributionParameters`
+
+- `normal :: NormalDistributionParameters`
+
+- `uniform :: UniformRealDistributionParameters`
+
+Packet latency involves sampling from one of the above distributions and delaying the packet by the result with respect
+to the provided `timeUnit`:
+
+`timeUnit :: TimeUnit` ~ the unit of time associated with the delay added to packets.
+
+---
+
+#### EventPipelineParameters
+
+An event pipeline introduces event-based semantics into Packet Courier. Event-based semantics allow network conditions
+to vary dramatically over time, namely in a stateful way. This is very useful for emulating mobile connections, for
+example, where a client might move under a bridge or behind a tree and experience a momentary dip in quality of service.
+
+When no events are currently in progress, an event pipeline will resort back to a default set of network conditions.
+However, when the event scheduler invokes an event, the network conditions associated with that event will take over for
+the duration of the event. If multiple events are taking place at the same time, the event with the highest precedence
+will have priority in its network conditions. Precedence is determined by the order that events are specified in the
+configuration file, i.e.:
+
+```
+"eventPipelineParameters" : {
+  "timeUnit": "MILLI_SECONDS",
+  "defaultNetworkConditions": [
+    ...
+  ],
+  "networkEvents": [
+    {
+      // Event with precedence 0.
+      ...
+    },
+    {
+      // Event with precedence 1.
+      ...
+    },
+    {
+      // Event with precedence 2.
+      ...
+    }
+  ]
+}
+```
+
+`timeUnit :: TimeUnit` ~ the unit of time associated with the interval and duration parameters specified as part of this
+event pipeline.
+
+`defaultNetworkConditions :: [NetworkCondition]` ~ the network conditions which are active when no event is taking
+place.
+
+`networkEvents :: [NetworkEvent]` ~ the events that could be invoked as part of the event pipeline.
+
+---
+
+#### NetworkEvent
+
+`meanInterval :: double` ~ the average time between invocations of this event.
+
+`meanDuration :: double` ~ the average amount of time this event lasts for.
+
+`networkConditions :: [NetworkCondition]` ~ the network conditions that this event will instantiate whilst it is active
+and has the highest precedence of active events.
+
+---
+
+#### ExponentialDistributionParameters
+
+`lambda :: double`
+
+---
+
+#### NormalDistributionParameters
+
+`mean :: double`
+
+`standardDeviation :: double`
+
+---
+
+#### UniformRealDistributionParameters
+
+`minimum :: double`
+
+`maximum :: double`
+
+---
+
+#### TimeUnit
+
+An _enum_ that constitutes exactly one of the following:
+
+- `NANO_SECONDS`
+
+- `MICRO_SECONDS`
+
+- `MILLI_SECONDS`
+
+- `SECONDS`
+
+- `MINUTES`
+
+- `HOURS`
+
+- `DAYS`
+
+- `WEEKS`
+
+- `MONTHS`
+
+- `YEARS`
+
+- `DECADES`
+
+- `CENTURIES`
+
+- `MILLENNIA`
+
+- `ERAS`
+
+- `FOREVER`
