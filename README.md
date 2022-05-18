@@ -555,3 +555,32 @@ An _enum_ that constitutes exactly one of the following:
 - `ERAS`
 
 - `FOREVER`
+
+---
+
+#### Logger
+
+Specifies how Packet Courier expresses its logging outputs. Constitutes exactly one of the following:
+
+- `console :: ConsoleLogger`
+
+- `file :: FileLogger`
+
+---
+
+#### ConsoleLogger
+
+An _enum_ that constitutes exactly one of the following:
+
+- `STDOUT`
+
+- `STDERR`
+
+---
+
+#### FileLogger
+
+`path :: string` ~ the directory that the file should be written to.
+
+
+
