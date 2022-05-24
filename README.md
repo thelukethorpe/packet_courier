@@ -582,5 +582,67 @@ An _enum_ that constitutes exactly one of the following:
 
 `path :: string` ~ the directory that the file should be written to.
 
+---
+
+### Packet Courier as a Java Library
+
+Users can leverage the Packet Courier source code to design their network simulations and emulations to a finer degree
+of granularity by placing the compiled Jar in the `lib` of their Java project.
+
+The `PacketCourierSimulation` class sits at the core of all network simulation within the Packet Courier Java framework.
+In order to create a simulation, one can use the `configure` method as follows:
+
+```
+Random random = new Random();
+PacketCourierSimulation<DefaultNodeInfo> packetCourierSimulation =
+  PacketCourierSimulation.configuration()
+    .addNode("Alice", Example::runAliceScript)
+    .addNode("Bob", Example::runBobScript)
+    .addConnection(
+      "Alice",
+      "Bob",
+      PacketPipeline.parameters(
+        NetworkCondition.uniformPacketDrop(0.5, random),
+        NetworkCondition.uniformPacketLatency(
+          250.0, 1000.0, ChronoUnit.MILLIS, random)))
+    .addLogger(ConsoleLogger.out())
+    .usingWallClock()
+    .configure();
+```
+
+A `PacketCourierSimulation` instance has `start` and `waitFor` methods which can be used respectively to trigger the
+simulation and block the calling thread until it has finished. In addition, each configuration option such
+as `addLogger`, `usingWallClock`, `withPort` and `withProcessLoggingEnabled` will have an entirely analogous counterpart
+in the [Courier Config File Specification](#courier-config-file-specification). Please
+see `src/test/java/thorpe/luke/network/simulation/example` for example configurations.
+
+The Java framework for Packet Courier enjoys a richer set of semantics than its command-line doppelgänger, namely in how
+nodes execute network code. Each `Node` in the topology has a root `Worker`, which does the work described by
+its `WorkerScript`. A `WorkerScript` is simply a coroutine that takes a `WorkerManager` as a parameter., which in turn
+allows network code to be written in an arbitrary context. For example, a `WorkerManager` allows a worker to do the
+following:
+
+- **Access its own address:** each worker will have a `WorkerAddress` which enables Packet Courier to route "mail" to
+  the correct "mailbox".
+- **Send "mail" a worker:** a worker can send "mail", i.e.: a packet, to a worker (including itself) provided that it
+  has the associated `WorkerAddress`. If there is no direct connection from the sender to the destination, then the "
+  mail" will be dropped. Otherwise, when the "mail" arrives, it will sit in the destination worker's "mailbox" until it
+  is collected.
+- **Wait for "mail":** if the worker's "mailbox" is empty, then the worker will wait until it is not. Otherwise, the
+  worker will retrieve "mail", i.e.: a packet, from the "mailbox".
+- **Log a message:** logs a string to each of the simulation's loggers.
+- **Generate a crash dump:** will write a list of strings to a file at the crash dump location; if such a path has not
+  been specified, then no crash dump will be generated.
+- **Spawn a child worker:** workers behave similarly to threads, just with a few additional abstractions. A child worker
+  will have its own unique `WorkerAddress` and hence its own "mailbox", but will inherit the network conditions of its
+  parent node.
+- **Get arbitrary information about the node that the worker is running on:** each worker will almost certainly need
+  some initial information to work with. For instance, if a worker has no other worker addresses other than its own, how
+  will it communicate with the wider topology? Indeed, it would be useful for them to have access to the addresses of
+  their neighbours, or perhaps even the entire topology. This is the purpose of the `NodeInfo` generic type parameter
+  in `PackerCourierSimulation`; users can pass a `NodeInfoGenerator<NodeInfo>` into the `configure` method
+  of `PacketCourierSimulation` which will generate a "package" of node information for each node on simulation startup.
+  Note that `DefaultNodeInfo` is what nodes are provided with in the case where no bespoke `NodeInfoGenerator<NodeInfo>`
+  is specified. 
 
 
