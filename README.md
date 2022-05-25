@@ -2,6 +2,42 @@
 
 ## A Distributed Network Simulation Tool
 
++ [Introduction](#introduction)
++ [Building the Project](#building-the-project)
++ [Running an Emulation](#running-an-emulation)
++ [Emulation Semantics](#emulation-semantics)
++ [Courier Config File Specification](#courier-config-file-specification)
+    - [Debug](#debug)
+    - [Duration](#duration)
+    - [Topology](#topology)
+    - [CustomTopology](#customtopology)
+    - [StarTopology](#startopology)
+    - [RingTopology](#ringtopology)
+    - [LinearDaisyChainTopology](#lineardaisychaintopology)
+    - [FullyConnectedMeshTopology](#fullyconnectedmeshtopology)
+    - [JointMeshTopology](#jointmeshtopology)
+    - [DisjointMeshTopology](#disjointmeshtopology)
+    - [Script](#script)
+    - [CommandNodeProto](#commandnodeproto)
+    - [Connection Proto](#connection-proto)
+    - [NetworkCondition](#networkcondition)
+    - [PacketLimitParameters](#packetlimitparameters)
+    - [PacketThrottleParameters](#packetthrottleparameters)
+    - [PacketCorruptionParameters](#packetcorruptionparameters)
+    - [PacketDropParameters](#packetdropparameters)
+    - [PacketDuplicationParameters](#packetduplicationparameters)
+    - [PacketLatencyParameters](#packetlatencyparameters)
+    - [EventPipelineParameters](#eventpipelineparameters)
+    - [NetworkEvent](#networkevent)
+    - [ExponentialDistributionParameters](#exponentialdistributionparameters)
+    - [NormalDistributionParameters](#normaldistributionparameters)
+    - [UniformRealDistributionParameters](#uniformrealdistributionparameters)
+    - [TimeUnit](#timeunit)
+    - [Logger](#logger)
+    - [ConsoleLogger](#consolelogger)
+    - [FileLogger](#filelogger)
++ [Packet Courier as a Java Library](#packet-courier-as-a-java-library)
+
 ---
 
 ### Introduction
