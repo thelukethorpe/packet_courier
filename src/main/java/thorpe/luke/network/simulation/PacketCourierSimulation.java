@@ -31,6 +31,7 @@ import thorpe.luke.util.UniqueLoopbackIpv4AddressGenerator;
 
 public class PacketCourierSimulation<NodeInfo> {
 
+  public static final String LOG_FILE_EXTENSION = ".courierlog";
   public static final String CONFIGURATION_FILE_EXTENSION = ".courierconfig";
   public static final String CRASH_DUMP_FILE_EXTENSION = ".couriercrashdump";
 
@@ -91,6 +92,10 @@ public class PacketCourierSimulation<NodeInfo> {
 
   public static Configuration<DefaultNodeInfo> configuration() {
     return new Configuration<>(DefaultNodeInfo.generator());
+  }
+
+  public String getName() {
+    return simulationName;
   }
 
   public void start() {
@@ -380,6 +385,10 @@ public class PacketCourierSimulation<NodeInfo> {
 
     public Configuration(NodeInfoGenerator<NodeInfo> nodeInfoGenerator) {
       this.nodeInfoGenerator = nodeInfoGenerator;
+    }
+
+    public String getSimulationName() {
+      return simulationName;
     }
 
     private static boolean isBlank(String string) {

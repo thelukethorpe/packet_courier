@@ -4,8 +4,11 @@ import com.google.protobuf.util.JsonFormat;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -23,6 +26,9 @@ import thorpe.luke.network.simulation.worker.WorkerScript;
 import thorpe.luke.util.UniqueStringGenerator;
 
 public class PacketCourierSimulationConfigurationProtoParser<NodeInfo> {
+
+  private static final DateTimeFormatter LOG_FILE_DATE_FORMAT =
+      DateTimeFormatter.ofPattern("yyyy_MM_dd_hh_mm_ss");
 
   private final PacketCourierSimulation.Configuration<NodeInfo> configuration;
   private final Map<String, WorkerScript<NodeInfo>> nodeNameToWorkerScriptWorkList;
@@ -96,7 +102,7 @@ public class PacketCourierSimulationConfigurationProtoParser<NodeInfo> {
 
     configurationProto
         .getLoggersList()
-        .forEach(loggerProto -> configuration.addLogger(parseLogger(loggerProto)));
+        .forEach(loggerProto -> configuration.addLogger(parseLogger(loggerProto, "logger")));
 
     parseDebug(configurationProto.getDebug());
     parseTopology(configurationProto.getTopology());
@@ -124,7 +130,8 @@ public class PacketCourierSimulationConfigurationProtoParser<NodeInfo> {
 
     debugProto
         .getMetaLoggersList()
-        .forEach(loggerProto -> configuration.addMetaLogger(parseLogger(loggerProto)));
+        .forEach(
+            loggerProto -> configuration.addMetaLogger(parseLogger(loggerProto, "meta-logger")));
   }
 
   private Optional<String> parseTopology(TopologyProto topologyProto) {
@@ -373,12 +380,12 @@ public class PacketCourierSimulationConfigurationProtoParser<NodeInfo> {
     return WorkerProcessConfiguration.fromCommand(command);
   }
 
-  private static Logger parseLogger(LoggerProto loggerProto) {
+  private Logger parseLogger(LoggerProto loggerProto, String namePrefix) {
     switch (loggerProto.getLoggerParametersCase()) {
       case CONSOLE:
         return parseConsoleLogger(loggerProto.getConsole());
       case FILE:
-        return parseFileLogger(loggerProto.getFile());
+        return parseFileLogger(loggerProto.getFile(), namePrefix);
     }
     throw new PacketCourierSimulationConfigurationProtoParserException(
         "Logger Proto is missing parameters.");
@@ -395,9 +402,21 @@ public class PacketCourierSimulationConfigurationProtoParser<NodeInfo> {
         "Console Logger Proto not recognized.");
   }
 
-  private static BufferedFileLogger parseFileLogger(FileLoggerProto fileLoggerProto) {
+  private BufferedFileLogger parseFileLogger(FileLoggerProto fileLoggerProto, String namePrefix) {
     try {
-      return new BufferedFileLogger(Paths.get(fileLoggerProto.getPath()).toFile());
+      Path logFilePath = Paths.get(fileLoggerProto.getPath());
+      if (logFilePath.toFile().isFile()) {
+        return new BufferedFileLogger(logFilePath.toFile());
+      }
+      LocalDateTime now = LocalDateTime.now();
+      String logFileName =
+          configuration.getSimulationName().replace("\\s*", "-")
+              + "__"
+              + namePrefix
+              + "__"
+              + LOG_FILE_DATE_FORMAT.format(now)
+              + PacketCourierSimulation.LOG_FILE_EXTENSION;
+      return new BufferedFileLogger(logFilePath.resolve(logFileName).toFile());
     } catch (IOException e) {
       throw new PacketCourierSimulationConfigurationProtoParserException(e);
     }
