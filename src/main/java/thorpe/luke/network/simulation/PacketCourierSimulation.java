@@ -31,13 +31,12 @@ import thorpe.luke.util.UniqueLoopbackIpv4AddressGenerator;
 
 public class PacketCourierSimulation<NodeInfo> {
 
+  public static final String LOG_FILE_EXTENSION = ".courierlog";
   public static final String CONFIGURATION_FILE_EXTENSION = ".courierconfig";
   public static final String CRASH_DUMP_FILE_EXTENSION = ".couriercrashdump";
 
   private static final DateTimeFormatter META_LOG_DATE_FORMAT =
       DateTimeFormatter.ofPattern("dd/MM/yyyy-hh:mm:ss");
-
-  private static final int DEFAULT_TICK_DURATION_SAMPLE_SIZE = 1_000_000;
 
   private final String simulationName;
   private final Logger metaLogger;
@@ -55,6 +54,7 @@ public class PacketCourierSimulation<NodeInfo> {
       Path crashDumpLocation,
       int port,
       int datagramBufferSize,
+      int tickDurationSampleSize,
       Map<InetAddress, WorkerAddress> privateIpAddressToWorkerAddressMap,
       Map<Node<NodeInfo>, DatagramSocket> nodeToPublicSocketMap) {
     this.simulationName = simulationName;
@@ -79,6 +79,7 @@ public class PacketCourierSimulation<NodeInfo> {
                     crashDumpLocation,
                     port,
                     datagramBufferSize,
+                    tickDurationSampleSize,
                     privateIpAddressToWorkerAddressMap,
                     nodeToPublicSocketMap),
             ThreadNameGenerator.generateThreadName(simulationName));
@@ -91,6 +92,10 @@ public class PacketCourierSimulation<NodeInfo> {
 
   public static Configuration<DefaultNodeInfo> configuration() {
     return new Configuration<>(DefaultNodeInfo.generator());
+  }
+
+  public String getName() {
+    return simulationName;
   }
 
   public void start() {
@@ -120,6 +125,7 @@ public class PacketCourierSimulation<NodeInfo> {
       Path crashDumpLocation,
       int port,
       int datagramBufferSize,
+      int tickDurationSampleSize,
       Map<InetAddress, WorkerAddress> privateIpAddressToWorkerAddressMap,
       Map<Node<NodeInfo>, DatagramSocket> nodeToPublicSocketMap) {
     // Configure simulation logic.
@@ -157,7 +163,7 @@ public class PacketCourierSimulation<NodeInfo> {
                 total_tick_duration_in_nanoseconds +=
                     tick_finish_in_nanoseconds - tick_start_in_nanoseconds;
                 number_of_ticks_sampled++;
-                if (number_of_ticks_sampled >= DEFAULT_TICK_DURATION_SAMPLE_SIZE) {
+                if (number_of_ticks_sampled >= tickDurationSampleSize) {
                   double average_tick_duration_in_nanoseconds =
                       total_tick_duration_in_nanoseconds / (double) number_of_ticks_sampled;
                   metaLogger.log(
@@ -376,10 +382,14 @@ public class PacketCourierSimulation<NodeInfo> {
     private boolean processLoggingEnabled = false;
     private boolean processMonitorEnabled = false;
     private Duration processMonitorCheckupInterval = Duration.of(10, ChronoUnit.SECONDS);
-    private int tickDurationSampleSize = DEFAULT_TICK_DURATION_SAMPLE_SIZE;
+    private int tickDurationSampleSize = 1_000_000;
 
     public Configuration(NodeInfoGenerator<NodeInfo> nodeInfoGenerator) {
       this.nodeInfoGenerator = nodeInfoGenerator;
+    }
+
+    public String getSimulationName() {
+      return simulationName;
     }
 
     private static boolean isBlank(String string) {
@@ -661,6 +671,7 @@ public class PacketCourierSimulation<NodeInfo> {
           crashDumpLocation,
           port,
           datagramBufferSize,
+          tickDurationSampleSize,
           privateIpAddressToWorkerAddressMap,
           nodeToPublicSocketMap);
     }
