@@ -16,14 +16,14 @@
       "serverScript": {
         "command": "python3 src/test/resources/thorpe/luke/network/simulation/example/simple_server.py ${NODE_NAME} ${PRIVATE_IP} ${PORT} ${DATAGRAM_BUFFER_SIZE}",
         "timeout": {
-          "duration": 2,
+          "length": 2,
           "timeUnit": "SECONDS"
         }
       },
       "clientScript": {
         "command": "python3 src/test/resources/thorpe/luke/network/simulation/example/simple_client.py ${NODE_NAME} ${PRIVATE_IP} ${PORT} ${NEIGHBOUR_IPS} 1000",
         "timeout": {
-          "duration": 250,
+          "length": 250,
           "timeUnit": "MILLI_SECONDS"
         }
       },
