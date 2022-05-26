@@ -8,9 +8,6 @@
       "console": "STDOUT"
     }
   ],
-  "debug": {
-    "crashDumpLocation": "."
-  },
   "topology": {
     "custom": {
       "commandsNodes": [

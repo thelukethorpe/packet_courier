@@ -89,9 +89,9 @@ public class WorkerManager<NodeInfo> {
     logger.log(message);
   }
 
-  public void generateCrashDump(List<String> crashDumpContents) {
+  public boolean generateCrashDump(List<String> crashDumpContents) {
     if (crashDumpLocation == null) {
-      return;
+      return false;
     }
     LocalDateTime now = LocalDateTime.now();
     String crashDumpFileName =
@@ -105,10 +105,11 @@ public class WorkerManager<NodeInfo> {
       crashDumpFileLogger = new BufferedFileLogger(crashDumpFile);
     } catch (IOException e) {
       exceptionListener.invoke(e);
-      return;
+      return false;
     }
     crashDumpContents.forEach(crashDumpFileLogger::log);
     crashDumpFileLogger.flush();
     crashDumpFileLogger.close();
+    return true;
   }
 }

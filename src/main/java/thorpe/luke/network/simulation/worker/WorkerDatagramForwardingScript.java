@@ -43,6 +43,14 @@ public class WorkerDatagramForwardingScript<NodeInfo> implements WorkerScript<No
     return new Builder();
   }
 
+  private void tryGenerateCrashDump(
+      WorkerManager<NodeInfo> workerManager, List<String> crashDumpContents) {
+    boolean wasCrashDumpSuccessful = workerManager.generateCrashDump(crashDumpContents);
+    if (!wasCrashDumpSuccessful && processLoggingEnabled) {
+      crashDumpContents.forEach(workerManager::log);
+    }
+  }
+
   private void waitForAndForwardPackets(WorkerManager<NodeInfo> workerManager) {
     byte[] buffer = new byte[datagramBufferSize];
     do {
@@ -71,7 +79,7 @@ public class WorkerDatagramForwardingScript<NodeInfo> implements WorkerScript<No
             Arrays.stream(e.getStackTrace())
                 .map(StackTraceElement::toString)
                 .collect(Collectors.toList());
-        workerManager.generateCrashDump(stackTraceErrors);
+        tryGenerateCrashDump(workerManager, stackTraceErrors);
         return;
       }
     } while (true);
@@ -98,9 +106,7 @@ public class WorkerDatagramForwardingScript<NodeInfo> implements WorkerScript<No
       forwardingThread.interrupt();
       forwardingThread.join();
       if (!workerProcessExitStatus.isSuccess()) {
-        workerManager.generateCrashDump(workerProcessExitStatus.getErrors());
-      } else if (processLoggingEnabled) {
-        workerProcessExitStatus.getErrors().forEach(workerManager::log);
+        tryGenerateCrashDump(workerManager, workerProcessExitStatus.getErrors());
       }
     } catch (IOException | InterruptedException e) {
       throw new WorkerException(e);
