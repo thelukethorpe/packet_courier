@@ -179,7 +179,8 @@ public class WorkerProcessConfiguration {
         command[i] = commandWords.get(i);
       }
     }
-    return WorkerProcess.factoryOf(new ProcessBuilder().command(command), timeout);
+    String name = address.getName() + " Process";
+    return WorkerProcess.factoryOf(name, new ProcessBuilder().command(command), timeout);
   }
 
   @FunctionalInterface
