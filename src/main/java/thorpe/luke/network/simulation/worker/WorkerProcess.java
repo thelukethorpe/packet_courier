@@ -7,28 +7,28 @@ import java.io.InputStreamReader;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import thorpe.luke.log.Logger;
+import thorpe.luke.util.ThreadNameGenerator;
 
 public class WorkerProcess {
 
   private static final int SUCCESS_EXIT_CODE = 0;
 
+  private final String name;
   private final AtomicBoolean processComplete = new AtomicBoolean(false);
-  private final Lock processLock = new ReentrantLock();
   private final Process process;
   private final Duration timeout;
   private final Logger logger;
 
-  private WorkerProcess(Process process, Duration timeout, Logger logger) {
+  private WorkerProcess(String name, Process process, Duration timeout, Logger logger) {
+    this.name = name;
     this.process = process;
     this.timeout = timeout;
     this.logger = logger;
   }
 
-  public static Factory factoryOf(ProcessBuilder processBuilder, Duration timeout) {
-    return new Factory(processBuilder, timeout);
+  public static Factory factoryOf(String name, ProcessBuilder processBuilder, Duration timeout) {
+    return new Factory(name, processBuilder, timeout);
   }
 
   private void logProcessOutput() {
@@ -39,16 +39,13 @@ public class WorkerProcess {
     InputStream inputStream = process.getInputStream();
     BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
     while (!processComplete.get()) {
-      String processOutput = null;
+      String processOutput;
       try {
-        processLock.lock();
-        if (!processComplete.get()) {
-          processOutput = bufferedReader.readLine();
-        }
+        processOutput = bufferedReader.readLine();
       } catch (IOException e) {
         throw new WorkerException(e);
-      } finally {
-        processLock.unlock();
+      } catch (Throwable e) {
+        return;
       }
       if (processOutput == null) {
         return;
@@ -58,7 +55,9 @@ public class WorkerProcess {
   }
 
   public WorkerProcessExitStatus waitFor() throws InterruptedException, IOException {
-    Thread processLoggingThread = new Thread(this::logProcessOutput);
+    Thread processLoggingThread =
+        new Thread(
+            this::logProcessOutput, ThreadNameGenerator.generateThreadName(name + " Logger"));
     processLoggingThread.start();
 
     int exitStatus;
@@ -73,9 +72,8 @@ public class WorkerProcess {
 
     processComplete.set(true);
     if (!hasExited) {
-      processLock.lock();
+      processLoggingThread.interrupt();
       process.destroy();
-      processLock.unlock();
       process.waitFor();
     }
 
@@ -93,10 +91,12 @@ public class WorkerProcess {
   }
 
   public static class Factory {
+    private final String name;
     private final ProcessBuilder processBuilder;
     private final Duration timeout;
 
-    private Factory(ProcessBuilder processBuilder, Duration timeout) {
+    private Factory(String name, ProcessBuilder processBuilder, Duration timeout) {
+      this.name = name;
       this.processBuilder = processBuilder;
       this.timeout = timeout;
     }
@@ -107,7 +107,7 @@ public class WorkerProcess {
 
     public WorkerProcess start(Logger logger) throws IOException {
       Process process = processBuilder.start();
-      return new WorkerProcess(process, timeout, logger);
+      return new WorkerProcess(name, process, timeout, logger);
     }
   }
 }
