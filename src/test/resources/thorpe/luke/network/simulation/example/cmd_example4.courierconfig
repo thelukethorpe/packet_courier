@@ -9,6 +9,7 @@
     }
   ],
   "debug" : {
+    "crashDumpLocation": ".",
     "processMonitorEnabled": true,
     "metaLoggers": [
       {

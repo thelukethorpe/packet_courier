@@ -8,6 +8,9 @@
       "console": "STDOUT"
     }
   ],
+  "debug": {
+    "crashDumpLocation": "."
+  },
   "topology": {
     "star": {
       "serverScript": {
