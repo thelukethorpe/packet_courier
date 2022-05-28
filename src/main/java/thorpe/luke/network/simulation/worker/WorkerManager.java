@@ -95,7 +95,7 @@ public class WorkerManager<NodeInfo> {
     }
     LocalDateTime now = LocalDateTime.now();
     String crashDumpFileName =
-        address.getHostingNodeAddress().getName().replace("\\s*", "-")
+        address.getHostingNodeAddress().getName().replaceAll("\\s+", "-")
             + "__"
             + CRASH_DUMP_DATE_FORMAT.format(now)
             + PacketCourierSimulation.CRASH_DUMP_FILE_EXTENSION;

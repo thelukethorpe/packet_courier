@@ -410,7 +410,7 @@ public class PacketCourierSimulationConfigurationProtoParser<NodeInfo> {
       }
       LocalDateTime now = LocalDateTime.now();
       String logFileName =
-          configuration.getSimulationName().replace("\\s*", "-")
+          configuration.getSimulationName().replaceAll("\\s+", "-")
               + "__"
               + namePrefix
               + "__"
