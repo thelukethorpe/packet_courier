@@ -73,7 +73,9 @@ public class WorkerDatagramForwardingScript<NodeInfo> implements WorkerScript<No
       try {
         DatagramSocket publicSocket =
             privateIpAddressToPublicSocketMap.get(InetAddress.getByAddress(sourceIpAddress));
-        publicSocket.send(forwardingDatagramPacket);
+        if (publicSocket != null) {
+          publicSocket.send(forwardingDatagramPacket);
+        }
       } catch (IOException e) {
         List<String> stackTraceErrors =
             Arrays.stream(e.getStackTrace())
