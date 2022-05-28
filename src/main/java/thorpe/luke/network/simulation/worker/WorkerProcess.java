@@ -70,8 +70,8 @@ public class WorkerProcess {
       exitStatus = hasExited ? process.exitValue() : SUCCESS_EXIT_CODE;
     }
 
-    processComplete.set(true);
     if (!hasExited) {
+      processComplete.set(true);
       processLoggingThread.interrupt();
       process.destroy();
       process.waitFor();
