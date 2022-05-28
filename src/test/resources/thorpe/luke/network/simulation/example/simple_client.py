@@ -15,7 +15,7 @@ if __name__ == '__main__':
     port = int(sys.argv[3])
     # Get neighbours from arg 4.
     neighbours = json.loads(sys.argv[4])
-    # Get number of messages to send from arg 5;
+    # Get number of messages to send from arg 5.
     n = int(sys.argv[5])
 
     # Create datagram socket.
