@@ -1,0 +1,45 @@
+{
+  "simulationName": "Duplication Analysis Size 100",
+  "port": 4444,
+  "datagramBufferSize": 136,
+  "wallClockEnabled": true,
+  "processLoggingEnabled": true,
+  "loggers": [
+    {
+      "file": {
+        "path": "doc/final_report/system_test_results/duplication/"
+      }
+    }
+  ],
+  "debug" : {
+    "crashDumpLocation": ".",
+    "processMonitorEnabled": true,
+    "metaLoggers": [
+      {
+        "console": "STDOUT"
+      }
+    ]
+  },
+  "topology": {
+    "star": {
+      "serverScript": {
+        "command": "python3 src/test/resources/thorpe/luke/network/simulation/analysis/analysis_server.py ${NODE_NAME} ${PRIVATE_IP} ${PORT} ${DATAGRAM_BUFFER_SIZE}",
+        "timeout": {
+          "length": 6,
+          "timeUnit": "MINUTES"
+        }
+      },
+      "clientScript": {
+        "command": "python3 src/test/resources/thorpe/luke/network/simulation/analysis/analysis_client.py ${NODE_NAME} ${PRIVATE_IP} ${PORT} ${DATAGRAM_BUFFER_SIZE} ${NEIGHBOUR_IPS} 50 4"
+      },
+      "size": 100,
+      "networkConditions": [
+        {
+          "packetDuplicationParameters": {
+            "meanDuplications": 4.2
+          }
+        }
+      ]
+    }
+  }
+}
