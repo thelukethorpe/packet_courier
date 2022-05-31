@@ -48,11 +48,11 @@ multiple machines forming an intricate topology, which in turn will serve hundre
 Although \texttt{tc-netem} could in principle deliver the testbed demands of such a system, it almost certainly
 could not be done by hand, so to speak. Instead, it would necessitate some kind of managment software that would wrap
 the \texttt{tc-netem} functionality and present programmers with a palatable interface. Unfortunately, this \emph{still}
-falls foul of platform dependency concerns; a non-trivial set of concerns for an innately multi-platform exercise such
+fall foul of platform dependency concerns; a non-trivial set of concerns for an innately multi-platform exercise such
 has video game development.
 
 It should be made explicitly clear that this scenario is not illusory. There is much activity within this
-space, as demonstrated by companies such as Microsoft, Heroic Labs and Improbable developing tools and services that
+space, as demonstrated by companies such as Microsoft, Heroic Labs, Improbable developing tools and services that
 enable the deployment of highly distributive and pervasive video games\cite{microsoft_playfab, heroic_labs_nakama,
     improbable_spatialos, improbable_spatialos_unreal_gdk_github}. As of Janurary 2022, Improbable's child company,
 Midwinter Entertainment, is on the verge of releasing \emph{Scavengers}\cite{improbable_spatialos_scavengers}, a
@@ -88,7 +88,7 @@ well-established entry-point\cite{ns_3_man_pdf}. In tow, five essential concepts
     as smoothly as possible.
 \end{itemize}
 
-The guide also details a walk-through of an example simulation, \texttt{first.cc}, programmed in C++ and entailing a
+The guide also details a walk-through of a example simulation, \texttt{first.cc}, programmed in C++ and entailing a
 mixed bag of non-self-evident semantic quirks native to the \texttt{ns-3} framework. One such quirk is how
 granularity is configured with respect to time:
 
@@ -125,7 +125,7 @@ the user. For example, the next few lines of code in \texttt{first.cc} are:
 Free-floating strings are used throughout the \texttt{ns-3} API in the manner observed above, namely as a mechanism to
 retrieve and inject information into the global simulation state. Design choices of this nature needlessly burdern the
 developer with the responsibility of ensuring the syntax and semantics of their configuration are correct; something
-that can (and probably should) be woven into the root language where possible.
+that can and should be woven into the root language where possible.
 
 The flip-side of a less prescriptive specification is an increased degree of freedom, which is amply on display in
 the \texttt{ns-3} library. The sheer depth of possibility on offer here is somewhat akin to staring into the abyss.
@@ -193,3 +193,155 @@ tool for distributed simulation.
 \section{Related Work}
 
 TODO
+
+\newpage
+
+
+\section{INTERIM REPORT ONLY: Project Plan}
+
+\lettrine{G}{iven} that these next sections will only appear as part of the interim report (which in turn is purely a
+feedback exercise), I'm going to take this opportunity to relax the tone of my writing and speak directly to the
+marker in an effort to quickly get everyone up-to-speed. To detail every nuance of the technical architecture of the
+project in its current state would be equivalent to writing about half of the final report, which just isn't feasible
+in the available time-frame.
+
+My language of choice is Java, as inspired by Pandora, a tool often used by first-year logic students to practice
+natural deduction. Java is platform agnotistic, whilst also being high level and not having to deal with
+cross-compiler issues like C++. I also couldn't justify putting up with the scrapyard, Mad Max approach to semantics
+that is characteristic of C++ for the fairly meagre performance upside, which I'm sure is going to be the subject of
+some rumination during the design stages of the report.
+
+I'm not quite where I'd like to be when it comes to the report; ideally I would have reviewed 2 or 3 more
+technologies in the form of Kubernetes, Docker, gRPC, etc. I have a massive backlog of actual simulation tools that I
+haven't managed to get to as well (if I ever do). There are also structural issues that I need to fix, such as code
+snippets that aren't captioned or referenced, a lack of appendices, a general lack of diagrams. The introduction also
+remains unfinished, since I wasn't sure what to write for ``contributions'', as this seems to require a conclusive
+scope for the project which is still subject to change.
+
+I am however well ahead of schedule on the code front. For some context, I have previous experience working with
+network simulation during my tenure working on the SpatialOS tool at Improbable. The project currently contains 3258
+lines of Java code. Here is a high-level overview of the file structure (please excuse the ropey formatting; the
+project is very large):
+
+\begin{center}
+    \includegraphics[width=0.35\textwidth]{images/interim_file_structure}
+\end{center}
+
+I currently don't have a name for the tool, but it has absolute parity with \texttt{tc-netem} (semantics which I'm
+likely to change as the project evolves). Here is an example of some working setup code which one might write to
+configure and run a simulation:
+
+\begin{center}
+    \includegraphics[width=\textwidth]{images/interim_example_sim_code}
+\end{center}
+
+A quick rundown on the current semantics. Nodes are connected in a topology. Each connection in said topology admits
+of a packet pipeline, which applies a sequence of network conditions to packets which flow through it, i.e.:
+probabilistic drop, corruption, duplication or latency, or perhaps even bandwidth throttling or packet limiting. Each
+node runs one or more workers, which are essentially wrapped threads. Each worker has an address. Workers send
+messages to other workers. These messages are routed by nodes. For example, if worker 1 running on node A sent a
+message to worker 2 running on node B, this message would ultimately be serialized into a packet, go through the packet
+pipeline connecting node A and node B. If this packet survives the trip, then node B will look up worker 2 in its
+address book and post it to worker 2's mailbox (providing that worker 2 exists). For the purposes of simplicity, the
+addressing mechanism is an artifact of the simulation logic, and cannot fall foul of corruption, i.e.: a message
+addressed to worker 2 will only be delivered to worker 2, if it is delivered at all. If a user wishes to bake their
+own custom addressing mechanism (that is fallible to corruption) into the provided framework, then they are free to
+do so.
+
+Nodes \texttt{A} and \texttt{B} are each given a \texttt{WorkerScript} during this setup, which are special kinds of
+lambda. A \texttt{WorkerScript} is a function which takes a \texttt{WorkerManager} as a parameter, which in turn
+provides each worker with a variety of important utilities, such as sending and receiving mail, or spawning child
+workers.
+
+I'm currently hosting the repository privately on GitHub and am using a Kanban board to organise and prioritise my work:
+
+\begin{center}
+    \includegraphics[width=\textwidth]{images/interim_kanban_board}
+\end{center}
+
+Thus, I'm looking to get the following work done by 1/4/22 [$\sim$10 university week budget with 1 week written-off for
+exams]:
+\begin{itemize}
+    \item Come up with a good name for the tool (and the project as a whole) [<1 day].
+    \item Research and writeup findings on 1 or 2 other simulation tools [$\sim$2 weeks].
+    \item Research and writeup findings on Kubernetes, Docker, gRPC and Protobuf [$\sim$2 weeks].
+    \item Research and writeup findings on 1 or 2 other pieces of related work [$\sim$2 weeks].
+    \item Document semantics of the proposed solution as part of the Design section [$\sim$1 week].
+    \item Implement Protobuf support to allow users to specify large topologies easily [$\sim$1 week].
+    \item Investigate performance ramifications of current semantics and writeup findings [$\sim$1 week].
+\end{itemize}
+
+This then leaves the Easter holiday, which is about 4 weeks long (with 1 week written-off for rest). Ultimately,
+these weeks should be 2 or 3 times more efficient than those during term-time, since I won't have other modules to
+study for. Thus, I'm looking to get the following done between 1/4/22 and 1/5/22:
+\begin{itemize}
+    \item Generalise Worker API to interface with arbitrary binaries, possibly using HTTP or gRPC [$\sim$1 week].
+    \item Investigate ways to distribute tool, whether as a library or as a UI-based program [$\sim$1 week].
+    \item Tie off any loose ends in the design section of the report [$\sim$1 week].
+\end{itemize}
+
+I want to leave the first 5 weeks of the summer term as ``wiggle-room'' to allow the scope of project to change over
+the coming few months. Planning rigidly all the way until the day before the presentation is a recipe for disaster in my
+experience. Broadly speaking, this time should be largely dedicated to writing a very polished report and accompanying
+presentation. Ideally, the vast majority of the tool would have been comprehensively finished by the start of the summer
+term, i.e.: no massive architectural or semantic alterations; just small tweaks or quality of life improvements. This
+would include most of the design documentation having been written up by this stage, ideally with at least some of
+the implementation documented as well.
+
+
+\section{INTERIM REPORT ONLY: Evaluation Plan}
+
+\lettrine{T}{here} seem to be two dimensions of success that can be measured when evaluating this project: the quality
+of user experience and the power and performance of the tool. The former posits abstract and qualitative questions
+such as:
+\begin{itemize}
+    \item How intuitive is this tool?
+    \item How quickly can I integrate it with my current test suite?
+    \item How long will it take me to configure a complicated topology?
+    \item How much can a simulation using this tool resemble the real-world?
+    \item How much of my own research will I have to do when deciding on the configuration parameters?
+\end{itemize}
+
+These are just some of the very valid and quite probable questions that will be asked in the context of user
+experience. Naturally, they are also somewhat illusive when it comes to actually being answered in a satisfactory way
+. Of course, a minority of such questions can be addressed in a vacuum. For example, is the cab of a Rolls Royce more
+comfortable than a solitary confinement cell in Guantanamo Bay? The answer is patently obvious, yet it is undoubtedly
+a question of user experience.
+
+Putting trivial examples aside, one way of measuring the quality of user experience enabled by the end product is to
+establish a pipeline for expected usage and compare this to other leading products. If our solution has fewer steps
+that are markedly simpler, then this is one metric that can be used. In addition, experiments with real people can be
+conducted, measuring quantities such as time taken or number of clicks required to perform particular tasks within
+the framework. Anonymous, long-form surveys can be conducted as well. Ultimately the approach taken will depend on
+the exact nature of the feature being analysed. Admitedly, this is all very loose and will definitely need to be
+considered in more detail (and in a more concrete manner) as the user-focus is refined in the coming weeks.
+
+There are less subjective metrics that can be used in the context of technical performance, however. The most
+critical of which being the maximum number of workers that a simulation is capable of managing at any given time, and
+how it reacts to any upper limits being abruptly crashed into. Do these values change depending on the machine, and
+in what way exactly? Would it be possible to run some kind of proprietary diagnostic that could inform the current
+user of their machine's limitations?
+
+Ultimately the maximum size of supported topology and the time taken to execute standard algorithms are two simple
+quantities that can be compared across multiple simulation tools for contrast and compare. Although these will
+certainly be very useful experiments to conduct, if nothing else for the information of any prospective user, the
+niche that this tool is attempting to appeal are likely to value improvements in usability and user experience than
+performance metrics.
+
+
+\section{INTERIM REPORT ONLY: Ethical Issues}
+
+\lettrine{A}{s} far as I can tell, this project has virtually zero impact on the well-being or suffering of conscious
+creatures, beyond allowing people to test their distributed algorithms in a more convenient way. If there was ever an
+archetypal ``amoral'' endeavour, then it'd probably sound something like this. If an extremist political group
+wishes to abuse the fruits of these labours to develop a super-weapon of mass destruction under the guise of
+distributed computing, then I'm not sure there's much that can be done to stop them.
+
+The only serious concerns arise in the unlikely scenario whereby the final solution contains crippling bugs or security
+vulnerabilities that end up causing collateral damage to users. This can be remidied by ensuring that any
+distributions of the tool are accompanied by a sufficiently encompassing licence that exonerates liability for any
+damages. While the ideal solution is just to ensure that no such issues exist, that would be quite a naive and
+arrogant expectation. A simple and popular logging tool was recently discovered to have a major security leak
+(https://www.ncsc.gov.uk/information/log4j-vulnerability-what-everyone-needs-to-know); why would I assume any code I
+write would be free of similar issues? As such, the liscenes of any tools used should also be taken into account as
+well.
