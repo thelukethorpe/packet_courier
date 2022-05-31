@@ -35,17 +35,41 @@ furnishing insights into distributed algorithms that reality never could.
 
 \section{Objectives}
 
-\lettrine{G}{iven} that this project will culminate in the creation of some software, the overall objectives are best
-framed with respect to what users can expect, i.e.:
+\lettrine{I}{f} the ultimate goal of this project were to be expressed as a succinct yet all-encompassing sound-bite,
+it would probably be \emph{to provide those with a curiosity for distributed computer systems with the means to tinker
+around with network technologies as though they were running in the real world.} Indeed, whilst this may capture the
+spirit of what is being worked towards, it is very abstract and unspecific; in order to distill this
+mission-statement into a set of more tangible objectives, it is probably best framed with respect to what users can
+expect from the end product, i.e.:
+
 \begin{enumerate}
     \item An interface to design an arbitrary network topology.
     \item A configuration suite to define how packets are manipulated during message-passing.
-    \item A mechanism to run a distributed algorithm across the virtual topology.
+    \item A mechanism to run a distributed algorithm across a virtual network topology which reflects the properties
+    described by the user as per objectives 1) and 2).
+    \item Platform agnosticism:
+    \begin{enumerate}
+        \item Basic usage of the tool should not depend on the operating system or hardware being used.
+        \item Users should not be pigeonholed into working with a particular programming language in order to
+        simulate their solution.
+    \end{enumerate}
+    \item Plug-and-playability:
+    \begin{enumerate}
+        \item Users should need minimal domain-specific knowledge in order to use the full set of features on offer.
+        \item The prospective tool should be able to mimic a real network in a way that minimises bespoke set-up,
+        i.e.: if a user normally tests their distributed algorithm using real computers connected over a physical
+        network, then transitioning to using the prospective tool should be more or less seamless.
+    \end{enumerate}
 \end{enumerate}
 
-Ideally each of these criteria should be met in the most general way possible to ensure that the prospective tool is
-accessible to the widest range of users. By way of example, users should not be pigeonholed into working with a
-particular programming language in order to simulate their solution.
+Not only do these objectives provide the project with a selection of qualitative yet precise aims, they also imbue
+the development process with a sense of direction and purpose. The picture being painted of the end user becomes more
+refined and vivid through the act of clarifying their needs and how they can be met. In this instance, the key
+qualities that would hopefully appeal to prospective users are versatility and ease-of-use. One might conceptualise
+the proposed solution as a black box that appears from the outside to contain an entire network topology, whereby
+users can adjust its shape and behaviour using an intuitive control-panel of dials and knobs. In turn, students,
+developers and enthusiasts alike can probe this black box to achieve whatever network-related ends they see fit, with
+minimal configuration and bespoke setup required.
 
 
 \section{Contributions}
