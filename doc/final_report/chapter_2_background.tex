@@ -48,11 +48,11 @@ multiple machines forming an intricate topology, which in turn will serve hundre
 Although \texttt{tc-netem} could in principle deliver the testbed demands of such a system, it almost certainly
 could not be done by hand, so to speak. Instead, it would necessitate some kind of managment software that would wrap
 the \texttt{tc-netem} functionality and present programmers with a palatable interface. Unfortunately, this \emph{still}
-fall foul of platform dependency concerns; a non-trivial set of concerns for an innately multi-platform exercise such
+falls foul of platform dependency concerns; a non-trivial set of concerns for an innately multi-platform exercise such
 has video game development.
 
 It should be made explicitly clear that this scenario is not illusory. There is much activity within this
-space, as demonstrated by companies such as Microsoft, Heroic Labs, Improbable developing tools and services that
+space, as demonstrated by companies such as Microsoft, Heroic Labs and Improbable developing tools and services that
 enable the deployment of highly distributive and pervasive video games\cite{microsoft_playfab, heroic_labs_nakama,
     improbable_spatialos, improbable_spatialos_unreal_gdk_github}. As of Janurary 2022, Improbable's child company,
 Midwinter Entertainment, is on the verge of releasing \emph{Scavengers}\cite{improbable_spatialos_scavengers}, a
@@ -88,7 +88,7 @@ well-established entry-point\cite{ns_3_man_pdf}. In tow, five essential concepts
     as smoothly as possible.
 \end{itemize}
 
-The guide also details a walk-through of a example simulation, \texttt{first.cc}, programmed in C++ and entailing a
+The guide also details a walk-through of an example simulation, \texttt{first.cc}, programmed in C++ and entailing a
 mixed bag of non-self-evident semantic quirks native to the \texttt{ns-3} framework. One such quirk is how
 granularity is configured with respect to time:
 
@@ -125,7 +125,7 @@ the user. For example, the next few lines of code in \texttt{first.cc} are:
 Free-floating strings are used throughout the \texttt{ns-3} API in the manner observed above, namely as a mechanism to
 retrieve and inject information into the global simulation state. Design choices of this nature needlessly burdern the
 developer with the responsibility of ensuring the syntax and semantics of their configuration are correct; something
-that can and should be woven into the root language where possible.
+that can (and probably should) be woven into the root language where possible.
 
 The flip-side of a less prescriptive specification is an increased degree of freedom, which is amply on display in
 the \texttt{ns-3} library. The sheer depth of possibility on offer here is somewhat akin to staring into the abyss.
