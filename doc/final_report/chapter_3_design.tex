@@ -1,10 +1,35 @@
 \section{Methodology}
 
-TODO
+The prospective solution was ultimately named \emph{Packet Courier} for reasons that the ensuing design documentation
+aims to make clear. In summary, Packet Courier listens for packets being sent by nodes on its virtual network,
+processing and rerouting them according to their listed destination and the associated conditions; just as a mail
+courier would do analogously for letters and parcels. The metaphor also aligns itself well with the overall
+motivations of the project, whereby postal services are largely seen as reliable infrastructure that operate silently
+in the background, enabling people to send goods across seemingly vast distances without needing to worry about how
+this is achieved. Indeed, these are the ideals that Packet Courier strives to embody, especially in light of
+objectives 4) and 5).
+
+Packet Courier has been designed and developed by leveraging philosophies from the \emph{lean development} school of
+thought\cite{william_feld_lean_book, steve_blank_lean_blog}. This involved making Packet Courier a functional and
+useful piece of software from the very first iteration, and continuing to ensure that this remained so with each new
+feature. As a consequence, every supervisory meeting, informal peer review or user ``playtest'' would be a
+meaningfully different experience, with something novel to demonstrate on each occasion. In this way, any feedback
+could be readily taken on-board and implemented quickly. By contrast, if Packet Courier had been meticulously
+designed from the bottom-up or the top-down, even the smallest changes in direction could risk rendering much of the
+planning totally obsolete.
+
+The simplest way to guarantee that Packet Courier provided users with tangible value from day one was to integrate an
+application-programmer interface into the base simulation engine. That way, developers could always take advantage of
+what Packet Courier had to offer, even if it was primitive. This ended up paying dividends down-the-line, as it was this
+combination of design philosophy and system architecture that facilitated the development of Packet Courier's
+emulation mode, which leveraged the base simulation APIs to further empower Packet Courier to manipulate authentic
+UDP packets in real-time.
+
 
 \section{High-Level Architecture}
 
 TODO
+
 
 \section{Top-Down Specification}
 
