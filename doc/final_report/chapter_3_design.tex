@@ -41,6 +41,23 @@ ip-address. Not only does this improve readability, but it also insulates the lo
 from the lower-level details of the machine or the network. Is \texttt{ipv4} or \texttt{ipv6} being used? An Elixir
 developer wouldn't need to know or care.
 
+As such, Packet Courier channels Elixir's spirit of using intuitive, high-level concepts to help users quickly build
+an understanding for a given simulation. As one might expect, the \emph{Node} is a cornerstone abstraction within the
+Packet Courier framework. A node represents a particular location within a wider network topology and enjoys a unique
+\emph{Node Address}. Each node will have at least one \emph{Worker}, where each worker will in turn carry out some
+work in the form of a coroutine. Workers also have access to a \emph{Postal Service} which enables them to interact
+with the wider network by sending a \emph{Packet} to a destination \emph{WorkerAddress}. The postal service will then
+package the packet and destination worker address into a single piece of \emph{Mail} and send it along the
+\emph{NodeConnection} associated with the source and destination worker addresses (provided it exists). Notice that
+the mail is sent along a node connection, as opposed to a \emph{worker} connection, because mail is principally
+exchanged between nodes rather than workers. In this way, when a piece of mail arrives at its destination node, the
+node extracts and routes the packet to its respective worker address; idiomatically speaking, the node
+\emph{Delivers} the packet to the worker's \emph{Mailbox}. The worker then has the option to poll packets from its
+mailbox. It is important to note that mailboxes store packets, not \emph{mail}. The rationale behind this is that one
+needn't accompany their letter or parcel with a return address in order to send it; this is a choice that can be made
+at the sender's discretion. Workers are also granted privacy, meaning that they can only see the contents of their own
+mailbox.
+
 
 \section{Top-Down Specification}
 
