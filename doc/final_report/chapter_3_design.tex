@@ -1,9 +1,9 @@
 \section{Methodology}
 
-The prospective solution was ultimately named \emph{Packet Courier} for reasons that the ensuing design documentation
-aims to make clear. In summary, Packet Courier listens for packets being sent by nodes on its virtual network,
-processing and rerouting them according to their listed destination and the associated conditions; just as a mail
-courier would do analogously for letters and parcels. The metaphor also aligns itself well with the overall
+\lettrine{T}{he} prospective solution was ultimately named \emph{Packet Courier} for reasons that the ensuing design
+documentation aims to make clear. In summary, Packet Courier listens for packets being sent by nodes on its virtual
+network, processing and rerouting them according to their listed destination and the associated conditions; just as a
+mail courier would do analogously for letters and parcels. The metaphor also aligns itself well with the overall
 motivations of the project, whereby postal services are largely seen as reliable infrastructure that operate silently
 in the background, enabling people to send goods across seemingly vast distances without needing to worry about how
 this is achieved. Indeed, these are the ideals that Packet Courier strives to embody, especially in light of
@@ -30,16 +30,16 @@ UDP packets in real-time.
 
 \subsection{Simulation Semantics}
 
-Many of Packet Courier's core abstractions are inspired by the Elixir programming language\cite{elixir}. One of
-Elixir's major selling points is how elegantly it removes unnecessary detail when interfacing with the programmer.
-Rather than hemming developers into considering bits being sent over a wire, or packets being sent over a network,
-Elixir talks in terms of \emph{processes} exchanging \emph{messages} with one another\cite{elixir_processes}, which
-could consist of any high-level object such as text, numbers, tuples, or even higher-order structures like lists and
-structs. Furthermore, Elixir uses neat allegories to help developers build up a more intuitive picture of what their
-code does, i.e.: collecting messages from a \emph{mailbox} or using an arbitrary \emph{process-id} rather than an
-ip-address. Not only does this improve readability, but it also insulates the logic of the distributed algorithms
-from the lower-level details of the machine or the network. Is \texttt{ipv4} or \texttt{ipv6} being used? An Elixir
-developer wouldn't need to know or care.
+\lettrine{M}{any} of Packet Courier's core abstractions are inspired by the Elixir programming language\cite{elixir}.
+One of Elixir's major selling points is how elegantly it removes unnecessary detail when interfacing with the
+programmer. Rather than hemming developers into considering bits being sent over a wire, or packets being sent over a
+network, Elixir talks in terms of \emph{processes} exchanging \emph{messages} with one
+another\cite{elixir_processes}, which could consist of any high-level object such as text, numbers, tuples, or even
+higher-order structures like lists and structs. Furthermore, Elixir uses neat allegories to help developers build up
+a more intuitive picture of what their code does, i.e.: collecting messages from a \emph{mailbox} or using an
+arbitrary \emph{process-id} rather than an ip-address. Not only does this improve readability, but it also insulates
+the logic of the distributed algorithms from the lower-level details of the machine or the network. Is \texttt{ipv4}
+or \texttt{ipv6} being used? An Elixir developer wouldn't need to know or care.
 
 As such, Packet Courier channels Elixir's spirit of using intuitive, high-level concepts to help users quickly build
 an understanding for a given simulation. As one might expect, the \emph{Node} is a cornerstone abstraction within the
