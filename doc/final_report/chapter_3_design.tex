@@ -33,10 +33,10 @@ UDP packets in real-time.
 Many of Packet Courier's core abstractions are inspired by the Elixir programming language\cite{elixir}. One of
 Elixir's major selling points is how elegantly it removes unnecessary detail when interfacing with the programmer.
 Rather than hemming developers into considering bits being sent over a wire, or packets being sent over a network,
-Elixir talks in terms of \emph{processes} exchanging \emph{messages} with one another, which could consist of any
-high-level object such as text, numbers, tuples, or even higher-order structures like lists and structs.
-Furthermore, Elixir uses neat allegories to help developers build up a more intuitive picture of what their code
-does, i.e.: collecting messages from a \emph{mailbox} or using an arbitrary \emph{process-id} rather than an
+Elixir talks in terms of \emph{processes} exchanging \emph{messages} with one another\cite{elixir_processes}, which
+could consist of any high-level object such as text, numbers, tuples, or even higher-order structures like lists and
+structs. Furthermore, Elixir uses neat allegories to help developers build up a more intuitive picture of what their
+code does, i.e.: collecting messages from a \emph{mailbox} or using an arbitrary \emph{process-id} rather than an
 ip-address. Not only does this improve readability, but it also insulates the logic of the distributed algorithms
 from the lower-level details of the machine or the network. Is \texttt{ipv4} or \texttt{ipv6} being used? An Elixir
 developer wouldn't need to know or care.
@@ -48,7 +48,7 @@ Packet Courier framework. A node represents a particular location within a wider
 work in the form of a coroutine. Workers also have access to a \emph{Postal Service} which enables them to interact
 with the wider network by sending a \emph{Packet} to a destination \emph{WorkerAddress}. The postal service will then
 package the packet and destination worker address into a single piece of \emph{Mail} and send it along the
-\emph{NodeConnection} associated with the source and destination worker addresses (provided it exists). Notice that
+\emph{Node Connection} associated with the source and destination worker addresses (provided it exists). Notice that
 the mail is sent along a node connection, as opposed to a \emph{worker} connection, because mail is principally
 exchanged between nodes rather than workers. In this way, when a piece of mail arrives at its destination node, the
 node extracts and routes the packet to its respective worker address; idiomatically speaking, the node
@@ -57,6 +57,18 @@ mailbox. It is important to note that mailboxes store packets, not \emph{mail}. 
 needn't accompany their letter or parcel with a return address in order to send it; this is a choice that can be made
 at the sender's discretion. Workers are also granted privacy, meaning that they can only see the contents of their own
 mailbox.
+
+Drilling down into the specifics of packet transmission, each node connection is associated with a \emph{Packet
+Pipeline}. As the name suggests, a packet pipeline is a linear conduit whereby packets are processed in a fashion
+akin to a conveyor-belt, and it is herein that any packet manipulation is conducted, i.e.: latency, drop, corruption.
+The nature of this architecture is the first reason why packet communication occurs between nodes and not workers. If
+$n$ nodes had on average $w$ workers each, then the maximum number of unidirectional inter-node connections would be
+$n(n-1)$, yet the expected number of unidirectional inter-worker connections would be $w^2n(n-1)$. Thus, it is much
+more resource efficient for the workers to simply delegate mail sorting responsibilities to their respective node. In
+addition, workers are temporal insofar as they can be added and removed from the simulation dynamically like threads,
+which would mean that packet pipelines would need to be introduced on-the-fly in a way that would only mirror
+node-to-node semantics anyway, since workers inherit their position in the topology (i.e.: who they can send packets
+to and with what network conditions) from their node.
 
 
 \section{Top-Down Specification}
