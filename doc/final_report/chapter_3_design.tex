@@ -28,7 +28,18 @@ UDP packets in real-time.
 
 \section{High-Level Architecture}
 
-TODO
+\subsection{Simulation Semantics}
+
+Many of Packet Courier's core abstractions are inspired by the Elixir programming language\cite{elixir}. One of
+Elixir's major selling points is how elegantly it removes unnecessary detail when interfacing with the programmer.
+Rather than hemming developers into considering bits being sent over a wire, or packets being sent over a network,
+Elixir talks in terms of \emph{processes} exchanging \emph{messages} with one another, which could consist of any
+high-level object such as text, numbers, tuples, or even higher-order structures like lists and structs.
+Furthermore, Elixir uses neat allegories to help developers build up a more intuitive picture of what their code
+does, i.e.: collecting messages from a \emph{mailbox} or using an arbitrary \emph{process-id} rather than an
+ip-address. Not only does this improve readability, but it also insulates the logic of the distributed algorithms
+from the lower-level details of the machine or the network. Is \texttt{ipv4} or \texttt{ipv6} being used? An Elixir
+developer wouldn't need to know or care.
 
 
 \section{Top-Down Specification}
