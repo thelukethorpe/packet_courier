@@ -80,7 +80,26 @@ Courier is no different: nodes can only directly send mail to their immediate ne
 
 \subsection{Network Condition Semantics}
 
-TODO
+When it comes to the \emph{network} aspect of the network simulation framework that Packet Courier offers,
+\texttt{tc-netem}\cite{tc_netem_wiki, tc_netem_8_man,tc_netem_src} provides an excellent template to draw from.
+Indeed, Packet Courier incorporates most of the semantics that \texttt{tc-netem} lays out for itself, just with a few
+subtle tweaks, namely:
+\begin{itemize}
+    \item \textbf{Bandwidth throttling} \\
+    Constrains bitrate to a specified upper limit.
+    \item \textbf{Packet limiting} \\
+    Enforces that only a certain number of packets can be enqueued within a certain time-frame, dropping any that
+    exceed the limit.
+    \item \textbf{Packet delay} \\
+    Imbues packets with an artificial latency in keeping with a chosen distribution (uniform, normal or exponential).
+    \item \textbf{Packet drop} \\
+    Samples a Bernoulli distribution and drops the packet on success.
+    \item \textbf{Packet corruption} \\
+    Samples a Bernoulli distribution and flips a random bit on success.
+    \item \textbf{Packet duplication} \\
+    Samples a Poisson distribution to decide how many duplicates the given packet should have and enqueues that
+    number of copies alongside the packet itself.
+\end{itemize}
 
 \subsection{Algorithms}
 
