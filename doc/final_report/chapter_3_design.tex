@@ -94,7 +94,21 @@ Indeed, Packet Courier incorporates most of the semantics that \texttt{tc-netem}
 subtle tweaks, namely:
 \begin{itemize}
     \item \textbf{Bandwidth throttling} \\
-    Constrains bitrate to a specified upper limit.
+    Constrains bitrate to a specified upper limit. \\ \\
+    \emph{Packet Courier achieves this effect in a very prescriptive manner by imbuing each packet with a latency
+    based on the maximum throughput and the size of the packet. For example, if the bitrate was set to 4MBps and a
+    1MB packet arrived, then it would be made to wait 0.25 seconds in simulation time. This effect stacks, meaning
+    that if a 2MB packet then arrived in the same tick, it would be made to wait 0.75 seconds to account for the 1MB
+    of data that is yet to experience its 0.25 seconds of latency. In this way, 3MB is transferred over 0.75 seconds,
+        upholding a 4MBps bitrate. \\ \\
+        The general premise is to control the bitrate of a connection rather than drop excess packets. Consequently,
+        packet throttling does risk becoming a black hole with respect to memory, particularly in cases where a
+        high-throughput connection is being heavily throttled over a long period of time. As such, packet throttling
+        should mainly be used to smooth out connections that are prone to burst behaviours, rather than as a cheap
+        and dirty bitrate control mechanism. This is unlikely to satisfy users on its own, however, and as such, the
+        packet throttling semantics include a drop-threshold parameter which acts as a failsafe: if the number of
+        bytes currently held in the packet throttler's buffer exceeds the threshold, then incoming packets will be
+        dropped until the contents of the buffer fall below this threshold again.}
     \item \textbf{Packet limiting} \\
     Enforces that only a certain number of packets can be enqueued within a certain time-frame, dropping any that
     exceed the limit.
