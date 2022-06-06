@@ -434,12 +434,18 @@ whereby excess packets are simply dropped.
 #### PacketThrottleParameters
 
 Packet throttling involves controlling the number of bytes that can be transmitted across a connection over a particular
-period of time, whereby no packets are dropped; instead the bitrate of the connection is controlled. In this way, packet
-throttling does risk becoming a black hole with respect to memory, particularly in cases where a high-throughput
-connection is being heavily throttled over a long period of time. As such, packet throttling should mainly be used to
-smooth out connections that are prone to burst behaviours, rather than as a cheap and dirty bitrate control mechanism.
+period of time. The general premise is to control the bitrate of a connection rather than drop excess packets. In this
+way, packet throttling does risk becoming a black hole with respect to memory, particularly in cases where a
+high-throughput connection is being heavily throttled over a long period of time. As such, packet throttling should
+mainly be used to smooth out connections that are prone to burst behaviours, rather than as a cheap and dirty bitrate
+control mechanism. However, the `byteDropThreshold` parameter acts as a failsafe in case this approach isn't possible:
+if the number of bytes currently held in the packet throttler's buffer exceeds `byteDropThreshold`, then incoming
+packets will be dropped until the contents of the buffer fall below this threshold again.
 
 `byteThrottleRate :: int32` ~ the maximum number of bytes transmitted per unit time.
+
+`byteDropThreshold :: int32` ~ the minimum number of bytes needed to be present in the buffer before incoming packets
+are dropped.
 
 `timeUnit :: TimeUnit` ~ the unit of time associated with `byteThrottleRate`.
 

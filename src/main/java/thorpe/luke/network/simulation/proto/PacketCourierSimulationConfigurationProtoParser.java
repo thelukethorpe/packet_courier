@@ -456,6 +456,7 @@ public class PacketCourierSimulationConfigurationProtoParser<NodeInfo> {
       PacketThrottleParametersProto packetThrottleParametersProto) {
     return NetworkCondition.packetThrottle(
         packetThrottleParametersProto.getByteThrottleRate(),
+        packetThrottleParametersProto.getByteDropThreshold(),
         parseTimeUnit(packetThrottleParametersProto.getTimeUnit()));
   }
 
