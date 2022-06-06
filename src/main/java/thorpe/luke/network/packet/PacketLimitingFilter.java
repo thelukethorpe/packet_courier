@@ -26,7 +26,7 @@ public class PacketLimitingFilter<Wrapper extends PacketWrapper<Wrapper>>
   public void tick(LocalDateTime now) {
     long timeElapsed = timeUnit.between(this.now, now);
     if (timeElapsed > 0) {
-      packetBudget = timeElapsed * packetLimitRate;
+      packetBudget = Math.round((timeElapsed + 0.5) * packetLimitRate);
       this.now = now;
     }
   }
