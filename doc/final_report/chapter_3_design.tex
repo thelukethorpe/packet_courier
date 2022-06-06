@@ -118,6 +118,13 @@ subtle tweaks, namely:
     packet-budget, i.e.: how many packets are allowed through over the course of the next tick.}
     \item \textbf{Packet delay} \\
     Imbues packets with an artificial latency in keeping with a chosen distribution (uniform, normal or exponential).
+    \\ \\
+    \emph{Delay semantics are achieved by simply sampling the provided distribution and adding that value onto the
+    current simulation time to produce a scheduled ``dequeue'' time. Packets can be stored in a priority queue which
+    only releases the top element if the current simulation time has passed the scheduled dequeue time. \\ \\
+    The only notably difference being the replacement of the Pareto distribution with the exponential distribution.
+    This can be chalked up to the exponential distribution already having been implemented for other use-cases, but
+    the Pareto distribution being cut due to time constraints.}
     \item \textbf{Packet drop} \\
     Samples a Bernoulli distribution and drops the packet on success.
     \item \textbf{Packet corruption} \\
