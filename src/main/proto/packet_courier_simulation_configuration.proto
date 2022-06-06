@@ -123,7 +123,8 @@ message PacketLimitParametersProto {
 
 message PacketThrottleParametersProto {
   int32 byteThrottleRate = 1;
-  TimeUnitProto timeUnit = 2;
+  int32 byteDropThreshold = 2;
+  TimeUnitProto timeUnit = 3;
 }
 
 message PacketCorruptionParametersProto {

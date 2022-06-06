@@ -22,7 +22,8 @@ public interface NetworkCondition {
     };
   }
 
-  static NetworkCondition packetThrottle(int byteThrottleRate, ChronoUnit timeUnit) {
+  static NetworkCondition packetThrottle(
+      int byteThrottleRate, int byteDropThreshold, ChronoUnit timeUnit) {
     if (byteThrottleRate < 0) {
       throw new InvalidNetworkConditionException(
           "Packet throttle rate should be greater than or equal to 0.");
@@ -31,7 +32,8 @@ public interface NetworkCondition {
       @Override
       public <Wrapper extends PacketWrapper<Wrapper>>
           PacketFilter<Wrapper> asPacketFilterStartingAt(LocalDateTime startTime) {
-        return new PacketThrottlingFilter<>(byteThrottleRate, timeUnit, startTime);
+        return new PacketThrottlingFilter<>(
+            byteThrottleRate, byteDropThreshold, timeUnit, startTime);
       }
     };
   }
