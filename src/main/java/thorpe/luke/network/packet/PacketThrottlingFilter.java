@@ -2,53 +2,50 @@ package thorpe.luke.network.packet;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.LinkedList;
 import java.util.Optional;
-import java.util.Queue;
 
 public class PacketThrottlingFilter<Wrapper extends PacketWrapper<Wrapper>>
     implements PacketFilter<Wrapper> {
 
-  private final Queue<Wrapper> packetWrapperQueue = new LinkedList<>();
+  private final PacketLatencyFilter<Wrapper> packetLatencyFilter;
   private final int byteThrottleRate;
   private final ChronoUnit timeUnit;
-  private long byteBudget;
-  private LocalDateTime now;
+  private double timeDelta;
+  private LocalDateTime previousScheduledDequeueTime;
 
   public PacketThrottlingFilter(
       int byteThrottleRate, ChronoUnit timeUnit, LocalDateTime startTime) {
+    this.packetLatencyFilter = new PacketLatencyFilter<>(startTime);
     this.byteThrottleRate = byteThrottleRate;
     this.timeUnit = timeUnit;
-    this.byteBudget = 0;
-    this.now = startTime;
+    this.timeDelta = 0.0;
+    this.previousScheduledDequeueTime = startTime;
   }
 
   @Override
   public void tick(LocalDateTime now) {
-    long timeElapsed = timeUnit.between(this.now, now);
-    if (timeElapsed > 0) {
-      byteBudget = timeElapsed * byteThrottleRate;
-      this.now = now;
-    }
+    packetLatencyFilter.tick(now);
   }
 
   @Override
   public void enqueue(Wrapper packetWrapper) {
-    packetWrapperQueue.offer(packetWrapper);
+    int packetSizeInBytes = packetWrapper.getPacket().countBytes();
+    double timeRequiredToProcessPacket = packetSizeInBytes / (double) byteThrottleRate;
+    long processingLatency = (long) timeRequiredToProcessPacket;
+    timeDelta += timeRequiredToProcessPacket - processingLatency;
+    if (timeDelta >= 1.0) {
+      long latencyDelta = (long) timeDelta;
+      processingLatency += latencyDelta;
+      timeDelta -= latencyDelta;
+    }
+    LocalDateTime scheduledDequeueTime =
+        previousScheduledDequeueTime.plus(processingLatency, timeUnit);
+    packetLatencyFilter.enqueue(new ScheduledPacket<>(scheduledDequeueTime, packetWrapper));
+    previousScheduledDequeueTime = scheduledDequeueTime;
   }
 
   @Override
   public Optional<Wrapper> tryDequeue() {
-    Wrapper packetWrapper = packetWrapperQueue.peek();
-    if (packetWrapper == null) {
-      return Optional.empty();
-    }
-    int packetByteCount = packetWrapper.getPacket().countBytes();
-    if (packetByteCount > byteBudget) {
-      return Optional.empty();
-    }
-    byteBudget -= packetByteCount;
-    packetWrapperQueue.poll();
-    return Optional.of(packetWrapper);
+    return packetLatencyFilter.tryDequeue().map(ScheduledPacket::getPacketWrapper);
   }
 }
