@@ -4,14 +4,13 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
-import java.util.PriorityQueue;
 import java.util.Random;
 import thorpe.luke.distribution.Distribution;
 
 public class SimulatedPacketLatencyFilter<Wrapper extends PacketWrapper<Wrapper>>
     implements PacketFilter<Wrapper> {
 
-  private final PriorityQueue<ScheduledPacket> packetQueue = new PriorityQueue<>();
+  private final PacketLatencyFilter<Wrapper> packetLatencyFilter;
   private final Distribution<Double> latencyDistribution;
   private final ChronoUnit timeUnit;
   private final Random random;
@@ -22,6 +21,7 @@ public class SimulatedPacketLatencyFilter<Wrapper extends PacketWrapper<Wrapper>
       ChronoUnit timeUnit,
       LocalDateTime startTime,
       Random random) {
+    this.packetLatencyFilter = new PacketLatencyFilter<>(startTime);
     this.latencyDistribution = latencyDistribution;
     this.timeUnit = timeUnit;
     this.random = random;
@@ -31,46 +31,18 @@ public class SimulatedPacketLatencyFilter<Wrapper extends PacketWrapper<Wrapper>
   @Override
   public void tick(LocalDateTime now) {
     this.now = now;
+    packetLatencyFilter.tick(now);
   }
 
   @Override
   public void enqueue(Wrapper packetWrapper) {
     long latency = Math.round(latencyDistribution.sample(random));
     LocalDateTime scheduledDequeueTime = now.plus(Duration.of(latency, timeUnit));
-    packetQueue.offer(new ScheduledPacket(scheduledDequeueTime, packetWrapper));
+    packetLatencyFilter.enqueue(new ScheduledPacket<>(scheduledDequeueTime, packetWrapper));
   }
 
   @Override
   public Optional<Wrapper> tryDequeue() {
-    ScheduledPacket scheduledPacket = packetQueue.peek();
-    if (scheduledPacket == null || scheduledPacket.getScheduledDequeueTime().isAfter(now)) {
-      return Optional.empty();
-    }
-    packetQueue.poll();
-    return Optional.of(scheduledPacket).map(ScheduledPacket::getPacketWrapper);
-  }
-
-  private class ScheduledPacket implements Comparable<ScheduledPacket> {
-
-    private final LocalDateTime scheduledDequeueTime;
-    private final Wrapper packetWrapper;
-
-    private ScheduledPacket(LocalDateTime scheduledDequeueTime, Wrapper packetWrapper) {
-      this.scheduledDequeueTime = scheduledDequeueTime;
-      this.packetWrapper = packetWrapper;
-    }
-
-    public LocalDateTime getScheduledDequeueTime() {
-      return scheduledDequeueTime;
-    }
-
-    public Wrapper getPacketWrapper() {
-      return packetWrapper;
-    }
-
-    @Override
-    public int compareTo(ScheduledPacket that) {
-      return this.scheduledDequeueTime.compareTo(that.scheduledDequeueTime);
-    }
+    return packetLatencyFilter.tryDequeue().map(ScheduledPacket::getPacketWrapper);
   }
 }
