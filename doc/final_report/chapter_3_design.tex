@@ -70,6 +70,12 @@ which would mean that packet pipelines would need to be introduced on-the-fly in
 node-to-node semantics anyway, since workers inherit their position in the topology (i.e.: who they can send packets
 to and with what network conditions) from their node.
 
+\begin{figure}[!h]
+    \includegraphics[width=\textwidth]{images/chapter_3_design/simulation_semantics_diagram}
+    \centering
+    \caption{An example of how a packet would be sent from one worker to another in a Packet Courier simulation.}
+\end{figure}
+
 In this way, workers doing work on a node can be interpreted as a group of machines being connected to a central
 router. Machines can connect and disconnect freely to a router, just as workers can be spawned and killed atop a node. A
 router provides each of its machines with a unique local ip-address, but has its own ip-address which it shares with
@@ -77,6 +83,8 @@ the world, just as is the case with worker and node addresses. Routers are only 
 neighbours (by definition), and as such, if a device wishes to send a message to a destination that is more than one
 degree removed, then it will need to ask intermediate routers to forward the message onward. Once again, Packet
 Courier is no different: nodes can only directly send mail to their immediate neighbours.
+
+\newpage
 
 \subsection{Network Condition Semantics}
 
