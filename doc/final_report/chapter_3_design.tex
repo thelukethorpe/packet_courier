@@ -111,7 +111,11 @@ subtle tweaks, namely:
         dropped until the contents of the buffer fall below this threshold again.}
     \item \textbf{Packet limiting} \\
     Enforces that only a certain number of packets can be enqueued within a certain time-frame, dropping any that
-    exceed the limit.
+    exceed the limit. \\ \\
+    \emph{Packet Courier leverages the notion of a ``packet-budget'' to decide how many packets should be enqueued
+    within a particular time-frame. With each simulation tick, the time between the current simulation time and the
+    last tick is measured and multiplied with the maximum number of packets per unit time to calculate the
+    packet-budget, i.e.: how many packets are allowed through over the course of the next tick.}
     \item \textbf{Packet delay} \\
     Imbues packets with an artificial latency in keeping with a chosen distribution (uniform, normal or exponential).
     \item \textbf{Packet drop} \\
