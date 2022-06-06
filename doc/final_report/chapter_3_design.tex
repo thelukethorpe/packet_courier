@@ -126,12 +126,20 @@ subtle tweaks, namely:
     This can be chalked up to the exponential distribution already having been implemented for other use-cases, but
     the Pareto distribution being cut due to time constraints.}
     \item \textbf{Packet drop} \\
-    Samples a Bernoulli distribution and drops the packet on success.
+    Samples a Bernoulli distribution and drops the packet on success. \\ \\
+    \emph{Drop semantics remain the same as \texttt{tc-netem}. Gilbert Elliott and Markov modelling were left out
+    because they can be replicated as part of the more general event-based semantics. ``Loss'' has been changed to
+    ``drop'' to avoid confusion with notions of corruption.}
     \item \textbf{Packet corruption} \\
-    Samples a Bernoulli distribution and flips a random bit on success.
+    Samples a Bernoulli distribution and flips a random bit on success.\\ \\
+    \emph{Corruption semantics remain the same as \texttt{tc-netem}.}
     \item \textbf{Packet duplication} \\
     Samples a Poisson distribution to decide how many duplicates the given packet should have and enqueues that
-    number of copies alongside the packet itself.
+    number of copies alongside the packet itself. \\ \\
+    \emph{Duplication semantics remain the same as \texttt{tc-netem} with the exception that the Bernoulli distribution
+    has been generalised to a Poisson distribution. Indeed, if a packet is dropped on the success of a Bernoulli
+    sample with parameter $p = 0.42$, then there will be 0.42 duplicate packets on average, as would be the case with
+    a Poisson distribution parameterised by $\lambda = 0.42$.}
 \end{itemize}
 
 \subsection{Algorithms}
