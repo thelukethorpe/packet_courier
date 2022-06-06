@@ -24,6 +24,9 @@ public class PacketThrottlingFilter<Wrapper extends PacketWrapper<Wrapper>>
 
   @Override
   public void tick(LocalDateTime now) {
+    if (previousScheduledDequeueTime.isBefore(now)) {
+      previousScheduledDequeueTime = now;
+    }
     packetLatencyFilter.tick(now);
   }
 
