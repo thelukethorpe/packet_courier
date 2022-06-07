@@ -174,6 +174,74 @@ loss\cite{tc_netem_8_man}:
     loss probability in the bad state and $1-k$ is the loss probability in the good state.''}
 \end{itemize}
 
+\newpage
+
+Whilst these models do give users the opportunity to specify more complex packet drop conditions, they admit of the
+following limitations:
+\begin{itemize}
+    \item \textbf{The 4-state Markov and Gilbert-Elliot models can only be applied to packet drop} \\
+    If packet drop can be stateful, then it intuitively follows that other network artefacts can be as well. Indeed,
+    one might ask: ``what causes a connection to enter into a `good burst' or a `lossy gap' phase?'' The answer will
+    surely relate to underlying quirks of the network infrastructure, which are unlikely to affect loss of packets in
+    a manner that is totally independent of latency, say. Even then, plenty of studies have shown (inadvertently or
+    otherwise) that network phenomena such as delay and jitter can vary in ways that are seemingly
+    stateful\cite{hpbn_mobile_networks, a_close_examination_of_4G_lte_networks,
+        gsma_4G_5G_experience_evaluation_guideline, mobile_broadband_networks_under_mobility,
+        emulating_3G_4G_networks, study_on_quality_of_service_in_4G_and_5G_networks,
+        speed_test_russian_4G_LTE_internet_provider_Beeline}.
+    Figure~\ref{fig:chapter_3_design-delay_plotted_against_time_from_study} shows one such example of this principle
+    in action, whereby the latency observed appears to behave approximately according to a 3 state model: ``good'',
+    where delay seems to mostly hover in the 25-30ms region; ``bad'', where delay will occassionally spike to as high
+    as 50ms; ``ugly'', where delay very rarely spikes to even higher than 50ms. To illustrate this hypothesis
+    further, we can see similar patterns when examining other metrics such as traffic load, as demonstrated in
+    Figure~\ref{fig:chapter_3_design-traffic_load_plotted_against_time_from_study}. \\ \\
+
+    \begin{figure}[!h]
+        \includegraphics[width=0.9\textwidth]{images/chapter_3_design/delay_plotted_against_time_from_study}
+        \centering~\caption{Delay (ms) on 4G packets bent sent as part of a video streaming service measured over
+        time (s)\cite{study_on_quality_of_service_in_4G_and_5G_networks}.
+        }\label{fig:chapter_3_design-delay_plotted_against_time_from_study}
+    \end{figure}
+    \begin{figure}[!h]
+        \includegraphics[width=0.9\textwidth]{images/chapter_3_design/traffic_load_plotted_against_time_from_study}
+        \centering~\caption{Traffic Load (KBits/s) on 4G packets bent sent as part of a VoIP call measured over
+        time (s)\cite{study_on_quality_of_service_in_4G_and_5G_networks}.
+        }\label{fig:chapter_3_design-traffic_load_plotted_against_time_from_study}
+    \end{figure}
+
+    In this way, one could eyeball the number of states that would be appropriate to model the kind of conditions
+    observed in Figures~\ref{fig:chapter_3_design-delay_plotted_against_time_from_study}
+    and~\ref{fig:chapter_3_design-traffic_load_plotted_against_time_from_study}, only to then perform some kind of
+    k-means clustering algorithm to aggregate the relevant statistics and characterise these states, i.e.: how
+    frequently they occur; how long they last; how their key metric (drop, delay, traffic-load) is distributed.
+    Notice that we are now in the realm of event-based semantics, where (network) events are being described by their
+    interval, duration and effect, which leads nicely onto the second issue with \texttt{tc-netem}'s state-based
+    models.
+    \newpage
+    \item \textbf{Probabilistically parameterised models are hard to reason about} \\
+    Consider a network engineer who is new to a particular codebase and finds a protocol testbed with the following
+    configuration:
+    \begin{quote}
+        \texttt{loss p13=0.5 p31=0.25 p32=0.4 p23=0.7 p14=0.15}
+    \end{quote}
+    There is a distinct likelihood that bafflement would ensue. \\ \\
+    Although probabilistic state-based modelling can be very powerful, expressing a virtual network scenario in terms
+    of state-transition probabilities does not always lend itself well to being human-readable. Most would find it
+    difficult to develop a sense of how the network defined above would behave in even a coarse sense. For example,
+    if packets flowed into the simulation at a constant rate, what might the graph of throughput against time look
+    like? How would it be shaped? Would there be peaks and troughs, and if so, how frequently and for how long? These
+    are important questions that are not necessarily self-evident from a selection of transition probabilities.
+    \item \textbf{What if 4-state Markov and Gilbert-Elliot models don't fit the bill?} \\
+    Unless a particular network admits of exactly one state, a ``good`` and a ``bad'' state, or four states
+    characterised by ``good''/``lossy'' and ``gap''/``burst'', then it'll be a hard task to accurately model it
+    using \texttt{tc-netem}. Packet loss on mobile connections has been shown to differ signicantly based on locality
+    and speed of travel\cite{mobile_broadband_networks_under_mobility}, and with the gaming industry trending towards
+    mobile ventures\cite{statista_mobile_gaming, rise_of_mobile_gaming}, there is a strong chance that game development
+    firms will want to optimize their net-code by emulating the kind of network conditions experienced when on a
+    train, bus or car journey. As such, a more general purpose set of semantics are required for undertakings of this
+    nature.
+\end{itemize}
+
 \subsection{Algorithms}
 
 \subsubsection{Normal Distribution Sampler}
