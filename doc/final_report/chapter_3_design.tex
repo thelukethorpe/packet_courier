@@ -73,7 +73,8 @@ to and with what network conditions) from their node.
 \begin{figure}[!h]
     \includegraphics[width=\textwidth]{images/chapter_3_design/simulation_semantics_diagram}
     \centering
-    \caption{An example of how a packet would be sent from one worker to another in a Packet Courier simulation.}
+    \caption{An example of how a packet would be sent from one worker to another in a Packet Courier simulation
+    .}\label{fig:chapter_3_design-simulation_semantics_diagram}
 \end{figure}
 
 In this way, workers doing work on a node can be interpreted as a group of machines being connected to a central
@@ -140,6 +141,37 @@ subtle tweaks, namely:
     has been generalised to a Poisson distribution. Indeed, if a packet is dropped on the success of a Bernoulli
     sample with parameter $p = 0.42$, then there will be 0.42 duplicate packets on average, as would be the case with
     a Poisson distribution parameterised by $\lambda = 0.42$.}
+\end{itemize}
+
+\newpage
+
+\subsection{Event-Based Semantics}
+
+In addition to simple Bernoulli sampling, \texttt{tc-netem} offers two different stateful methods to model packet
+loss\cite{tc_netem_8_man}:
+\begin{itemize}
+    \item \textbf{4-state Markov model} \\
+    Parameters: \emph{transition probabilities $p13$, $p31$, $p32$, $p23$ and $p14$.} \\
+    Semantics: \emph{``State 1 corresponds to good reception, State 4 to independent losses, State 3 to burst losses
+    and State 2 to good reception within a burst.''} \\ \\
+    This can be thought of more simply as a network boasting two attributes: \emph{reception} and \emph{activity}.
+    Reception can either be \emph{good} or \emph{lossy}: if it is good, then packets are not dropped; if it is lossy,
+    then packets are dropped. Activity can be either \emph{gap} or \emph{burst} which have no bearing on packet drop
+    in isolation. Naturally these two attributes yeild a 4-state Markov model as illustrated in
+    Figure~\ref{fig:chapter_3_design-tc_netem_4_state_marvok_diagram}. \\ \\
+    \begin{figure}[!h]
+        \includegraphics[width=0.35\textwidth]{images/chapter_3_design/tc_netem_4_state_marvok_diagram}
+        \centering
+        \caption{The 4-state Markov packet loss model as implemented by \texttt{tc-netem}\cite{tc_netem_src}
+        .}\label{fig:chapter_3_design-tc_netem_4_state_marvok_diagram}
+    \end{figure}
+
+    The relevance of the activity attribute lies within the fact that the probability of a packet being dropped
+    depends on which phase the network is currently undergoing: gap or burst.
+    \item \textbf{Gilbert-Elliot loss model} \\
+    Parameters: \emph{$p$, $r$, $h$ and $k$.} \\
+    Semantics: \emph{``$p$ and $r$ are the transition probabilities between the bad and the good states, $1-h$ is the
+    loss probability in the bad state and $1-k$ is the loss probability in the good state.''}
 \end{itemize}
 
 \subsection{Algorithms}
