@@ -314,11 +314,35 @@ intervals. This observation serves less as a proposition for a potential feature
 that the semantics laid out in this section subsume the models available within the \texttt{tc-netem} framework,
 converting them into a format that is more easily read and understood by humans.
 
+\newpage
+
 \subsection{Algorithms}
+
+\lettrine{M}{ost} of the Packet Courier semantics as defined up until this point should map more or less directly onto a
+programmed implementation. There are a few instances where this isn't the case, however, namely when sampling the
+statistical distributions which sit at the heart of Packet Courier's network simulation. The normal and Poisson
+distributions are particularly problematic since neither has a closed form inverse cumulative distribution function,
+ergo neither can be trivially sampled by percentile.
 
 \subsubsection{Normal Distribution Sampler}
 
-TODO
+The Box-Muller transform converts a pair of independent, uniform, random variables, $U_1, U_2 \sim U(0, 1)$ into a pair
+of independent, normal, random variables $Z_0, Z_1 \sim \mathcal{N}(0, 1)$\cite{box_muller_transform} via the
+following process:
+
+\begin{algorithm}[caption={Box-Muller Transform\cite{box_muller_transform}.},label={alg:box_muller_transform},
+    captionpos=b]
+    $U_1 \gets$ sample $U(0, 1)$
+    $U_2 \gets$ sample $U(0, 1)$
+    $R \gets \sqrt{-2 log_e U_1}$
+    $\theta \gets 2 \pi U_2$
+    $Z_0 \gets R \cos \theta$
+    $Z_1 \gets R \sin \theta$
+\end{algorithm}
+
+Note that this algorithm would only need to be run every other sample, since it generates two standard normal
+variables. Moreover, it can be readily be adapted to any arbitrary normal distribution, since $Z \sim \mathcal{N}(0,
+1) \implies \mu + \sigma Z \sim \mathcal{N}(\mu, \sigma^2)$.
 
 \subsubsection{Poisson Distribution Sampler}
 

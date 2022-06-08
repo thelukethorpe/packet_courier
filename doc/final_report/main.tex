@@ -17,6 +17,7 @@
 
 \usepackage{listings}
 \usepackage{xcolor}
+\usepackage{caption}
 \lstset
 {
     basicstyle=\footnotesize,
@@ -30,6 +31,25 @@
     breaklines=true,
     breakatwhitespace=false,
 }
+\newcounter{nalg}[chapter]
+\renewcommand{\thenalg}{\thechapter .\arabic{nalg}}
+\DeclareCaptionLabelFormat{algocaption}{Algorithm \thenalg}
+\lstnewenvironment{algorithm}[1][]
+{
+    \refstepcounter{nalg}
+    \captionsetup{labelformat=algocaption,labelsep=colon}
+    \lstset{
+        mathescape=true,
+        frame=tB,
+        numbers=left,
+        keywordstyle=\color{black}\bfseries\em,
+        keywords={,input, output, return, sample, datatype, function, in, if, else, foreach, while, begin, end, }
+        numbers=left,
+        xleftmargin=.04\textwidth,
+        #1
+    }
+}
+{}
 
 \usepackage[font=footnotesize,labelfont=bf]{caption}
 \usepackage{fancyhdr}
