@@ -328,7 +328,7 @@ ergo neither can be trivially sampled by percentile.
 
 The Box-Muller transform converts a pair of independent, uniform, random variables, $U_1, U_2 \sim U(0, 1)$ into a pair
 of independent, normal, random variables $Z_0, Z_1 \sim \mathcal{N}(0, 1)$\cite{box_muller_transform} via the
-following process:
+following process: \\
 
 \begin{algorithm}[caption={Box-Muller Transform\cite{box_muller_transform}.},label={alg:box_muller_transform},
     captionpos=b]
@@ -346,7 +346,54 @@ variables. Moreover, it can be readily be adapted to any arbitrary normal distri
 
 \subsubsection{Poisson Distribution Sampler}
 
-TODO
+The Poisson cumulative distribution function for $X \sim Poi(\lambda)$ as defined as follows:
+\begin{align*}
+    F_X(x) = e^{-\lambda} \sum_{i=0}^{\lfloor x \rfloor} \frac{\lambda^i}{i!}
+\end{align*}
+
+\begin{figure}[!h] {
+    \includegraphics[width=0.9\textwidth]{images/chapter_3_design/poisson_percent_point_function}
+    \centering~\caption{The inverse CDF (or PPF: percent point function) of the Poission distribution for various
+        $\lambda$ parameters\cite{engineering_statistics_handbook_poisson_distribution}.}
+    \label{fig:chapter_3_design-poisson_percent_point_function}
+}
+\end{figure}
+
+As such, $F_X(x)$ sketches a step graph delimited by $x \in \mathbb{N}$ as illustrated by
+Figure~\ref{fig:chapter_3_design-poisson_percent_point_function}. This property makes the Poisson distribution
+perfect for tabulation, whereby the sampling strategy is to pre-compute a reasonable selection of percentile-value
+pairs (i.e.: percentiles between 0 and 0.999) and perform simple lookups based on a uniform random percentile sample
+$U \sim [0, 1)$.
+
+\newpage
+
+\begin{algorithm}[caption={Poisson distribution builder and sampler.},label={alg:poisson_builder_and_sampler},
+    captionpos=b]
+    function builder_poisson_table($\lambda$):
+    $\quad$ $term \gets e^{-\lambda}$
+    $\quad$ $percentile \gets 0$
+    $\quad$ $x \gets 0$
+    $\quad$ $table \gets$ new table()
+    $\quad$ while $(1 - percentile) > \epsilon$ do
+    $\quad$ $\quad$ add $\langle percentile, x \rangle$ to table
+    $\quad$ $\quad$ $x \gets x + 1$
+    $\quad$ $\quad$ $percentile \gets percentile + term$
+    $\quad$ $\quad$ $term \gets term \cdot \frac{\lambda}{x}$
+    $\quad$ end
+    $\quad$ add  $\langle 1, x \rangle$ to table
+    $\quad$ return table
+    end
+
+    function sample_poisson_table(table):
+    $\quad$ $percentile \gets$ sample $U[0, 1)$
+    $\quad$ $\langle lower, upper \rangle \gets$ lookup $percentile$ in table
+    $\quad$ # $lower$ is the table entry where $lower.percentile$ is the
+    $\quad$ # largest percentile that is smaller than the lookup parameter.
+    $\quad$ # $upper$ is the converse of $lower$.
+    $\quad$ # Taking $lower.x$ mimicks the flooring behaviour of $F_X(x)$.
+    $\quad$ return $lower.x$
+    end
+\end{algorithm}
 
 
 \section{Top-Down Specification}
