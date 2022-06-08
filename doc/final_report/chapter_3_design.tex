@@ -159,12 +159,12 @@ loss\cite{tc_netem_8_man}:
     Reception can either be \emph{good} or \emph{lossy}: if it is good, then packets are not dropped; if it is lossy,
     then packets are dropped. Activity can be either \emph{gap} or \emph{burst} which have no bearing on packet drop
     in isolation. Naturally these two attributes yeild a 4-state Markov model as illustrated in
-    Figure~\ref{fig:chapter_3_design-tc_netem_4_state_marvok_diagram}. \\ \\
+    Figure~\ref{fig:chapter_3_design-tc_netem_4_state_markov_diagram}. \\ \\
     \begin{figure}[!h]
-        \includegraphics[width=0.35\textwidth]{images/chapter_3_design/tc_netem_4_state_marvok_diagram}
+        \includegraphics[width=0.35\textwidth]{images/chapter_3_design/tc_netem_4_state_markov_diagram}
         \centering
         \caption{The 4-state Markov packet loss model as implemented by \texttt{tc-netem}\cite{tc_netem_src}
-        .}\label{fig:chapter_3_design-tc_netem_4_state_marvok_diagram}
+        .}\label{fig:chapter_3_design-tc_netem_4_state_markov_diagram}
     \end{figure}
 
     The relevance of the activity attribute lies within the fact that the probability of a packet being dropped
@@ -242,6 +242,77 @@ following limitations:
     train, bus or car journey. As such, a more general purpose set of semantics are required for undertakings of this
     nature.
 \end{itemize}
+
+\newpage
+
+These limitations can be overcome by generalising the 4-state Markov and Gilbert-Elliot models into a discrete
+event-based model\cite{discrete_event_simulation}. Packet Courier achieves this by incorperating an \emph{event
+pipeline} into the core network condition semantics alongside bandwidth throttling, packet delay etc.
+
+An event pipeline consists of a ``default'' set of network conditions and a list of possible network events.
+Naturally, the default network conditions are what the pipeline will revert to when no network events are currently
+underway. Network events are characterised by their mean interval and duration, as well as what network conditions
+they will impose on the simulation. In instances where multiple events have been triggered at the same time, the
+conditions with highest precedence will take priority. Event start and finish times are randomly generated according
+to the exponential distributions $Exp(1/\mu_{interval})$ and $Exp(1/\mu_{duration})$ respectively. The
+exponential distribution is not an arbitrary choice, since it is the only continuous distribution that boasts a
+\emph{memoryless} property\cite{memoryless_random_variables}. Indeed, discrete event simulations are built upon
+principles of memorylessness, namely because it ensures that sampled intervals and durations do not crudely depend on
+the time that has already elapsed. This is crucial since events are often best modelled as being independent from one
+another, insofar as an event would be scheduled in a way that is ignorant of previous events in the simulation. In a
+real-world context, one can imagine a dip in 4G service being caused by a bus going underneath a bridge: would the
+event of ``going under a bridge'' be described as an \emph{independent} occurrence? The answer is almost certainly
+``yes''. Note however that an event pipeline is itself a network condition, so a network event could in principle
+invoke a new event pipeline (only for the duration of the event, of course). This does then provide scope for
+network events to ``depend'' on one another via the use of nested pipelines.
+
+It is also no coincidence that the discrete memoryless distribution is geometric\cite{memoryless_random_variables},
+not only because this is essentially the ``floored'' version of the exponential distribution, but it is used to
+convert a set of state transition probabilities into discrete event parameters. Let us refer back to
+Figure~\ref{fig:chapter_3_design-tc_netem_4_state_markov_diagram} as the subject for a worked example.
+
+Let us first assume that a state transition occurs once per tick, which simply corresponds to an arbitrary unit of
+time. The mean ``duration'' of each state can be computed by evaluating the expected number of consecutive ticks
+without state change for each individual state. It follows that this would be distributed geometrically with the
+parameter $p$ set to the probability of a state change. Hence, the mean durations for each state in
+Figure~\ref{fig:chapter_3_design-tc_netem_4_state_markov_diagram} are as follows:
+\begin{align*}
+    \mu_{1,duration} &= \frac{1}{1 - p_{13} - p_{14}} \\
+    \mu_{2,duration} &= \frac{1}{1 - p_{23}} \\
+    \mu_{3,duration} &= \frac{1}{1 - p_{31} - p_{32}} \\
+    \mu_{4,duration} &= 1
+\end{align*}
+
+The mean ``interval'' of each state can be similarly computed by evaluating the expected number of consecutive ticks
+whereby the simulation is not in that particular state. This random variable would be distributed geometrically with
+the parameter $p$ set to the probability that a state transition is not directed towards the state in question,
+given that the prior state was also not the state in question. Using state 1 in
+Figure~\ref{fig:chapter_3_design-tc_netem_4_state_markov_diagram} as an example, $p$ in this case would be the
+probability that the simulation transitioned to state 2, 3 or 4, given that it was already in one of those states
+prior. Hence, the mean intervals for each state in Figure~\ref{fig:chapter_3_design-tc_netem_4_state_markov_diagram}
+are as follows:
+\begin{align*}
+    \mu_{1,interval} &= \frac{q_2 + q_3 + q_4}{q_2 + q_3(1 - p_{31})} \\
+    \mu_{2,interval} &= \frac{q_1 + q_3 + q_4}{q_1 + q_3(1 - p_{32}) + q_4} \\
+    \mu_{3,interval} &= \frac{q_1 + q_2 + q_4}{q_1(1 - p_{13}) + q_2(1 - p_{23}) + q_4} \\
+    \mu_{4,interval} &= \frac{q_1 + q_2 + q_3}{q_1(1 - p_{14}) + q_2 + q_3}
+\end{align*}
+
+Where $q_i$ is the probability that the simulation is in state $i$ at any given time, which can be solved by the
+following homogenous system:
+\begin{align*}
+    q_1 &= q_1(1 - p_{13} - p_{14}) + q_3p_{31} + q_4 \\
+    q_2 &= q_2(1 - p_{32}) + q_3p_{32} \\
+    q_3 &= q_1p_{13} + q_2p_{23} + q_3(1 - p_{31} - p_{32}) \\
+    q_4 &= q_1p_{14}
+\end{align*}
+
+The purpose of this exercise is to illustrate the relationship between state transitional models and Packet Courier's
+event-based semantics. In fact, one could generalise the above process into a set of formulaic linear equations and
+hence write an algorithm to convert state transition probabilities into their respective mean durations and
+intervals. This observation serves less as a proposition for a potential feature, and more a rigorous demonstration
+that the semantics laid out in this section subsume the models available within the \texttt{tc-netem} framework,
+converting them into a format that is more easily read and understood by humans.
 
 \subsection{Algorithms}
 
