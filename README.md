@@ -145,7 +145,7 @@ determine that this is Alice attempting to send a packet to Bob, in turn applyin
 latency, loss and corruption to the packet, before forwarding it on to Bob's _private_ IP, ensuring that the source is
 listed as Alice's _public_ IP.
 
-![Public vs Private IP Diagram](/doc/readme/emulation_semantics_diagram.jpg)
+![Public vs Private IP Diagram](/doc/readme/emulation_semantics_diagram.png)
 
 One potential issue with this approach is that nodes could (accidentally or otherwise) simply pass on their private IP
 address and have other nodes bypass the emulator entirely. There is of course nothing that can realistically be done to
