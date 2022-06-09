@@ -405,7 +405,95 @@ there, more complex features can be built on top of this initial API to broaden 
 
 \subsection{Application-Programmer Interface}
 
-TODO
+At the bare minimum, a Packet Courier simulation needs to be provided with the following parameters:
+\begin{itemize}
+    \item The topology of the simulated network.
+    \item A set of ``scripts'' which run atop each node in the simulated network.
+    \item The simulated network conditions for each node-to-node connection.
+\end{itemize}
+
+The most simple way of enabling the user to define these aspects of the simulation would be to provide them with an
+API capable of the following:
+\begin{itemize}
+    \item Create a blank simulation configuration.
+    \item Add a new, uniquely named node to a configuration.
+    \item Imbue a node with a runnable ``script''.
+    \item Connect two nodes with a set of network conditions.
+    \item Run a configuration as a simulation.
+\end{itemize}
+
+The notion of a ``script'' which runs on each node has been quite vague thus far. The general premise would be to
+spawn a root worker within each node on simulation startup, and provide them with a user defined code snippet which
+will set them to work. This then presents the problem of how the user is expected to write code which interfaces with
+the details of the simulation ahead of time. Alas, a worker needs to be given the autonomy to know its own address,
+send packets to other workers, extract packets from its own mailbox, spawn its own child workers, etc. How can a user
+take advantage of these features using a pre-programmed ``script'' that write when configuring their simulation?
+
+Packet Courier overcomes this obstacle by modeling a \emph{Worker-Script} as a lambda that takes a
+\emph{Worker-Manager} as a parameter. A worker-manager can be thought of as a collection of lambdas that together
+capture the capabilities of a worker. The fact that a worker-script is a lambda allows a user to write code whilst
+manipulating an arbitrary parameter which in turn provides the requisite context.
+Algorithm~\ref{alg:worker_script_example} illustrates this principle in action. \\
+
+\begin{algorithm}[caption={An example of what a worker-script might look like.},label={alg:worker_script_example},
+    captionpos=b]
+    function alice_worker_script(worker_manager):
+    $\quad$ $neighbour \gets$ worker_manager.get_neighbour()
+    $\quad$ $packet \gets$ "Hello neighbour! My name is Alice." as bytes
+    $\quad$ worker_manager.send_mail($neighbour$, $packet$)
+    $\quad$ $packet \gets$ worker_manager.wait_for_mail()
+    $\quad$ $message \gets packet$ as string
+    $\quad$ worker_manager.log($message$)
+    end
+\end{algorithm}
+
+Notice that the worker-script in Algorithm~\ref{alg:worker_script_example} takes advantage of a function called
+\texttt{get\_neighbour}. This then raises the question of what information should workers be provided with? Of course
+they should still be provided with the basic functionality of knowing their own address, sending and receiving mail,
+spawning child workers and logging messages, but what \emph{information} should they be given regarding the wider
+simulation? Should they know the addresses of their neighbours? Or should they be given a blueprint of the entire
+topology? How about a random subset? Should workers be able to see the current simulation time as well?
+
+The answer to all of these questions depends on the use-case of the simulation and should ideally be decided by the
+user themselves. Packet Courier achieves this using a ``care package'' style system, i.e.: a worker-manager can
+provide a package of information on request, where the exact contents of this package have been defined ahead of
+time by the user. This too takes advantage of a lambda called a \emph{Node-Info Generator}, which takes a snapshot of
+the simulation as its parameter and processes it into a bespoke care package which workers can enjoy. This
+``generation'' of node-info is only done once per node on simulation startup in case it happens to be an
+intensive procedure. In this way, the call to \texttt{get\_neighbour()} on line 2 of
+Algorithm~\ref{alg:worker_script_example} should in reality be something like \texttt{get\_info().get\_neighbour()}.
+
+In summary, if a user wished to leverage this conceptual Packet Courier API, they would write some code that looked
+something akin to Algorithm~\ref{alg:simulation_configuration_example}; the logged output would be:
+\begin{quote}
+    \texttt{> Hello neighbour! My name is Alice.} \\
+    \texttt{> Greetings! I am Bob.}
+\end{quote}
+
+\newpage
+
+\begin{algorithm}[caption={An example of what configuring a simulation might look like.},
+    label={alg:simulation_configuration_example},
+    captionpos=b]
+    function bob_worker_script(worker_manager):
+    $\quad$ $packet \gets$ worker_manager.wait_for_mail()
+    $\quad$ $message \gets packet$ as string
+    $\quad$ worker_manager.log($message$)
+    $\quad$ $neighbour \gets$ worker_manager.get_neighbour()
+    $\quad$ $packet \gets$ "Greetings! I am Bob." as bytes
+    $\quad$ worker_manager.send_mail($neighbour$, $packet$)
+    end
+
+    $config \gets$ new config()
+    add ("Alice" using $alice\_worker\_script$) to $config$
+    add ("Bob" using $bob\_worker\_script$) to $config$
+    $network\_conditions \gets$ new network_conditions()
+    add (uniform packet drop from 35 to 50 in ms) to $network\_conditions$
+    add ($network\_conditions$ from "Alice" to "Bob") to $config$
+    add ($network\_conditions$ from "Bob" to "Alice") to $config$
+    $simulation \gets$ start $config$
+    wait for $simulation$ to end
+\end{algorithm}
 
 \subsection{Standalone Emulator}
 
