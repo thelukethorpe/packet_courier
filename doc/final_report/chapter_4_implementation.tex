@@ -10,7 +10,45 @@ like Perforce\cite{perforce, perforce_vs_git}).
 
 \subsection{Ticket Tracking}
 
-TODO
+GitHub Issues\cite{github_issues} powers Packet Courier's ticket tracking. Tickets, or \emph{issues}, as per the
+GitHub nomenclature, are categorised based on one or more of the following custom tags:
+\begin{itemize}
+    \item \textbf{Bug:} \emph{Something isn't working.}
+    \item \textbf{CI:} \emph{Change to pipeline.}
+    \item \textbf{Documentation:} \emph{Improvements or additions to documentation.}
+    \item \textbf{Feature:} \emph{New feature or request.}
+    \item \textbf{Optimization:} \emph{Improvements in performance.}
+    \item \textbf{Refactor:} \emph{Tech-debt, structural change of quality-of-life improvement.}
+    \item \textbf{Testing:} \emph{Improvements or additions to test suite.}
+    \item \textbf{Won't Fix:} \emph{This will not be worked on.}
+\end{itemize}
+
+Issues are further organised using a Kanban board\cite{kanban_board}. As the \emph{documentation} tag suggests,
+this board is not only used for development purposes, in fact, it has been used to help manage the project
+holistically, including the writing of this very report, as shown in
+Figure~\ref{fig:chapter_4_implementation-github_kanban_board}.
+
+\begin{figure}[!h] {
+    \includegraphics[width=\textwidth]{images/chapter_4_implementation/github_kanban_board}
+    \centering~\caption{Packet Courier's Project Kanban Board\cite{packet_courier}.}
+    \label{fig:chapter_4_implementation-github_kanban_board}
+}
+\end{figure}
+
+Pull-requests are opened for every merge to the \texttt{main} branch and linked to the associated ticket number.
+Branches are named with a uniform and consistent structure, prefixed by the issue number followed by a brief subtitle
+of the ticket delimited by hyphens. Despite being an individual project, this repository has been maintained to
+industry standards of software engineering practices for organisational reasons, and has in turn benefited massively
+from it.
+
+\begin{figure}[!h] {
+    \includegraphics[width=\textwidth]{images/chapter_4_implementation/github_pull_request}
+    \centering~\caption{An example of a pull-request in the Packet Courier repository\cite{packet_courier}.}
+    \label{fig:chapter_4_implementation-github_pull_request}
+}
+\end{figure}
+
+\newpage
 
 \subsection{Programming Languages}
 
