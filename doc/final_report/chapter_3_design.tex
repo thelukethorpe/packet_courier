@@ -495,6 +495,77 @@ something akin to Algorithm~\ref{alg:simulation_configuration_example}; the logg
     wait for $simulation$ to end
 \end{algorithm}
 
-\subsection{Standalone Emulator}
+\subsection{Emulation Semantics}
 
-TODO
+Although Packet Courier would be able provide value to users via APIs, it would likely alienate many developers who
+were not already using the same programming language as the Packet Courier framework. Forcing prospective users to
+write their simulation code in a particular language is diametrically opposed to objectives 4.b) and 5.a).
+
+Packet Courier solves this issue by taking advantage of its own APIs to build an adaptive interface that generalises
+the simulation semantics further to integrate with any arbitrary packet. Indeed, another step has been taken to
+evolve the tool once more from a \emph{simulator} to an \emph{emulator}.
+
+Imagine a game developer, Todd, who wants to test his custom networking protocol, SkyNet, for client-server
+connections. Todd has built his protocol on top of UDP, since speed is more important than quality of service in the
+context of hus game. Naturally, there is no real point in conducting vanilla tests on his machine, because the UDP
+packets will just be internally routed by the kernel, giving Todd no understanding of how his protocol would perform
+in the wild. Todd could use Packet Courier to \emph{emulate} such a scenario, but how?
+
+Todd could leverage the simulation semantics of Packet Courier to set up a topology with two nodes, each adorning a UDP
+socket. The worker at these nodes would do carry out two jobs:
+\begin{itemize}
+    \item Forward packets received by the UDP socket to the other worker.
+    \item Send packets in the mailbox onward to the client/server via the UDP socket.
+\end{itemize}
+
+Notice however that there are now four UDP sockets in play: the client's, the server's and the two being used by
+Packet Courier. As a consequence, Packet Courier needs to perform some sleight of hand here and essentially lie to
+the client and the server about the ip-address of their counterpart. Thus, the client and the server will actually
+end up sending their packets to Packet Courier whilst thinking that they are sending them directly to each other.
+
+In the case where Todd wanted to test his game using multiple clients to a single server, then the exact same
+principle applies. The only difference is that Packet Courier would need to keep track of which ip-addresses
+corresponded to which node.
+
+To formalise these semantics, Packet Courier is said to use an abstraction of ``public'' vs ``private'' ip-addresses in
+order to slot the emulated network inbetween running processes. Each process is assigned a private ip-address which
+corresponds to the address it should be sending and receiving packets on. Whilst processes could just communicate purely
+using these ip-addresses, they would simply be passing messages using UDP as a protocol and the operating system
+kernel as a wire; there would be no scope for manipulating the transmission of packets in a way that mimics a
+particular type of internet connection.
+
+To solve this problem, Packet Courier introduces the notion of a public ip-address, which allows Packet Courier to
+intercept packets and modify them as per the user configuration. By way of analogy, one could think of a private
+ip-address as a home address and a public ip-address as a PO Box. Suppose someone doesn't want mail to be sent
+directly to their home for whatever reason; in this instance they can open a PO Box, whereby they collect parcels and
+letters that they know are intended for them in an environment where they can be screened and processed.
+
+\begin{figure}[!h] {
+    \includegraphics[width=\textwidth]{images/chapter_3_design/emulation_semantics_diagram}
+    \centering~\caption{A diagram demonstrating how Alice sends a packet to Bob.}
+    \label{fig:chapter_3_design-emulation_semantics_diagram}
+}
+\end{figure}
+
+For example, consider bidirectionally connected nodes Alice and Bob (as in
+Figure~\ref{fig:chapter_3_design-emulation_semantics_diagram}). Alice is told at runtime that her private ip-address is
+\texttt{127.0.0.3}, her public ip-address is \texttt{127.0.0.4} and she is neighboured with Bob who has a public
+ip-address of \texttt{127.0.0.6}. When Alice wants to send a packet to Bob, she should send it from her private UDP
+socket with address \texttt{127.0.0.3} to the destination of \texttt{127.0.0.6}. Alice will in fact be sending her
+packet to the Packet Courier routing layer, which will determine that this is Alice attempting to send a packet to
+Bob, in turn applying any network conditions such as latency, loss and corruption to the packet, before forwarding it
+on to Bob's private ip-address, ensuring that the source is listed as Alice's public ip-address.
+
+One potential issue with this approach is that nodes could (accidentally or otherwise) simply pass on their private
+ip-address and have other nodes bypass the emulator entirely. There is of course nothing that can realistically be
+done to stop this, in the same way that there is nothing stopping users from hard coding ip-addresses into their
+protocols which would have a similar effect. Ideally Packet Courier would manipulate packets at the level of the
+kernel, bypassing the need for this architecture in the first place, however this just isn't very feasible in a way
+that is portable, containerised and platform-agnostic. Thus, this is just a limitation that users should be
+encouraged to bear in mind when using the tool.
+
+In conclusion, Packet Courier's emulation semantics enable arbitrary processes to interface with Packet Courier
+using UDP. Given that virtually every networking protocol will ultimately use UDP at the lowest-levels of
+abstraction, this opens up Packet Courier to be used in real-world contexts with minimal setup. Indeed, Packet
+Courier can be used as a standalone emulator and invoked from the command-line without writing a single line of
+simulation code.
