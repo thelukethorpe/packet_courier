@@ -92,7 +92,12 @@ consists exclusively of Java. Python's dynamic typing\cite{python_typing}, poor
 performance\cite{programming_language_efficiency} and inefficient multi-threading and synchronisation
 primitives\cite{python_gil} are the main reasons why it wasn't used more prominently within Packet Courier.
 
-\subsection{Build Management and Dependencies}
+\subsection{Build and Dependency Management}
+
+Packet Courier uses Apache Maven 3.6.3\cite{maven} to manage its build phases and dependencies. Maven is convienent,
+lightweight, widely supported, boasts a huge repository of libraries\cite{maven_repository} and with a single
+command can compile the project into a portable \texttt{.jar} file that can be used as an executable binary or a Java
+library.
 
 \subsubsection{JUnit 4}
 
