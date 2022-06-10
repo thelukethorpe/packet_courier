@@ -50,7 +50,47 @@ from it.
 
 \subsection{Programming Languages}
 
-TODO
+Java 8\cite{java_8} was chosen as the foundational language for Packet Courier due to:
+\begin{itemize}
+    \item Its excellent breadth of supported platforms\cite{java_8_support}, which lends itself well to objective 4.a).
+    \item The vast number of popular and easily importable libraries available to it\cite{java_relevance}.
+    \item Its object-oriented nature, which maps nicely onto the abstract semantics laid out in the design section.
+    \item Its relatively high levels of time-efficiency, as shown in
+    Figure~\ref{fig:chapter_4_implementation-programming_language_comparison}.
+    \item Its suite of concurrency abstractions\cite{java_util_concurrent}.
+\end{itemize}
+
+\begin{figure}[!h]
+    \includegraphics[width=\textwidth]{images/chapter_4_implementation/programming_language_comparison}
+    \centering~\caption{A comparison of programming languages based on energy usage, time and memory
+    efficiency\cite{programming_language_efficiency}.}
+    \label{fig:chapter_4_implementation-programming_language_comparison}
+\end{figure}
+
+Although languages such as C and C++ outperform Java across all metrics displayed by
+Figure~\ref{fig:chapter_4_implementation-programming_language_comparison}, they are needlessly low-level to the point
+where it would likely become a hindrance. Even a cursory investigation into the nature of socket programming in C++
+revealed a perfect case study as to the benefits of Java for a problem statement like Packet Courier's. It turns out
+that Windows does not natively support the standard C++ socket specification, \texttt{sys/socket.h}, meaning that
+\texttt{winsock2.h} must be used instead\cite{socket_vs_winsock}. This would then mean either going to the effort of
+implementing two different platform-dependent solutions, or using a library that promises platform agnosticism. There
+are many such libraries however\cite{c++_socket_libraries}, placing a substantial research burden on the development
+of what should be a fairly simple component. C++ furthermore has been shown to have several non-trivial cross-platform
+and cross-compiler discrepancies for even the most basic code\cite{c++_cross_compiler_differences,
+    c++_statistical_differences, c++_random_differences, c++_filesystem_differences}.
+
+A key benefit of Java is that it smooths out cross-platform issues, providing developers with a clean, uniform and
+highly reliable set of semantics that transcend the nuances of the native operating system and hardware
+micro-architecture. Indeed, Java handily has a \texttt{DatagramSocket} class\cite{java_DatagramSocket} which has
+proven extremely useful in implementing Packet Courier's standalone emulator. In this way, external Java libraries
+are only called-in for more heavyweight or highly specific work, as opposed to routine or menial implementations.
+
+Java also strikes a Goldilocks-esque balance\cite{goldilocks_effect} between low-level languages like C++ and
+languages that are arguably even more abstract than Java, such as Python. Whilst Packet Courier does leverage Python
+3\cite{python_3} for basic client-server scripts to demonstrate the functionality of the emulator, production code
+consists exclusively of Java. Python's dynamic typing\cite{python_typing}, poor
+performance\cite{programming_language_efficiency} and inefficient multi-threading and synchronisation
+primitives\cite{python_gil} are the main reasons why it wasn't used more prominently within Packet Courier.
 
 \subsection{Build Management and Dependencies}
 
@@ -81,7 +121,7 @@ TODO
 
 TODO
 
-\subsection{Probability Distribution API}
+\subsection{Statistical Distribution API}
 
 TODO
 
