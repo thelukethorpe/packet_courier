@@ -1,0 +1,33 @@
+\lstdefinelanguage[2]{protobuf}{
+    sensitive=true,
+    morecomment=[l]{//},
+    morecomment=[s]{/*}{*/},
+    morestring=[b]{"},
+    morekeywords={enum,oneof,map,syntax,public,import,option,package,message,
+    group,optional,required,repeated,default,reserved,extend,extensions,
+    to,max,service,rpc,returns,true,false},
+    morekeywords=[2]{
+        double,float,int32,int64,uint32,uint64,sint32,sint64,
+        fixed32,fixed64,sfixed32,sfixed64,bool,string,bytes},
+    morekeywords=[3]{
+        deprecated, uninterpreted_option,
+        java_package,java_outer_classname,java_multiple_files,
+        java_generate_equals_and_hash,java_string_check_utf8,optimize_for,
+        go_package,cc_generic_services,java_generic_services,
+        py_generic_services,cc_enable_arenas,obj_class_prefix,
+        csharp_namespace,
+        message_set_wire_format,no_standard_descriptor_accessor,map_entry,
+        ctype, packed,jstype,lazy,weak,
+        allow_alias}
+}
+\lstalias[]{protobuf2}[2]{protobuf}
+
+\lstdefinelanguage[3]{protobuf}[2]{protobuf}{
+    deletekeywords={
+        group,
+        extensions, to, extend, max,
+        required,
+        optional,
+        default}
+}
+\lstalias[]{protobuf3}[3]{protobuf}

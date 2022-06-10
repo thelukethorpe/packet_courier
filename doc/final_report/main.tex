@@ -16,6 +16,8 @@
 \usepackage{multicol}
 
 \usepackage{listings}
+\usepackage{proto/lang}
+\usepackage{proto/style}
 \usepackage{xcolor}
 \usepackage{caption}
 \lstset
@@ -31,6 +33,8 @@
     breaklines=true,
     breakatwhitespace=false,
 }
+\renewcommand\lstlistingname{Code-Snippet}
+\renewcommand\lstlistlistingname{Code-Snippets}
 \newcounter{nalg}[chapter]
 \renewcommand{\thenalg}{\thechapter .\arabic{nalg}}
 \DeclareCaptionLabelFormat{algocaption}{Algorithm \thenalg}

@@ -135,9 +135,56 @@ assertion framework known as Hamcrest\cite{assert_j_vs_hamcrest}:
         which was the first step of AssertJ creation.''}
 \end{quote}
 
-\subsubsection{Google Protobuf}
+\subsubsection{Google Protocol Buffer}
 
-TODO
+Google Protocol Buffer\cite{google_protobuf} is a multi-faceted library that is supported across multiple languages,
+but is used by Packet Courier to parse configuration files into Java objects. There are many file parsing libraries
+for specific file formats, such as Google Gson, a Java JSON parsing library\cite{google_gson}. The unique selling
+point of Google Protocol Buffer is its neatly compartmentalised workflow:
+\begin{enumerate}
+    \item Write a \texttt{.proto} file that defines the expected file structure. See
+    Code-Snippet~\ref{code:google_protocol_buffer_example} for an example.
+    \item Compile the \texttt{.proto} file using Maven to generate the corresponding parse-tree in Java.
+    \item Choose a parser such as \texttt{JsonFormat} to generate a parse-tree from an input file.
+    \item Perform a semantic pass over the parse-tree, i.e.: completing basic sanity checks whilst converting the
+    raw syntactic form of the parse-tree into something more abstract that can be assimilated into the core APIs.
+\end{enumerate}
+
+\begin{lstlisting}[language=protobuf2,style=protobuf,caption={An example of a \texttt{.proto} file that encodes for
+an \texttt{AddressBook}. A data file that followed this syntactic structure could then be read into memory as an
+\texttt{AddressBookProtos} Java class, ready for further abstraction.},
+    label={code:google_protocol_buffer_example},captionpos=b]
+    syntax = "proto2";
+
+    package tutorial;
+
+    option java_multiple_files = true;
+    option java_package = "com.example.tutorial.protos";
+    option java_outer_classname = "AddressBookProtos";
+
+    message Person {
+        optional string name = 1;
+        optional int32 id = 2;
+        optional string email = 3;
+
+        enum PhoneType {
+            MOBILE = 0;
+            HOME = 1;
+            WORK = 2;
+        }
+
+        message PhoneNumber {
+            optional string number = 1;
+            optional PhoneType type = 2 [default = HOME];
+        }
+
+        repeated PhoneNumber phones = 4;
+    }
+
+    message AddressBook {
+        repeated Person people = 1;
+    }
+\end{lstlisting}
 
 \subsubsection{Protocol Buffers Protobuf Maven Plugin}
 
