@@ -107,7 +107,33 @@ unit tests are implemented using JUint 4.13 and are run on each Maven build.
 
 \subsubsection{AssertJ}
 
-TODO
+AssertJ\cite{assert_j} is used in conjunction with JUnit to provide unit tests with expressive, human-readable checks
+such as:
+
+\begin{lstlisting}[language=Java]
+public class PacketTest {
+  // JUnit 4 test.
+  @Test
+  public void testPacketStringConversion() {
+    String message = "hello there!";
+    Packet messageAsPacket = Packet.of(message);
+    // AssertJ assertion reads like an English sentence.
+    assertThat(messageAsPacket.tryParse()).hasValue(message);
+  }
+
+  // Some more tests...
+}
+\end{lstlisting}
+
+The following paragraph from a \emph{JavaZone} article summarises why AssertJ was favoured over the JUnit default
+assertion framework known as Hamcrest\cite{assert_j_vs_hamcrest}:
+\begin{quote}
+    \emph{``AssertJ is not as well-known as Hamcrest, but at the same time, its popularity has been growing pretty
+    fast over the last few years. As opposed to Hamcrest’s classic assertion syntax, which was inherited from the
+    default Java testing framework JUnit, the main idea of AssertJ is that it provides fluent syntax. The main goal
+    of that is to improve code readability. It’s worth mentioning that AssertJ is a fork of the FEST Assert project,
+        which was the first step of AssertJ creation.''}
+\end{quote}
 
 \subsubsection{Google Protobuf}
 
