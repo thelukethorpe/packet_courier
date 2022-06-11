@@ -221,7 +221,96 @@ is simply done via the Maven command:
 
 \subsection{Statistical Distribution API}
 
-TODO
+Packet Courier supports the following statistical distributions:
+\begin{itemize}
+    \item Bernoulli
+    \item Exponential
+    \item Normal
+    \item Poisson
+    \item Continuous (Real) Uniform
+    \item Discrete (Integer) Uniform
+\end{itemize}
+
+Each distribution implementation implements the \texttt{Distribution<T>} interface as shown in
+Figure~\ref{fig:chapter_4_implementation-distribution_api_tree}, whereby type parameter \texttt{T} corresponds to the
+type of value returned by the sampling function.
+
+\begin{figure}[!h]
+    \includegraphics[width=0.65\textwidth]{images/chapter_4_implementation/distribution_api_tree}
+    \centering~\caption{A diagram showing the class inheritance tree of the distribution API.}
+    \label{fig:chapter_4_implementation-distribution_api_tree}
+\end{figure}
+
+As per Code-Snippet~\ref{code:distribution_inferface}, Packet Courier distributions adhere to the C++
+distribution-generator pattern where the source of randomness, or \emph{generator}, is decoupled from the
+parameterised statistical distribution that is being sampled from\cite{c++_random, c++_random_number_generation}. In
+addition to the fact that decoupling is generally a good programming practice\cite{decoupling}, there are several
+application-specific benefits to separating a distribution from its sampling
+engine\cite{c++_random_number_generation_philosophy}:
+\begin{itemize}
+    \item Distributions are far more lightweight when they don't need to carry around a source of randomness. Indeed,
+    there are a number of places within the Packet Courier codebase that create a temporary distribution to be
+    sampled on-the-fly, as demonstrated in Code-Snippet~\ref{code:sample_from_event_duration_distribution}. If the
+    distribution needed to be created with a source of randomness ahead of time, then this would likely result in
+    much clumsier code. Of course, \texttt{Random} could be passed in as a constructor parameter, which wouldn't
+    affect Code-Snippet~\ref{code:sample_from_event_duration_distribution} in any way, but it would make the
+    distribution stateful.
+    \item Stateful distributions are less useful and needlessly more prone to error. Indeed, a stateless distribution
+    with no embedded source of randomness can be used in multiple different contexts or even across different
+    threads. Consider a scenario where a Poisson distribution is being used to model the number of sheep in a field.
+    Suppose a developer wanted to conduct two simulations for the same value of $\lambda$: one with pure randomness
+    and the other with a correlation bias. Decoupling means that the same distribution can be used to conduct both
+    experiments in parallel, whereas two of the same distribution would need to be created if the generator were
+    embedded in the distribution. Indeed, this is especially suboptiomal in the case of a Poisson distribution,
+    since the Packet Courier implementation generates a table for each distribution.
+    \item Depending on how deeply embedded the random number generation engine is in the distribution, it could
+    result in correlated results. For example, if two different normal distributions used a common seed for two
+    different instances of \texttt{Random}, then the same sequence would be generated. As a consequence, the
+    Box-Muller transform would generate the same values of $Z \sim \mathcal{N}(0,1)$\cite{box_muller_transform}. Even
+    if the two distributions were parameterised differently, the two output sequences would still be linear functions
+    of one another since $Z \sim \mathcal{N}(0,1) \implies \mu + \sigma Z \sim \mathcal{N}(\mu, \sigma^2)$. One might
+    argue that this could be resolved by using different seeds for each distribution; notice that this becomes a
+    nightmare very quickly, i.e.: coordinating the unique usage of seeds across all distributions, especially if
+    seeds are user-parameterised. The much simpler solution is just to decouple random generation from
+    stateless distributions.
+\end{itemize}
+
+\begin{lstlisting}[language=Java,caption={The \texttt{Distribution<T>} interface exactly as it appears in the
+codebase.},label={code:distribution_inferface},captionpos=b]
+public interface Distribution<T> {
+  T sample(Random random);
+
+  Double mean();
+
+  Double variance();
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=Java,caption={An example of a distribution being created and sampled on-the-fly with
+arbitrary parameters.},label={code:sample_from_event_duration_distribution},captionpos=b]
+public class SimulatedEventPipeline<Wrapper extends PacketWrapper<Wrapper>> implements PacketFilter<Wrapper> {
+  // Random generator.
+  private final Random random;
+
+  // Method that generates the duration of a particular event,
+  // as per the event-based semantics.
+  private LocalDateTime sampleFromEventDurationDistribution(double meanDuration) {
+    // Distribution is generated on-the-fly and used with
+    // the class's in-house source of randomness.
+    ExponentialDistribution eventDurationDistribution =
+        new ExponentialDistribution(1.0 / meanDuration);
+    long eventDuration = Math.round(eventDurationDistribution.sample(random));
+    return now.plus(Duration.of(eventDuration, timeUnit));
+  }
+
+  // Rest of class...
+}
+\end{lstlisting}
+
+Classes inheriting from \texttt{Distribution<T>} must also implement the \texttt{mean} and \texttt{variance} methods
+for testing purposes. This will be discussed in more detail later in the report, but in short, both statistics are
+required to compute a confidence interval\cite{confidence_interval}.
+
 
 \subsection{Network Condition API}
 
