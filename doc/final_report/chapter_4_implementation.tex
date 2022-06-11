@@ -107,10 +107,8 @@ unit tests are implemented using JUint 4.13 and are run on each Maven build.
 
 \subsubsection{AssertJ}
 
-AssertJ\cite{assert_j} is used in conjunction with JUnit to provide unit tests with expressive, human-readable checks
-such as:
-
-\begin{lstlisting}[language=Java]
+\begin{lstlisting}[language=Java,caption={An example of a Packet Courier unit test using JUnit and AssertJ.},
+    label={code:packet_test},captionpos=b]
 public class PacketTest {
   // JUnit 4 test.
   @Test
@@ -125,8 +123,10 @@ public class PacketTest {
 }
 \end{lstlisting}
 
-The following paragraph from a \emph{JavaZone} article summarises why AssertJ was favoured over the JUnit default
-assertion framework known as Hamcrest\cite{assert_j_vs_hamcrest}:
+
+AssertJ\cite{assert_j} is used in conjunction with JUnit to provide unit tests with expressive, human-readable checks
+as shown in Code-Snippet~\ref{code:packet_test}. The following paragraph from a \emph{JavaZone} article summarises
+why AssertJ was favoured over the JUnit default assertion framework known as Hamcrest\cite{assert_j_vs_hamcrest}:
 \begin{quote}
     \emph{``AssertJ is not as well-known as Hamcrest, but at the same time, its popularity has been growing pretty
     fast over the last few years. As opposed to Hamcrest’s classic assertion syntax, which was inherited from the
@@ -312,9 +312,67 @@ for testing purposes. This will be discussed in more detail later in the report,
 required to compute a confidence interval\cite{confidence_interval}.
 
 
+\newpage
+
 \subsection{Network Condition API}
 
-TODO
+\subsubsection{Packet}
+
+The \texttt{Packet} class is, by and large, the atomic building block for Packet Courier, despite only being a humble
+wrapper for a list of bytes. A flagship feature of \texttt{Packet} is its ability to transform freely from a Java
+object and back again, as demonstrated in Code-Snippet~\ref{code:packet_test}. This is achieved using Java's
+\texttt{Serializable} interface\cite{java_Serializable}, which imbues inheriting classes with a canonical
+representation at the level of bits; a crucial factor for communication over a wire. Furthermore, the JVM handles
+serialization under-the-hood, so all a programmer needs to do is write \texttt{implements Serializable} after the
+definition of a class they wish to be mailed as a \texttt{Packet}. For example, if a Packet Courier user were
+simulating an authentication process using a custom class named \texttt{UserCredentials} with two \texttt{String}
+attributes, \texttt{username} and \texttt{password}, then \texttt{UserCredentials} objects could be sent from worker
+to worker so long as the \texttt{Serializable} interface was implemented.
+
+\texttt{Packet} inherits from \texttt{PacketWrapper<Packet>}, a type-parameterised interface defined as follows:
+
+\begin{lstlisting}[language=Java,caption={The \texttt{PacketWrapper<Wrapper>} interface exactly as it appears in the
+codebase.},label={code:packet_wrapper_interface},captionpos=b]
+public interface PacketWrapper<Wrapper extends PacketWrapper<Wrapper>> {
+  Wrapper map(Function<Packet, Packet> function);
+
+  Wrapper copy();
+
+  Packet getPacket();
+}
+\end{lstlisting}
+
+
+\texttt{PacketWrapper<Wrapper>} allows non-packet objects to be sent through packet pipelines. The motivation behind
+this is simple: packet pipelines deal in terms of \emph{packets} and nothing else, yet there are plenty of scenarios
+where users of the API might want to their packets to carry additional information as they travel through a pipeline.
+The principle example within the wider context of Packet Courier is the \texttt{Mail} class, which holds the packet's
+destination address for routing purposes. However, \texttt{PacketWrapper<Wrapper>} could also be used for telemetry,
+instrumentation, timestamping and other broader logging purposes; any important meta-information about the packet
+that users of the API might find useful.
+
+The semantics of the \texttt{PacketWrapper<Wrapper>} interface can be likened to those of functional
+homogeneity\cite{homogeneous_function}. Classes that implement \texttt{PacketWrapper<Wrapper>} provide external code
+with the means to manipulate the \texttt{Packet} residing inside the wrapper without interacting with any other
+aspect of the object; a similar sentiment to keyhole surgery\cite{keyhole_surgery}.
+
+An arguably simpler solution is to use inheritance rather than composition, whereby \texttt{Mail}, say, inherits from
+\texttt{Packet} and is sent through the pipeline before being cast back to \texttt{Mail} having emerged on the other
+side. This is majorly inferior for many reasons:
+\begin{itemize}
+    \item This approach would be considered a ``hack'', since it does not make idiomatic sense within the context of
+    Java. Given that \texttt{Mail} would inherit from \texttt{Packet}, then one would conclude that \texttt{Mail}
+    \emph{is} a kind of \texttt{Packet}. This is not true though, in the same way that a letter isn't a type of
+    envelope, but is contained within one. Indeed, as per the semantics laid out in the design document,
+    \texttt{Mail} \emph{has} a \texttt{Packet}, and therefore composition is more appropriate.
+    \item Casting in this way is widely agreed upon by Java programmers to be a poor practice, with excellent reasons
+    to back this up\cite{reddit_casting, yegor_bugayenko_casting, mark_casting, dennis_sosnoski_casting,
+        erik_dietrich_casting}.
+    \item There are practical limitations to this method as well. How would more invasive packet manipulations such
+    as corruption and duplication work whilst still preserving the outer class? It \emph{could} be done using
+    methods such as \texttt{clone}\cite{java_clone}, but it would ultimately result in more convoluted and fragile
+    code\cite{java_avoid_clone}.
+\end{itemize}
 
 \subsection{Worker API}
 
