@@ -195,7 +195,14 @@ by adding an extra compilation step at compile time to plug this gap.
 
 \subsection{Continuous Integration}
 
-TODO
+The Packet Courier repository uses GitHub actions\cite{github_actions} to implement a continuous integration
+pipeline\cite{aws_ci} where code is linted and tested, both of which are done using Maven. Linting is enforced using
+\texttt{fmt-maven-plugin}\cite{fmt_maven_plugin}, which provides users with an automated way to check for and fix Java
+code that does not adhere to the Google Java Style Guide\cite{google_java_format, google_java_style_guide}. Testing
+is simply done via the Maven command:
+\begin{quote}
+    \texttt{mvn '-Dtest=**.*Test' test --no-transfer-progress}.
+\end{quote}
 
 
 \section{API Overview}
