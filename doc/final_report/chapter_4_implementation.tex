@@ -188,7 +188,10 @@ an \texttt{AddressBook}. A data file that followed this syntactic structure coul
 
 \subsubsection{Protocol Buffers Protobuf Maven Plugin}
 
-TODO
+An unusual quirk of the Google Protocol Buffer Java library is that it doesn't compile all of the requisite Java
+classes into the final \texttt{.jar}; instead it assumes that they will be loaded into the project as part of a
+separate library. The \texttt{protoc-jar-maven-plugin}\cite{protoc_jar_maven_plugin} helps to work around this issue
+by adding an extra compilation step at compile time to plug this gap.
 
 \subsection{Continuous Integration}
 
