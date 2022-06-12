@@ -456,7 +456,7 @@ implement \texttt{PacketFilter<Wrapper>} be commencerate with this notion? It wo
 packet pipeline a step in a packet pipeline. Naturally this is a redundant and confusing API behaviour that would
 only create potential for bad code.
 
-\subsubsection{NetworkConditions}
+\subsubsection{NetworkCondition}
 
 The \texttt{NetworkCondition} interface acts as a \texttt{PacketFilter<Wrapper>} factory. It is important that API
 users are not given the autonomy to create packet pipelines manually from packet filters or else they risk
@@ -483,6 +483,59 @@ but not limited to:
     \item \texttt{static NetworkCondition normalPacketLatency(double meanLatency, double standardDeviation,
         ChronoUnit timeUnit, Random random)}
 \end{itemize}
+
+\subsubsection{SimulatedEventPipeline}
+
+The \texttt{SimulatedEventPipeline<Wrapper>} class is a packet filter that implements the event-based semantics
+outlined in the design documentation. It is the only \texttt{PacketFilter<Wrapper>} that will be specifically
+discussed because it is notably more complicated than the others. The attributes of
+\texttt{SimulatedEventPipeline<Wrapper>} are listed in
+Code-Snippet~\ref{code:simulated_event_pipeline_class_attributes}.
+\begin{lstlisting}[language=Java,caption={The attributes of the \texttt{SimulatedEventPipeline<Wrapper>} class.},
+    label={code:simulated_event_pipeline_class_attributes},captionpos=b]
+public class SimulatedEventPipeline<Wrapper extends PacketWrapper<Wrapper>> implements PacketFilter<Wrapper> {
+  private final List<State> states;
+  private final StateTracker stateTracker;
+  private final PriorityQueue<ScheduledEvent> eventQueue = new PriorityQueue<>();
+  private final NeutralPacketFilter<Wrapper> outputBuffer;
+  private final ChronoUnit timeUnit;
+  private final Random random;
+  private LocalDateTime now;
+
+  // Rest of class...
+}
+\end{lstlisting}
+
+In essence, a \texttt{SimulatedEventPipeline<Wrapper>} juggles multiple packet pipelines which correspond to network
+events and is responsible for scheduling which \texttt{PacketPipeline<Wrapper>} is currently ``active'', i.e.:
+having packets enqueued to it. As such, each \texttt{State} contains a live packet pipeline, a unique precedence
+value and the mean interval and duration of their associated network event. The \texttt{StateTracker} keeps
+track of which network events are currently happening and which has the highest precedence; this helps the
+\texttt{enqueue} method decide which pipeline the given packet should go to. Java's Red-Black tree implementation,
+\texttt{TreeSet}\cite{java_TreeSet, baeldung_java_TreeSet}, is used to achieve this behaviour; it is used instead of
+\texttt{PriorityQueue} because it guarantees logarithmic removal times for an arbitrary element, whereas
+\texttt{PriorityQueue} requires linear time for this operation\cite{java_PriorityQueue}.
+
+The \texttt{eventQueue} tracks the timeline of events, i.e.: when each network event starts and finishes. When a
+\texttt{ScheduledEvent} starts, its respective state is pushed to the \texttt{stateTracker}; conversely, when a
+\texttt{ScheduledEvent} finishes, its respective state is popped from the \texttt{stateTracker}. Note that the
+\texttt{stateTracker} will never ``run out'' of states since the class is always given a set of default network
+conditions, which in turn form the basis for a ``default state''.
+
+The \texttt{states} attribute contains all possible states that could be active, i.e.: the default state plus a state
+for each network event. This is used in the \texttt{tick} method to ensure that each packet pipeline is synchronised.
+Similarly, the \texttt{tryDequeue} method also calls \texttt{tryDequeue} on each packet pipeline in \texttt{states}
+and siphons off any dequeued packets to the \texttt{outputBuffer}, which is then itself dequeued for the value
+that is ultimately returned. Indeed, \texttt{outputBuffer} is simply a way to linearize the outputs of the multiple
+packet pipelines being used.
+
+It is important to note that \texttt{tryDequeue} isn't implemented by simply calling \texttt{tryDequeue} on the current
+state. This is because packets may still exist within a packet pipeline ``in transit'' even after the network event is
+over and those packets should still be delivered. Consider a network event that occurs every 300 seconds and lasts
+for 10 seconds (on average) and adds a flat 75-second latency to each packet. If the packets in this particular
+pipeline are only dequeued when their state is active, then the packets will have a latency of 300 seconds as opposed
+to 75, since the 10-second duration of the event is not long enough to see them dequeued from their packet pipeline
+and the next time the state will become active again is in 300 seconds, meanwhile the packets are stuck in memory!
 
 \subsection{Worker API}
 
