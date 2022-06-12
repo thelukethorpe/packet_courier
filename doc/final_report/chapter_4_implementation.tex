@@ -456,6 +456,34 @@ implement \texttt{PacketFilter<Wrapper>} be commencerate with this notion? It wo
 packet pipeline a step in a packet pipeline. Naturally this is a redundant and confusing API behaviour that would
 only create potential for bad code.
 
+\subsubsection{NetworkConditions}
+
+The \texttt{NetworkCondition} interface acts as a \texttt{PacketFilter<Wrapper>} factory. It is important that API
+users are not given the autonomy to create packet pipelines manually from packet filters or else they risk
+experiencing crippling side effects. For example, a developer might decide to ``reuse'' a packet filter for two
+different pipelines because the parameters are the same. This would be absolutely disasterous since packets from two
+different pipelines would be routed through the \emph{same} filter, coupling them by accident and resulting in packets
+going to the wrong workers. To guard against this, the only public \texttt{PacketPipeline<Wrapper>} constructor takes
+an instance of the \texttt{PacketPipeline.Parameters} inner class, which is in turn a wrapper for a list of
+\texttt{NetworkCondition} objects. This forces API users to create packet pipelines using abstract parameters rather
+than straight from filters, delegating the creation of the actual filter instances to the pipeline itself.
+\begin{lstlisting}[language=Java,caption={The \texttt{NetworkCondition} interface without any of its presets.},
+    label={code:network_condition_interface},captionpos=b]
+public interface NetworkCondition {
+  <Wrapper extends PacketWrapper<Wrapper>> PacketFilter<Wrapper> asPacketFilterStartingAt(LocalDateTime startTime);
+}
+\end{lstlisting}
+
+The \texttt{NetworkCondition} interface comes with a suite of static methods that predefine a selection of network
+conditions that reflect the packet filtration mechanisms that are outlined by Packet Courier's semantics, including,
+but not limited to:
+\begin{itemize}
+    \item \texttt{static NetworkCondition packetLimit(int packetLimitRate, ChronoUnit timeUnit)}
+    \item \texttt{static NetworkCondition uniformPacketCorruption(double corruptionProbability, Random random)}
+    \item \texttt{static NetworkCondition normalPacketLatency(double meanLatency, double standardDeviation,
+        ChronoUnit timeUnit, Random random)}
+\end{itemize}
+
 \subsection{Worker API}
 
 TODO
