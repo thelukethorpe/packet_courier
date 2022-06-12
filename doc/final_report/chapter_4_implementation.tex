@@ -322,7 +322,7 @@ required to compute a confidence interval\cite{confidence_interval}.
     \label{fig:chapter_4_implementation-network_condition_api_tree}
 \end{figure}
 
-\subsubsection{Packet}
+\subsubsection{Packet \& PacketWrapper}
 
 The \texttt{Packet} class is, by and large, the atomic building block for Packet Courier, despite only being a humble
 wrapper for a list of bytes. A flagship feature of \texttt{Packet} is its ability to transform freely from a Java
@@ -380,7 +380,7 @@ side. This is majorly inferior for many reasons:
     code\cite{java_avoid_clone}.
 \end{itemize}
 
-\subsubsection{PacketFilter}
+\subsubsection{PacketFilter \& PacketPipeline}
 
 The \texttt{PacketFilter<Wrapper>} interface represents a single step in a packet pipeline and is defined as follows:
 \begin{lstlisting}[language=Java,caption={The \texttt{PacketFilter<Wrapper>} interface exactly as it appears in the
