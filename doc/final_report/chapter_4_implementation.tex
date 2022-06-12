@@ -380,6 +380,82 @@ side. This is majorly inferior for many reasons:
     code\cite{java_avoid_clone}.
 \end{itemize}
 
+\subsubsection{PacketFilter}
+
+The \texttt{PacketFilter<Wrapper>} interface represents a single step in a packet pipeline and is defined as follows:
+\begin{lstlisting}[language=Java,caption={The \texttt{PacketFilter<Wrapper>} interface exactly as it appears in the
+codebase.},label={code:packet_filter_interface},captionpos=b]
+public interface PacketFilter<Wrapper extends PacketWrapper<Wrapper>> {
+  void tick(LocalDateTime now);
+
+  void enqueue(Wrapper packetWrapper);
+
+  Optional<Wrapper> tryDequeue();
+}
+\end{lstlisting}
+
+A \texttt{PacketFilter<Wrapper>} can be conceptualised as a queue of packets that admits of special behaviour and can
+be synced up with the wider simulation using the \texttt{tick} method. For example, the
+\texttt{SimulatedPacketDropFilter<Wrapper>} will sample its Bernoulli distribution whenever the \texttt{enqueue}
+method is called, whereby the packet is never actually enqueued if the sample is ``successful''. Another example is
+the \texttt{PacketLatencyFilter<Wrapper>}\footnote{Packet filters prefixed with \texttt{Simulated} have some kind of
+random component to them; conversely, filters without this prefix are deterministic and provide what could in
+principle be real-world utility, such as packet throttling.} which takes instances of
+\texttt{ScheduledPacket<Wrapper>} as the parameter for its \texttt{enqueue} method and stores them in a priority
+queue with the packet scheduled for dequeue at the earliest time at the front of the queue. In turn,
+\texttt{tryDequeue} will only release the packet at the front of the queue if a) it exists, b) its scheduled dequeue
+time has passed with respect to the current simulation time; indeed, the purpose of \texttt{tick} here is to
+synchronise the filter with the simulation's clock. The \texttt{NeutralPacketFilter<Wrapper>} is a simple filter with
+FIFO semantics with the \texttt{ConcurrentNeutralPacketFilter<Wrapper>} being its thread-safe counterpart.
+
+In this way, the \texttt{enqueue} and \texttt{tryDequeue} methods of packet filters can be chained together to form a
+packet pipeline. In fact, this is precisely how the \texttt{PacketPipeline<Wrapper>} class works, as shown in
+Code-Snippet~\ref{code:packet_pipeline_class}.
+\begin{lstlisting}[language=Java,caption={A cut-down version of the \texttt{PacketPipeline<Wrapper>} class.},
+    label={code:packet_pipeline_class},captionpos=b]
+public class PacketPipeline<Wrapper extends PacketWrapper<Wrapper>> {
+  private final List<PacketFilter<Wrapper>> packetFilters;
+
+  private PacketPipeline(List<PacketFilter<Wrapper>> packetFilters) {
+    packetFilters.add(0, new ConcurrentNeutralPacketFilter<>());
+    this.packetFilters = Collections.unmodifiableList(new ArrayList<>(packetFilters));
+  }
+
+  public void enqueue(Wrapper packetWrapper) {
+    packetFilters.get(0).enqueue(packetWrapper);
+  }
+
+  public void tick(LocalDateTime now) {
+    for (int i = 0; i + 1 < packetFilters.size(); i++) {
+      PacketFilter<Wrapper> currentFilter = packetFilters.get(i);
+      PacketFilter<Wrapper> nextFilter = packetFilters.get(i + 1);
+      currentFilter.tryDequeue().ifPresent(nextFilter::enqueue);
+      nextFilter.tick(now);
+    }
+  }
+
+  public Optional<Wrapper> tryDequeue() {
+    PacketFilter<Wrapper> lastFilter = packetFilters.get(packetFilters.size() - 1);
+    return lastFilter.tryDequeue();
+  }
+}
+\end{lstlisting}
+
+Each packet pipeline starts off with a \texttt{ConcurrentNeutralPacketFilter<Wrapper>}, not only for algorithmic ease
+(i.e.: not having to do an empty check on \texttt{packetFilters} when enqueuing or dequeuing), but to ensure that
+enqueuing to a packet pipeline is always a thread-safe operation. This is important because workers do their work in
+parallel with one another and thus can send mail along the same channel concurrently. The \texttt{tick} and
+\texttt{tryDequeue} methods needn't be thread-safe, however, which will become apparent later in this section when
+their use-case is discussed.
+
+Note that \texttt{PacketPipeline<Wrapper>} could in principle inherit from \texttt{PacketFilter<Wrapper>}, since it
+implements the required methods. However, just because one could does not necessarily mean one \emph{should}. In
+these circumstances, the purpose of the \texttt{PacketFilter<Wrapper>} interface is to provide developers with an API
+to create and use steps in a \texttt{PacketPipeline<Wrapper>}. How would making \texttt{PacketPipeline<Wrapper>}
+implement \texttt{PacketFilter<Wrapper>} be commencerate with this notion? It would enable programmers to make a
+packet pipeline a step in a packet pipeline. Naturally this is a redundant and confusing API behaviour that would
+only create potential for bad code.
+
 \subsection{Worker API}
 
 TODO
