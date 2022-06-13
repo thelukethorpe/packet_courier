@@ -685,7 +685,7 @@ public class Node<NodeInfo> {
   private final NodeAddress address;
   private final WorkerAddressGenerator workerAddressGenerator;
   private final WorkerAddressBook<NodeInfo> workerAddressBook;
-  
+
   public void deliver(Mail mail) {
     workerAddressBook
         .lookup(mail.getDestinationAddress())
@@ -704,7 +704,8 @@ Code-Snippet~\ref{code:node_info_generator_interface}. It is this component that
 information workers in their simulation have access to. As per the design section, each node generates its own
 info-package on simulation startup which then gets handed out to each worker operating on that particular node. This
 is why many of the classes and interfaces in the node and worker APIs are type parameterised by \texttt{NodeInfo}.
-\begin{lstlisting}[language=Java,caption={The \texttt{NodeInfoGenerator<NodeInfo>} interface exactly as it appears in the
+\begin{lstlisting}[language=Java,caption={The \texttt{NodeInfoGenerator<NodeInfo>} interface exactly as it appears in
+the
 codebase.},label={code:node_info_generator_interface},captionpos=b]
 @FunctionalInterface
 public interface NodeInfoGenerator<NodeInfo> {
@@ -718,7 +719,40 @@ simulation time.
 
 \subsection{Mail API}
 
-TODO
+As with the node API, the mail API is fairly data focused. For example, the \texttt{Mail} class is composed of a
+\texttt{Packet} and a destination \texttt{WorkerAddress}. It is Packet Courier's chosen mode of transport of packets
+and thus inherits from \texttt{PacketWrapper<Mail>} so that it can travel along instances of
+\texttt{PacketPipeline<Mail>}.
+
+The \texttt{Mailbox} class is a wrapper for Java's \texttt{LinkedBlockingQueue}\cite{java_LinkedBlockingQueue}: a
+thread-safe queue that makes the polling thread wait until a new element is available. The renaming of elements alone
+is useful for abstraction purposes, as well it being an instance of an Adapter pattern\cite{adapter_pattern}.
+
+\texttt{PacketCourierPostalService<NodeInfo>} implements the \texttt{PostalService} interface which is defined in
+Code-Snippet~\ref{code:postal_service_interface} and is responsible for routing and delivering packets. It uses two
+maps to achieve this:
+\begin{itemize}
+    \item \texttt{Map<NodeAddress, Node<NodeInfo>> nodeToAddressMap}
+    \item \texttt{ConcurrentMap<NodeConnection<NodeInfo>, PacketPipeline<Mail>>}
+    \texttt{nodeConnectionToPacketPipelineMap}
+\end{itemize}
+
+Naturally, the \texttt{mail} method is implemented by looking up the respective nodes of the source and destination
+worker addresses using the \texttt{nodeToAddressMap} and in turn using them to formulate a
+\texttt{NodeConnection<NodeInfo>} which can then used to get the respective \texttt{PacketPipeline<Mail>} from
+\texttt{nodeConnectionToPacketPipelineMap}. The given packet is then packaged up as \texttt{Mail} with the
+destination address and enqueued into the relevant packet pipeline.
+
+The \texttt{PacketCourierPostalService<NodeInfo>} class also has a \texttt{tick} method which calls \texttt{tick} on
+each of the pipelines in \texttt{nodeConnectionToPacketPipelineMap} before forwarding any dequeued packets to their
+destination node.
+
+\begin{lstlisting}[language=Java,caption={The \texttt{PostalService} interface exactly as it appears in the
+codebase.},label={code:postal_service_interface},captionpos=b]
+public interface PostalService {
+  boolean mail(WorkerAddress sourceAddress, WorkerAddress destinationAddress, Packet packet);
+}
+\end{lstlisting}
 
 \subsection{Simulation API}
 
