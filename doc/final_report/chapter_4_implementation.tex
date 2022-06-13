@@ -630,9 +630,28 @@ to the \texttt{addressToWorkerMap} before returning it. In fact, \texttt{WorkerA
 class in the entire Packet Courier codebase that creates instances of \texttt{Worker<NodeInfo>} from scratch,
 ensuring that any new workers are logged in a relevant address book.
 
-\subsubsection{WorkerManager}
+\subsubsection{WorkerManager \& WorkerScript}
 
-TODO
+The \texttt{WorkerManager<NodeInfo>} class is where most of the magic happens regarding the worker API. As per the
+semantics presented in the design section, it is the black box that enables a worker to interact with the wider
+simulation. In this way, a \texttt{WorkerScript<NodeInfo>} is defined as in
+Code-Snippet~\ref{code:worker_script_interface}.
+\begin{lstlisting}[language=Java,caption={The \texttt{WorkerScript<NodeInfo>} interface exactly as it appears in the
+codebase.},label={code:worker_script_interface},captionpos=b]
+@FunctionalInterface
+public interface WorkerScript<NodeInfo> {
+  void run(WorkerManager<NodeInfo> workerManager);
+}
+\end{lstlisting}
+
+Despite the pivotal role it plays in providing users with the abstraction of writing code for an arbitrary worker,
+the \texttt{WorkerManager<NodeInfo>} class itself is relatively uncomplicated and simply houses a collection of key
+components that a worker may need to use indirectly, such as its \texttt{Mailbox}, \texttt{NodeInfo} and the
+simulation \texttt{PostalService}. This abstraction is important from a software engineering perspective as well,
+since it protects these components from being used in ways that might break the semantics of the simulation through
+encapsulation leakage. For example, the \texttt{PostalService} interface enables developers to send mail from a
+source to a destination, but if this was provided to a worker outright, then the worker could in turn spoof the
+source address: it is this kind of behaviour that the \texttt{WorkerManager<NodeInfo>} protects against.
 
 \subsubsection{WorkerTask}
 
