@@ -643,7 +643,7 @@ public class PacketCourierSimulation<NodeInfo> {
 
       // Configure packet pipeline logic.
       LocalDateTime startTime = clock.now();
-      Map<NodeConnection<NodeInfo>, PacketPipeline<Mail>> networkConditions =
+      Map<NodeConnection<NodeInfo>, PacketPipeline<Mail>> nodeConnectionToPacketPipelineMap =
           nodeConnectionToPacketPipelineFactoryMap
               .entrySet()
               .stream()
@@ -657,7 +657,8 @@ public class PacketCourierSimulation<NodeInfo> {
 
       // Configure simulation logic.
       PacketCourierPostalService<NodeInfo> postalService =
-          new PacketCourierPostalService<>(nameToNodeMap.values(), networkConditions);
+          new PacketCourierPostalService<>(
+              nameToNodeMap.values(), nodeConnectionToPacketPipelineMap);
 
       return new PacketCourierSimulation<>(
           simulationName,

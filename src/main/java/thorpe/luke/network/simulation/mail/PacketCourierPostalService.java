@@ -17,19 +17,21 @@ import thorpe.luke.network.simulation.worker.WorkerAddress;
 
 public class PacketCourierPostalService<NodeInfo> implements PostalService {
   private final Map<NodeAddress, Node<NodeInfo>> nodeToAddressMap;
-  private final ConcurrentMap<NodeConnection<NodeInfo>, PacketPipeline<Mail>> networkConditions;
+  private final ConcurrentMap<NodeConnection<NodeInfo>, PacketPipeline<Mail>>
+      nodeConnectionToPacketPipelineMap;
 
   public PacketCourierPostalService(
       Collection<Node<NodeInfo>> nodes,
-      Map<NodeConnection<NodeInfo>, PacketPipeline<Mail>> networkConditions) {
+      Map<NodeConnection<NodeInfo>, PacketPipeline<Mail>> nodeConnectionToPacketPipelineMap) {
     this.nodeToAddressMap =
         nodes.stream().collect(Collectors.toMap(Node::getAddress, Function.identity()));
-    this.networkConditions = new ConcurrentHashMap<>(networkConditions);
+    this.nodeConnectionToPacketPipelineMap =
+        new ConcurrentHashMap<>(nodeConnectionToPacketPipelineMap);
   }
 
   public void tick(LocalDateTime now) {
     for (Entry<NodeConnection<NodeInfo>, PacketPipeline<Mail>> networkConditionEntry :
-        networkConditions.entrySet()) {
+        nodeConnectionToPacketPipelineMap.entrySet()) {
       NodeConnection<NodeInfo> nodeConnection = networkConditionEntry.getKey();
       PacketPipeline<Mail> packetPipeline = networkConditionEntry.getValue();
       packetPipeline.tick(now);
@@ -48,7 +50,7 @@ public class PacketCourierPostalService<NodeInfo> implements PostalService {
       return false;
     }
     PacketPipeline<Mail> packetPipeline =
-        networkConditions.get(new NodeConnection<>(source, destination));
+        nodeConnectionToPacketPipelineMap.get(new NodeConnection<>(source, destination));
     if (packetPipeline == null) {
       return false;
     }
