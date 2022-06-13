@@ -614,6 +614,22 @@ and child having to do an initial handshake where the parent gives the child its
 to generate unique worker names. It does so using the simple algorithm of adding a prefix to a counter that
 increments with each new generation and lengthening the prefix when the counter overflows.
 
+\texttt{WorkerAddressBook<NodeInfo>} is used by nodes to keep track of their workers, taking advantage of Java's
+\texttt{ConcurrentHashMap}\cite{java_ConcurrentHashMap} to link workers with their addresses. Naturally, this allows
+nodes to route mail to their workers based on the destination address. There are two critical abstractions that
+\texttt{WorkerAddressBook} distinct from a simple map.
+
+First and foremost there is a garbage collection component to tracking workers, since they have a tendency to die
+off. If dead workers were never removed from a \texttt{WorkerAddressBook<NodeInfo>}, then this would quickly become a
+black hole with respect to memory. Packet Courier tackles this issue by using a custom design pattern that combines
+an in-house \texttt{Prunable} interface with a \texttt{GarbageCollector} which automatically remove dead workers from a
+\texttt{WorkerAddressBook} on every tenth address lookup.
+
+The second key abstraction comes in the form of the \texttt{registerWorker} method which creates a worker and adds it
+to the \texttt{addressToWorkerMap} before returning it. In fact, \texttt{WorkerAddressBook<NodeInfo>} is the only
+class in the entire Packet Courier codebase that creates instances of \texttt{Worker<NodeInfo>} from scratch,
+ensuring that any new workers are logged in a relevant address book.
+
 \subsubsection{WorkerManager}
 
 TODO
