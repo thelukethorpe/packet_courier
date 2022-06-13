@@ -84,9 +84,8 @@ public class Worker<NodeInfo> {
     }
   }
 
-  public void kill() {
+  public void interrupt() {
     workerThread.interrupt();
-    updateState(State.RUNNING, State.DEAD);
   }
 
   public State getState() {
