@@ -673,7 +673,48 @@ public class WorkerTaskExample {
 
 \subsection{Node API}
 
-TODO
+When compared to the worker API, the node API is somewhat straightforward. In fact, the \texttt{network.simulation
+.node} package only contains an interface and four classes which in turn are mostly data-oriented. For example,
+Code-Snippet~\ref{code:node_class} details the majority of functionality implemented by the \texttt{Node<NodeInfo>}
+class. It is however missing the methods \texttt{doWork}, \texttt{hashCode} and \texttt{equals}, but these are fairly
+trivial implementations. As one might expect, \texttt{doWork} is used to initiate the root worker. Whilst in
+principle the API has the capacity to have multiple root workers do work, it is limited to one for simplicity.
+\begin{lstlisting}[language=Java,caption={A cut-down version of the \texttt{Node<NodeInfo>} class.},
+    label={code:node_class},captionpos=b]
+public class Node<NodeInfo> {
+  private final NodeAddress address;
+  private final WorkerAddressGenerator workerAddressGenerator;
+  private final WorkerAddressBook<NodeInfo> workerAddressBook;
+  
+  public void deliver(Mail mail) {
+    workerAddressBook
+        .lookup(mail.getDestinationAddress())
+        .ifPresent(worker -> worker.post(mail.getPacket()));
+  }
+}
+\end{lstlisting}
+
+The \texttt{NodeAddress} class wraps a \texttt{String} attribute \texttt{name} which is provided and guaranteed to be
+unique by the user. It also provides some additional utility, such as \texttt{asRootWorkerAddress} and a custom
+\texttt{toString} method. \texttt{NodeConnection<NodeInfo>} is similar in that it bundles two \texttt{Node<NodeInfo>}
+attributes together: \texttt{source} and \texttt{destination}.
+
+The most interesting aspect of the node API is the \texttt{NodeInfoGenerator<NodeInfo>} interface which is defined in
+Code-Snippet~\ref{code:node_info_generator_interface}. It is this component that allows users to define what
+information workers in their simulation have access to. As per the design section, each node generates its own
+info-package on simulation startup which then gets handed out to each worker operating on that particular node. This
+is why many of the classes and interfaces in the node and worker APIs are type parameterised by \texttt{NodeInfo}.
+\begin{lstlisting}[language=Java,caption={The \texttt{NodeInfoGenerator<NodeInfo>} interface exactly as it appears in the
+codebase.},label={code:node_info_generator_interface},captionpos=b]
+@FunctionalInterface
+public interface NodeInfoGenerator<NodeInfo> {
+  NodeInfo generateInfo(NodeAddress address, Topology topology, Clock clock);
+}
+\end{lstlisting}
+
+\texttt{DefaultNodeInfo} is provided as a sensible default for users who might not need anything especially bespoke
+for their simulation. It provides each worker with access to the addresses of the neighbouring nodes and the current
+simulation time.
 
 \subsection{Mail API}
 
