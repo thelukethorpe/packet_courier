@@ -588,9 +588,27 @@ hierarchy forms with respect to who can post into which mailbox, i.e.: a node ca
 correct address and their respective nodes are topologically connected.} mail to any worker in its command and a
 worker can deliver mail to its children.
 
-\subsubsection{WorkerAddress, WorkerAddressBook \& WorkerAddressGenerator}
+\subsubsection{WorkerAddress, WorkerAddressGenerator \& WorkerAddressBook}
 
-TODO
+The \texttt{WorkerAddress} class simply provides each \texttt{Worker} with a way of being uniquely identified. It
+also implements \texttt{Serializable}\cite{java_Serializable} so that it can be over the wire, allowing workers to
+distribute their address. Each worker is given a \texttt{name} in the form of a \texttt{String}
+attribute, but this is only unique with respect to the hosting node. For example, two nodes ``Alice'' and ``Bob''
+could have workers with the same \texttt{name}. As a consequence each \texttt{WorkerAddress} also tracks the address
+of its hosting node to supplement this, making each instance of \texttt{WorkerAddress} truly unique. It is doubly
+crucial that a \texttt{WorkerAddress} contains the \texttt{NodeAddress} of the hosting node so that the postal
+service knows where to route \texttt{Mail} to.
+
+Note that every instance of \texttt{WorkerAddress} has access to its parent address as well. Whilst this isn't
+necessary to make the address unique, it is a useful addition. Indeed it makes sense that nodes might want to hide
+information from one another, or perhaps even different workers on the same node, yet there is little justification
+for a parent worker hiding its address from its child. To follow through with the real-world analogy laid out in the
+design where a node represents a router and a worker represents a machine, then this would be the equivalent of a
+machine hiding its ip-address from its own virtual machine. This could in theory be for security reasons, although
+that isn't necessarily applicable in the context of a Packet Courier simulation. If a worker spawns a child worker,
+then it is by definition because it wants it to do some work for it. In that case, it is likely that the parent will
+want to receive some communication from the child, at which point why not just cut out the extra step of the parent
+and child having to do an initial handshake where the parent gives the child its address?
 
 \subsubsection{WorkerManager}
 
