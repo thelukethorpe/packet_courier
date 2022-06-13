@@ -610,6 +610,10 @@ then it is by definition because it wants it to do some work for it. In that cas
 want to receive some communication from the child, at which point why not just cut out the extra step of the parent
 and child having to do an initial handshake where the parent gives the child its address?
 
+\texttt{WorkerAddressGenerator} leverages a utility class that was developed in-house, \texttt{UniqueStringGenerator},
+to generate unique worker names. It does so using the simple algorithm of adding a prefix to a counter that
+increments with each new generation and lengthening the prefix when the counter overflows.
+
 \subsubsection{WorkerManager}
 
 TODO
