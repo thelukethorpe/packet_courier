@@ -655,7 +655,21 @@ source address: it is this kind of behaviour that the \texttt{WorkerManager<Node
 
 \subsubsection{WorkerTask}
 
-TODO
+A \texttt{WorkerTask} is a simple abstraction that allows Packet Courier API users to write code times out in an
+elegant fashion. See Code-Snipet~\ref{code:worker_task_example} for an example.
+\begin{lstlisting}[language=Java,caption={An example of how \texttt{WorkerTask} might be used.},
+    label={code:worker_task_example},captionpos=b]
+public class WorkerTaskExample {
+  public static void myWorkerScript(WorkerManager<WorkerTaskExampleNodeInfo> workerManager) {
+    WorkerTask.configure()
+        .withTimeout(5, TimeUnit.SECONDS)
+        .execute(
+            () -> {
+              // Do some work.
+            });
+  }
+}
+\end{lstlisting}
 
 \subsection{Node API}
 
