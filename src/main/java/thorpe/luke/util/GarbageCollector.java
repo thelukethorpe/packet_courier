@@ -10,9 +10,17 @@ public class GarbageCollector {
     this.period = period;
   }
 
-  public void tick() {
+  private synchronized boolean incrementAndCompareTimeWithPeriod() {
     if (period <= ++time) {
       time = 0;
+      return true;
+    }
+    return false;
+  }
+
+  public void tick() {
+    boolean periodComplete = incrementAndCompareTimeWithPeriod();
+    if (periodComplete) {
       prunable.prune();
     }
   }
