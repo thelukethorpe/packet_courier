@@ -756,11 +756,147 @@ public interface PostalService {
 
 \subsection{Simulation API}
 
-TODO
+The \texttt{PacketCourierSimulation<NodeInfo>} class brings all the elements discussed thus far together to build a
+fully functioning simulation. An API user would configure their simulation using the \texttt{Configuration<NodeInfo>}
+inner class which leverages a builder pattern\cite{builder_pattern}. This allows the user to add nodes, connections,
+network conditions and other peripheral elements such as logging mechanisms to their simulation in a way that is easy
+and human readable. Once they have built their simulation, they can then run it using the \texttt{start} method which
+runs asynchronously and can be joint back to the current thread using \texttt{waitFor}, mirroring the semantics of
+Java's \texttt{Process} class\cite{java_Process}.
 
-\subsection{Miscilaneous}
+The main responsibility of the \texttt{PacketCourierSimulation<NodeInfo>} is to correctly manage the various
+components that make up a simulation, rather than provide any novel functionality. A bare-bones Packet Courier
+simulation will involve the following steps:
+\begin{enumerate}
+    \item Collect configuration information from the user.
+    \item Build a postal service.
+    \item Upon startup, create a thread for each node which sets them to work.
+    \item Create a management thread to tick the simulation clock and the postal service.
+    \item Start all threads.
+    \item Wait on the node threads to finish.
+    \item Mark the simulation as complete and wait for the management thread to finish.
+    \item Flush and close the loggers.
+\end{enumerate}
 
-TODO
+\begin{lstlisting}[language=Java,caption={An example of how a \texttt{PacketCourierSimulation<NodeInfo>} might be set
+up and used.},
+    label={code:simulation_example},captionpos=b]
+public class PacketCourierSimulationExample {
+
+  public static final String NODE_A_NAME = "Alice";
+  public static final String NODE_B_NAME = "Bob";
+
+  public static void aliceWorkerScript(WorkerManager<DefaultNodeInfo> workerManager) {
+    // Alice does some work.
+  }
+
+  public static void bobWorkerScript(WorkerManager<DefaultNodeInfo> workerManager) {
+    // Bob does some work.
+  }
+
+  public static void main(String[] args) {
+    Random random = new Random(42);
+    PacketCourierSimulation<DefaultNodeInfo> packetCourierSimulation =
+        PacketCourierSimulation.configuration()
+            .addNode(NODE_A_NAME, PacketCourierSimulationExample::aliceWorkerScript)
+            .addNode(NODE_B_NAME, PacketCourierSimulationExample::bobWorkerScript)
+            .addConnection(
+                NODE_A_NAME,
+                NODE_B_NAME,
+                PacketPipeline.parameters(
+                    NetworkCondition.uniformPacketDrop(0.5, random),
+                    NetworkCondition.uniformPacketLatency(
+                        35.0, 50.0, ChronoUnit.MILLIS, random)))
+            .addLogger(ConsoleLogger.out())
+            .configure();
+    packetCourierSimulation.start();
+    try {
+      packetCourierSimulation.waitFor();
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+  }
+}
+\end{lstlisting}
+
+\newpage
+
+\begin{lstlisting}[language=Java,caption={A \emph{massively} cut-down version of the
+\texttt{PacketCourierSimulation<NodeInfo>} class.},
+    label={code:simulation_class},captionpos=b]
+public class PacketCourierSimulation<NodeInfo> {
+  // There is a fair amount of instrumentation that has been left out for simplicity's sake.
+  private void run(
+      Map<String, RunnableNode<NodeInfo>> nodes,
+      PacketCourierPostalService<NodeInfo> postalService,
+      Clock clock,
+      Logger logger) {
+    AtomicBoolean simulationComplete = new AtomicBoolean(false);
+    // This is not a real method, of course - the actual code is just too long!
+    Map<Node<NodeInfo>, Thread> nodeThreads = getNodeThreadsSomehowFrom(nodes);
+    Thread simulationManagerThread =
+        new Thread(
+            () -> {
+              while (!simulationComplete.get()) {
+                clock.tick();
+                postalService.tick(clock.now());
+              }
+            });
+    nodeThreads.values().forEach(Thread::start);
+    simulationManagerThread.start();
+    joinAll(nodeThreads.values());
+    simulationComplete.set(true);
+    try {
+      simulationManagerThread.join();
+    } catch (InterruptedException e) {
+      // Handle exception.
+    }
+    logger.flush();
+    logger.close();
+  }
+}
+\end{lstlisting}
+
+The last piece of the puzzle is the \texttt{Clock} interface, as defined in Code-Snippet~\ref{code:clock_interface}.
+
+\begin{lstlisting}[language=Java,caption={The \texttt{Clock} interface exactly as it appears in the codebase.},
+    label={code:clock_interface},captionpos=b]
+public interface Clock {
+  void tick();
+
+  LocalDateTime now();
+}
+\end{lstlisting}
+
+There are two classes that inherit from \texttt{Clock}: \texttt{VirtualClock} and \texttt{WallClock}; herein lies the
+key distinction between a simulation and an emulation. When the \texttt{VirtualClock} ticks over, it simply adds an
+arbitrary unit of time to a counter. Given that each worker runs on its own thread, one could think of a
+\texttt{VirtualClock} tick as a simulation time slice or \emph{quantum}\cite{cpu_time_slicing} on the assumption that
+CPU scheduling is fair. In theory this provides Packet Courier simulations with perfect scaling, because although
+adding an extra worker will mean that more computational resources are required, the CPU scheduler will ensure that
+all threads will enjoy roughly the same amount of CPU time. In turn, this provides the illusion of total parallelism,
+since each worker will work for a simulation quantum before the simulation clock ticks over.
+
+Packet Courier's \texttt{VirtualClock} keeps track of a \texttt{LocalDateTime}\cite{java_LocalDateTime} that is
+initialized to midnight on the 1\textsuperscript{st} of January, Year 0. This value has a single unit of time added
+to it on each call to \texttt{tick}, namely a \texttt{ChronoUnit}\cite{java_ChronoUnit} of the user's choosing. For
+example, if the user specifies a flat latency of 42 milliseconds between ``Alice'' and ``Bob'', then this could be 42
+or 42,000 \texttt{VirtualClock} ticks depending on the given unit. API users might indeed find that they need to do
+some hyperparameter tuning to find the unit of granularity that suits their simulation, since \texttt{VirtualClock}
+ticks can be extremely short with respect to real-time (as low as a few hundred nanoseconds). For instance, if worker
+``Charlie'' is connected to ``Alice'' with a normally distributed latency with a mean of 42 milliseconds (arbitrary
+unit set by the user) and sends her a packet approximately every real millisecond of CPU time, but a simulation
+quantum is about one real microsecond of CPU time, then Charlie is sending a packet to Alice every 1000 ticks.
+Indeed, if one tick is programmed to represent one millisecond for abstraction purposes, then the probability of
+packets being reordered when being sent from Charlie to Alice is virtually zero, but the user may expect a certain
+degree of reordering due to the random latency they have specified. It is ``gotchas'' like these that are important
+to consider when using Packet Courier for simulation.
+
+\emph{Emulation}, on the other hand, is an entirely different beast and uses a \texttt{WallClock} instead. As one
+might imagine, the \texttt{tick} method in \texttt{WallClock} does nothing since the \texttt{now} method just
+retrieves the current wall-time. This seemingly small change results in wholesale different behaviour, i.e.: Alice's
+42-millisecond delay when sending packets to Bob will actually be 42 milliseconds, as opposed to 42 milliseconds in a
+virtual or simulated sense.
 
 
 \section{Standalone Emulator}
