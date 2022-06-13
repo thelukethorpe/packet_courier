@@ -539,6 +539,65 @@ and the next time the state will become active again is in 300 seconds, meanwhil
 
 \subsection{Worker API}
 
+\begin{figure}[!h]
+    \includegraphics[width=0.65\textwidth]{images/chapter_4_implementation/worker_api_tree}
+    \centering~\caption{A diagram showing the class inheritance tree of the worker API. Some of these classes are
+    specific to Packet Courier's emulator functionality and thus will be discussed in a later section.}
+    \label{fig:chapter_4_implementation-worker_api_tree}
+\end{figure}
+
+\subsubsection{Worker}
+
+As described in the design section, a Packet Courier worker is simply an agent within the simulation that performs
+work and is owned by a particular node. The \texttt{Worker<NodeInfo>} class is implemented as a wrapper for a Java
+\texttt{Thread}\cite{java_Thread} with a couple of useful abstractions layered on top.
+\begin{lstlisting}[language=Java,caption={A cut-down version of the \texttt{Worker<NodeInfo>} class.},
+    label={code:worker_class},captionpos=b]
+public class Worker<NodeInfo> {
+
+  private final Thread workerThread;
+  private final WorkerAddress address;
+  private final Mailbox mailbox;
+  private State state;
+
+  // Rest of class...
+
+  public enum State {
+    READY,
+    RUNNING,
+    DEAD
+  }
+}
+\end{lstlisting}
+
+Just as with a Java \texttt{Thread}\cite{java_Thread}, \texttt{Worker<NodeInfo>} has methods \texttt{run},
+\texttt{start}, \texttt{join} and \texttt{interrupt} which enjoy similar semantics, although the states are massively
+simplified. Note that unlike with \texttt{Thread}, the \texttt{join} method in \texttt{Worker<NodeInfo>} does not
+have \texttt{throws InterruptedException} in its type signature, instead opting to a throw a \texttt{WorkerException}
+which inherits form \texttt{RuntimeException}\cite{java_RuntimeException}. This was a deliberate design decision to
+discourage API users to rely on the \texttt{interrupt} mechanic as it creates complex inter-worker behaviours. The
+idea behind the \texttt{Worker<NodeInfo>} class is \emph{not} to be a thread in disguise, but rather to enable work
+to be done in parallel on each node. In principle, a worker should start, do its work, then finish with minimal fuss.
+Indeed, cutting out the potential for an \texttt{InterruptedException} in turn removes the mandate for a try-catch
+around every invocation of \texttt{join}, making for cleaner worker scripts.
+
+\texttt{Worker<NodeInfo>} also has a public \texttt{post} method which allows external code to insert a
+\texttt{Packet} into the worker's \texttt{Mailbox}. In the wider context of Packet Courier, a strict privacy
+hierarchy forms with respect to who can post into which mailbox, i.e.: a node can deliver\footnote{Insofar as
+``deliver'' means to post directly; any worker can \emph{mail} a packet to any other worker so long as they have the
+correct address and their respective nodes are topologically connected.} mail to any worker in its command and a
+worker can deliver mail to its children.
+
+\subsubsection{WorkerAddress, WorkerAddressBook \& WorkerAddressGenerator}
+
+TODO
+
+\subsubsection{WorkerManager}
+
+TODO
+
+\subsubsection{WorkerTask}
+
 TODO
 
 \subsection{Node API}
