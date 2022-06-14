@@ -1,6 +1,6 @@
-\section{Project Management}
+\section{Project Management}\label{section:project_management}
 
-\subsection{Version Control}
+\subsection{Version Control}\label{subsection:version_control}
 
 Packet Courier was developed using Git\cite{git} as a version control system and the code repository is hosted on
 GitHub\cite{github, packet_courier} at \url{https://github.com/thelukethorpe/packet_courier}. There is no special
@@ -8,7 +8,7 @@ reason for either of these choices; they are simply industry standards being use
 innately demand bespoke tooling (unlike data-heavy ventures such as game development, which might benefit from a tool
 like Perforce\cite{perforce, perforce_vs_git}).
 
-\subsection{Ticket Tracking}
+\subsection{Ticket Tracking}\label{subsection:ticket_tracking}
 
 GitHub Issues\cite{github_issues} powers Packet Courier's ticket tracking. Tickets, or \emph{issues}, as per the
 GitHub nomenclature, are categorised based on one or more of the following custom tags:
@@ -48,7 +48,7 @@ from it.
 
 \newpage
 
-\subsection{Programming Languages}
+\subsection{Programming Languages}\label{subsection:programming_languages}
 
 Java 8\cite{java_8} was chosen as the foundational language for Packet Courier due to:
 \begin{itemize}
@@ -92,20 +92,20 @@ consists exclusively of Java. Python's dynamic typing\cite{python_typing}, poor
 performance\cite{programming_language_efficiency} and inefficient multi-threading and synchronisation
 primitives\cite{python_gil} are the main reasons why it wasn't used more prominently within Packet Courier.
 
-\subsection{Build and Dependency Management}
+\subsection{Build and Dependency Management}\label{subsection:build_and_dependency_management}
 
 Packet Courier uses Apache Maven 3.6.3\cite{maven} to manage its build phases and dependencies. Maven is convienent,
 lightweight, widely supported, boasts a huge repository of libraries\cite{maven_repository} and with a single
 command can compile the project into a portable \texttt{.jar} file that can be used as an executable binary or a Java
 library.
 
-\subsubsection{JUnit 4}
+\subsubsection{JUnit 4}\label{subsubsection:junit_4}
 
 JUnit 4\cite{juint4} is an industry standard for conducting tests in Java, with an estimated 30.7\% of Java projects on
 GitHub using JUnit (according to a study done in 2013)\cite{java_library_popularity}. Naturally, the Packet Courier
 unit tests are implemented using JUint 4.13 and are run on each Maven build.
 
-\subsubsection{AssertJ}
+\subsubsection{AssertJ}\label{subsubsection:assert_j}
 
 \begin{lstlisting}[language=Java,caption={An example of a Packet Courier unit test using JUnit and AssertJ.},
     label={code:packet_test},captionpos=b]
@@ -135,7 +135,7 @@ why AssertJ was favoured over the JUnit default assertion framework known as Ham
         which was the first step of AssertJ creation.''}
 \end{quote}
 
-\subsubsection{Google Protocol Buffer}
+\subsubsection{Google Protocol Buffer}\label{subsubsection:google_protocol_buffer}
 
 Google Protocol Buffer\cite{google_protobuf} is a multi-faceted library that is supported across multiple languages,
 but is used by Packet Courier to parse configuration files into Java objects. There are many file parsing libraries
@@ -186,14 +186,14 @@ an \texttt{AddressBook}. A data file that followed this syntactic structure coul
     }
 \end{lstlisting}
 
-\subsubsection{Protocol Buffers Protobuf Maven Plugin}
+\subsubsection{Protocol Buffers Protobuf Maven Plugin}\label{subsubsection:protocol_buffers_protobuf_maven_plugin}
 
 An unusual quirk of the Google Protocol Buffer Java library is that it doesn't compile all of the requisite Java
 classes into the final \texttt{.jar}; instead it assumes that they will be loaded into the project as part of a
 separate library. The \texttt{protoc-jar-maven-plugin}\cite{protoc_jar_maven_plugin} helps to work around this issue
 by adding an extra compilation step at compile time to plug this gap.
 
-\subsection{Continuous Integration}
+\subsection{Continuous Integration}\label{subsection:continuous_integration}
 
 The Packet Courier repository uses GitHub actions\cite{github_actions} to implement a continuous integration
 pipeline\cite{aws_ci} where code is linted and tested, both of which are done using Maven. Linting is enforced using
@@ -208,9 +208,9 @@ is simply done via the Maven command:
 \newpage
 
 
-\section{API Overview}
+\section{API Overview}\label{section:api_overview}
 
-\subsection{Repository Structure}
+\subsection{Repository Structure}\label{subsection:repository_structure}
 
 \begin{figure}[!h]
     \includegraphics[width=\textwidth]{images/chapter_4_implementation/repository_structure}
@@ -219,7 +219,7 @@ is simply done via the Maven command:
     \label{fig:chapter_4_implementation-repository_structure}
 \end{figure}
 
-\subsection{Statistical Distribution API}
+\subsection{Statistical Distribution API}\label{subsection:statistical_distribution_api}
 
 Packet Courier supports the following statistical distributions:
 \begin{itemize}
@@ -314,7 +314,7 @@ required to compute a confidence interval\cite{confidence_interval}.
 
 \newpage
 
-\subsection{Network Condition API}
+\subsection{Network Condition API}\label{subsection:network_condition_api}
 
 \begin{figure}[!h]
     \includegraphics[width=0.8\textwidth]{images/chapter_4_implementation/network_condition_api_tree}
@@ -322,7 +322,7 @@ required to compute a confidence interval\cite{confidence_interval}.
     \label{fig:chapter_4_implementation-network_condition_api_tree}
 \end{figure}
 
-\subsubsection{Packet \& PacketWrapper}
+\subsubsection{Packet \& PacketWrapper}\label{subsubsection:packet_and_packet_wrapper}
 
 The \texttt{Packet} class is, by and large, the atomic building block for Packet Courier, despite only being a humble
 wrapper for a list of bytes. A flagship feature of \texttt{Packet} is its ability to transform freely from a Java
@@ -380,7 +380,7 @@ side. This is majorly inferior for many reasons:
     code\cite{java_avoid_clone}.
 \end{itemize}
 
-\subsubsection{PacketFilter \& PacketPipeline}
+\subsubsection{PacketFilter \& PacketPipeline}\label{subsubsection:packet_filter_and_packet_pipeline}
 
 The \texttt{PacketFilter<Wrapper>} interface represents a single step in a packet pipeline and is defined as follows:
 \begin{lstlisting}[language=Java,caption={The \texttt{PacketFilter<Wrapper>} interface exactly as it appears in the
@@ -456,7 +456,7 @@ implement \texttt{PacketFilter<Wrapper>} be commencerate with this notion? It wo
 packet pipeline a step in a packet pipeline. Naturally this is a redundant and confusing API behaviour that would
 only create potential for bad code.
 
-\subsubsection{NetworkCondition}
+\subsubsection{NetworkCondition}\label{subsubsection:network_condition}
 
 The \texttt{NetworkCondition} interface acts as a \texttt{PacketFilter<Wrapper>} factory. It is important that API
 users are not given the autonomy to create packet pipelines manually from packet filters or else they risk
@@ -484,7 +484,7 @@ but not limited to:
         ChronoUnit timeUnit, Random random)}
 \end{itemize}
 
-\subsubsection{SimulatedEventPipeline}
+\subsubsection{SimulatedEventPipeline}\label{subsubsection:simulated_event_pipeline}
 
 The \texttt{SimulatedEventPipeline<Wrapper>} class is a packet filter that implements the event-based semantics
 outlined in the design documentation. It is the only \texttt{PacketFilter<Wrapper>} that will be specifically
@@ -537,7 +537,7 @@ pipeline are only dequeued when their state is active, then the packets will hav
 to 75, since the 10-second duration of the event is not long enough to see them dequeued from their packet pipeline
 and the next time the state will become active again is in 300 seconds, meanwhile the packets are stuck in memory!
 
-\subsection{Worker API}
+\subsection{Worker API}\label{subsection:worker_api}
 
 \begin{figure}[!h]
     \includegraphics[width=0.65\textwidth]{images/chapter_4_implementation/worker_api_tree}
@@ -546,7 +546,7 @@ and the next time the state will become active again is in 300 seconds, meanwhil
     \label{fig:chapter_4_implementation-worker_api_tree}
 \end{figure}
 
-\subsubsection{Worker}
+\subsubsection{Worker}\label{subsubsection:worker}
 
 As described in the design section, a Packet Courier worker is simply an agent within the simulation that performs
 work and is owned by a particular node. The \texttt{Worker<NodeInfo>} class is implemented as a wrapper for a Java
@@ -588,7 +588,8 @@ hierarchy forms with respect to who can post into which mailbox, i.e.: a node ca
 correct address and their respective nodes are topologically connected.} mail to any worker in its command and a
 worker can deliver mail to its children.
 
-\subsubsection{WorkerAddress, WorkerAddressGenerator \& WorkerAddressBook}
+\subsubsection{WorkerAddress, WorkerAddressGenerator \&
+WorkerAddressBook}\label{subsubsection:worker_address_worker_address_generator_and_worker_address_book}
 
 The \texttt{WorkerAddress} class simply provides each \texttt{Worker} with a way of being uniquely identified. It
 also implements \texttt{Serializable}\cite{java_Serializable} so that it can be over the wire, allowing workers to
@@ -630,7 +631,7 @@ to the \texttt{addressToWorkerMap} before returning it. In fact, \texttt{WorkerA
 class in the entire Packet Courier codebase that creates instances of \texttt{Worker<NodeInfo>} from scratch,
 ensuring that any new workers are logged in a relevant address book.
 
-\subsubsection{WorkerManager \& WorkerScript}
+\subsubsection{WorkerManager \& WorkerScript}\label{subsubsection:worker_manager_and_worker_script}
 
 The \texttt{WorkerManager<NodeInfo>} class is where most of the magic happens regarding the worker API. As per the
 semantics presented in the design section, it is the black box that enables a worker to interact with the wider
@@ -653,7 +654,7 @@ encapsulation leakage. For example, the \texttt{PostalService} interface enables
 source to a destination, but if this was provided to a worker outright, then the worker could in turn spoof the
 source address: it is this kind of behaviour that the \texttt{WorkerManager<NodeInfo>} protects against.
 
-\subsubsection{WorkerTask}
+\subsubsection{WorkerTask}\label{subsubsection:worker_task}
 
 A \texttt{WorkerTask} is a simple abstraction that allows Packet Courier API users to write code times out in an
 elegant fashion. See Code-Snipet~\ref{code:worker_task_example} for an example.
@@ -671,7 +672,7 @@ public class WorkerTaskExample {
 }
 \end{lstlisting}
 
-\subsection{Node API}
+\subsection{Node API}\label{subsection:node_api}
 
 When compared to the worker API, the node API is somewhat straightforward. In fact, the \texttt{network.simulation
 .node} package only contains an interface and four classes which in turn are mostly data-oriented. For example,
@@ -717,7 +718,7 @@ public interface NodeInfoGenerator<NodeInfo> {
 for their simulation. It provides each worker with access to the addresses of the neighbouring nodes and the current
 simulation time.
 
-\subsection{Mail API}
+\subsection{Mail API}\label{subsection:mail_api}
 
 As with the node API, the mail API is fairly data focused. For example, the \texttt{Mail} class is composed of a
 \texttt{Packet} and a destination \texttt{WorkerAddress}. It is Packet Courier's chosen mode of transport of packets
@@ -754,7 +755,7 @@ public interface PostalService {
 }
 \end{lstlisting}
 
-\subsection{Simulation API}
+\subsection{Simulation API}\label{subsection:simulation_api}
 
 The \texttt{PacketCourierSimulation<NodeInfo>} class brings all the elements discussed thus far together to build a
 fully functioning simulation. An API user would configure their simulation using the \texttt{Configuration<NodeInfo>}
@@ -899,7 +900,7 @@ retrieves the current wall-time. This seemingly small change results in wholesal
 virtual or simulated sense.
 
 
-\section{Standalone Emulator}
+\section{Standalone Emulator}\label{section:standalone_emulator}
 
 Packet Courier achieves language agnosticism by offering UDP interoperability. As a consequeunce, any binary that
 uses UDP (directly or indirectly) to send and receive packets can enjoy what the Packet Courier API has to offer.
@@ -921,9 +922,10 @@ never write any Java code at all, i.e.: they configure the network they want via
 configuration file and spin-up a Packet Courier emulation from the command-line. This is exactly what the standalone
 Packet Courier emulator does.
 
-\subsection{Key Components}
+\subsection{Key Components}\label{subsection:key_components}
 
-\subsubsection{WorkerProcess, WorkerProcessConfiguration \& WorkerProcessExitStatus}
+\subsubsection{WorkerProcess, WorkerProcessConfiguration \&
+WorkerProcessExitStatus}\label{subsubsection:worker_process_worker_process_configuration_and_worker_process_exit_status}
 
 A \texttt{WorkerProcess} is a wrapper for a Java \texttt{Process}\cite{java_Process} that enables Packet Courier to
 invoke commands within the user space of the host operating system. The exact nature of the command is subject to
@@ -987,7 +989,7 @@ up\cite{java_process_hang_due_to_buffer_overflow}. The \texttt{waitFor} method d
 resources once its Java process has finished before returning a \texttt{WorkerProcessExitStatus}, which indicates to
 the calling code whether the process finished successfully or with a failure, detailing any relevant error messages.
 
-\subsubsection{WorkerDatagramForwardingScript}
+\subsubsection{WorkerDatagramForwardingScript}\label{subsubsection:worker_datagram_forwarding_script}
 
 The \texttt{WorkerDatagramForwardingScript<NodeInfo>} class implements the \texttt{WorkerScript<NodeInfo>} interface
 and thus can be run by a worker straight out of the box, whereby its key responsibilities are:
@@ -1005,7 +1007,7 @@ public UDP socket is looked up based on its private ip-address via the \texttt{p
 attribute in \texttt{WorkerDatagramForwardingScript<NodeInfo>}. The packet contents (i.e.: without the appended
 ip-address) are then sent to current node's private ip-address via the sender's public UDP socket.
 
-\subsubsection{PacketCourierSimulation}
+\subsubsection{PacketCourierSimulation}\label{subsubsection:packet_courier_simulation}
 
 The main simulation class contributes a substantial amount of work towards the standalone emulator, whereby its key
 responsibilities are:
@@ -1028,21 +1030,21 @@ listens on the given public UDP socket and converts the received packet into a f
 service; namely by getting the worker addresses of the private source-ip and public destination-ip using the relevant
 maps.
 
-\subsection{Protobuf Integration}
+\subsection{Protocol Buffer Integration}\label{subsection:protocol_buffer_integration}
 
 TODO
 
 
-\section{Debugging Features}
+\section{Debugging Features}\label{section:debugging_features}
 
-\subsection{Process Monitor}
-
-TODO
-
-\subsection{Crash Dumps}
+\subsection{Process Monitor}\label{subsection:process_monitor}
 
 TODO
 
-\subsection{Meta Logging}
+\subsection{Crash Dumps}\label{subsection:crash_dumps}
+
+TODO
+
+\subsection{Meta Logging}\label{subsection:meta_logging}
 
 TODO
