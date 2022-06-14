@@ -1066,7 +1066,11 @@ then meta logging may help to identify when the crash occurred and what might ha
 
 \subsection{Process Monitor}\label{subsection:process_monitor}
 
-TODO
+The \texttt{WorkerProcessMonitor} class goes a step further than the meta logging feature and starts a thread which
+periodically checks the status of each running child \texttt{Process}\cite{java_Process}. Users can specify how often
+the process monitor should perform its checks, which involve meta logging which processes are still alive and which
+have finished since its last check. This can be very useful for users who might want to find out why their simulation
+is hanging, i.e.: which processes aren't finishing of their accord.
 
 \subsection{Crash Dumps}\label{subsection:crash_dumps}
 
