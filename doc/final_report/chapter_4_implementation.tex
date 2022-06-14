@@ -923,6 +923,111 @@ Packet Courier emulator does.
 
 \subsection{Key Components}
 
+\subsubsection{WorkerProcess, WorkerProcessConfiguration \& WorkerProcessExitStatus}
+
+A \texttt{WorkerProcess} is a wrapper for a Java \texttt{Process}\cite{java_Process} that enables Packet Courier to
+invoke commands within the user space of the host operating system. The exact nature of the command is subject to
+change based on the node, however, which is why a suite of environment variables are available so that users can
+inject runtime data into their commands:
+\begin{itemize}
+    \item \texttt{NODE\_NAME} \\
+    Corresponds to the name that either the configuration file or Packet Courier has assigned to the node running the
+    command.
+    \item \texttt{PUBLIC\_IP} \\
+    Corresponds to this node's public ip-address, i.e.: the address that other nodes should send packets to if they
+    want Packet Courier to route it back to this node. Similar to a PO Box address.
+    \item \texttt{PRIVATE\_IP} \\
+    Corresponds to the node's private ip-address, i.e.: the address that this node should listen on to receive
+    packets. Similar to a house address.
+    \item \texttt{PORT} \\
+    Corresponds to the port that nodes have been configured to listen on.
+    \item \texttt{DATAGRAM\_BUFFER\_SIZE} \\
+    Corresponds to the buffer size of the UDP sockets that Packet Courier is listening on.
+    \item \texttt{NEIGHBOUR\_IPS} \\
+    Corresponds to the names and public ip-addresses of neighbouring nodes.
+    \item \texttt{FLOOD\_IPS\_BY\_DISTANCE=[distance]} \\
+    Generates the names and public ip-addresses of a basic flood search with search radius \texttt{distance}.
+    \item \texttt{TOPOLOGY\_IPS} \\
+    Corresponds to the names and public ip-addresses of the entire topology, including nodes that this node isn't
+    adjacent to and therefore cannot communicate with directly.
+\end{itemize}
+
+For example, if Alice and Bob were configured to be bidirectionally connected, listening on port 1234 with a datagram
+buffer size of 128, then Alice's command:
+\begin{quote}
+    \texttt{python3 server.py \$\{NODE\_NAME\} \$\{PORT\} \$\{DATAGRAM\_BUFFER\_SIZE\} \$\{PRIVATE\_IP\}}
+    \texttt{\$\{PUBLIC\_IP\}} \texttt{\$\{NEIGHBOUR\_IPS\}}
+\end{quote}
+\noindent
+\ldots would be translated at runtime into something like:
+\begin{quote}
+    \texttt{python3 server.py Alice 1234 128 127.0.0.3 127.0.0.4 \{"Bob": "127.0.0.6"\}}
+\end{quote}
+
+Note that this feature uses environment variable notation as an easy convention, but these are not actually
+environment variables at the level of the operating system. A real environment variable such as
+\texttt{\$\{JAVA\_HOME\}} would not be translated into something like \texttt{/usr/lib/jvm/java-8-oracle} at runtime.
+
+The \texttt{WorkerProcessConfiguration} handles the string processing required to find and replace the relevant
+environment variables, doing so by splitting the command based on whitespace and then examining each resulting word
+using Java's in-built regex matching libraries \texttt{Pattern}\cite{java_Pattern} and
+\texttt{Matcher}\cite{java_Matcher}.
+
+A \texttt{WorkerProcessConfiguration} is then converted into a \texttt{WorkerProcess.Factory} via the
+\texttt{buildFactory} method, which takes in runtime variables such as \texttt{Map<WorkerAddress, InetAddress>
+    workerAddressToPublicIpMap} to determine the values associated with the environment variables. In turn,
+\texttt{WorkerProcess.Factory} is essentially a wrapper for Java's \texttt{ProcessBuilder}\cite{java_ProcessBuilder}.
+The \texttt{WorkerProcess.Factory} has a \texttt{start} method which triggers the associated \texttt{Process} and
+returns an encapsulating \texttt{WorkerProcess}.
+
+\texttt{WorkerProcess} has a method called \texttt{waitFor} which spawns a thread that actively listens for console
+output from the running process. Even if process logging has been disabled by the user, it is still important to
+empty the process's output buffer since Java processes have been known to hang when their I/O buffers fill
+up\cite{java_process_hang_due_to_buffer_overflow}. The \texttt{waitFor} method does some final tidying up of
+resources once its Java process has finished before returning a \texttt{WorkerProcessExitStatus}, which indicates to
+the calling code whether the process finished successfully or with a failure, detailing any relevant error messages.
+
+\subsubsection{WorkerDatagramForwardingScript}
+
+The \texttt{WorkerDatagramForwardingScript<NodeInfo>} class implements the \texttt{WorkerScript<NodeInfo>} interface
+and thus can be run by a worker straight out of the box, whereby its key responsibilities are:
+\begin{itemize}
+    \item To run and manage the \texttt{WorkerProcess} for the current node.
+    \item To forward any Packet Courier \texttt{Mail} to the private ip-address of the process.
+\end{itemize}
+
+The second task is surprisingly non-trivial. The crucial difficulty is that the receipient needs to be provided with
+the illusion that the packet was sent from the sender's public ip-address, but a key aspect of the Packet Courier's
+semantics are that the workers don't know the \texttt{WorkerAddress} of the sender by default. This issue is solved
+by smuggling the private ip-address of the sender through the packet pipeline by appending into onto the last four
+bytes of the packet\footnote{This means it could be corrupted during transit}. Once the packet arrives, the sender's
+public UDP socket is looked up based on its private ip-address via the \texttt{privateIpAddressToPublicSocketMap}
+attribute in \texttt{WorkerDatagramForwardingScript<NodeInfo>}. The packet contents (i.e.: without the appended
+ip-address) are then sent to current node's private ip-address via the sender's public UDP socket.
+
+\subsubsection{PacketCourierSimulation}
+
+The main simulation class contributes a substantial amount of work towards the standalone emulator, whereby its key
+responsibilities are:
+\begin{itemize}
+    \item To generate batch of unique private and public ip-addresses, i.e.: one of each for every node.
+    \item To create a \texttt{DatagramSocket}\cite{java_DatagramSocket} for each public ip-address.
+    \item To build and maintain a \texttt{privateIpAddressToWorkerAddressMap}, which is used in the
+    \texttt{listenForAndRouteDatagramPackets} method.
+    \item To build and maintain a \texttt{publicIpAddressToWorkerAddressMap}, which is also used in the
+    \texttt{listenForAndRouteDatagramPackets} method.
+    \item To build and maintain a \texttt{privateIpAddressToPublicSocketMap}, which is used in
+    \texttt{WorkerDatagramForwardingScript<NodeInfo>}.
+    \item To build and maintain a \texttt{workerAddressToPublicIpMap}, which is used by
+    \texttt{WorkerProcessConfiguration} to build a \texttt{WorkerProcess.Factory}.
+    \item To build and maintain a \texttt{nodeToPublicSocketMap}, which is used in the main simulation body.
+\end{itemize}
+
+Each public UDP socket has a thread that runs the \texttt{listenForAndRouteDatagramPackets} method, which in turn
+listens on the given public UDP socket and converts the received packet into a format that can be sent by the postal
+service; namely by getting the worker addresses of the private source-ip and public destination-ip using the relevant
+maps.
+
 \subsection{Protobuf Integration}
 
 TODO
