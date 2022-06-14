@@ -901,9 +901,27 @@ virtual or simulated sense.
 
 \section{Standalone Emulator}
 
-\subsection{Key Components}
+Packet Courier achieves language agnosticism by offering UDP interoperability. As a consequeunce, any binary that
+uses UDP (directly or indirectly) to send and receive packets can enjoy what the Packet Courier API has to offer.
+This is achieved by giving each node a pair of public and private ip-addresses and opening a UDP socket for each
+public ip-address, as per the emulation semantics outlined in the design section.
 
-TODO
+Packet Courier users can in principle mix and match the API with the UDP adaptive solution, i.e.: have workers that
+use custom Java code and nodes that are communicating with a binary over UDP \emph{in the same simulation/emulation}.
+The limitation with this approach is that UDP sockets are assigned on a node-by-node basis, not worker-by-worker. As
+such, if a Packet Courier node Alice has workers Charlie and Doris, but node Bob is using an arbitrary binary, then
+Bob's binary could indeed send UDP packets to Alice, but not Charlie or Doris. In theory workers could be given UDP
+sockets on-the-fly, although this would be a potential feature for the future.
+
+Mixing and matching API and UDP functionality like this would be unusual, though; the most common use-cases would be
+simulation via the API and emulation via UDP. In the case where Packet Courier's UDP functionality is used for
+emulation, it will run silently in the background while other processes communicate through it, treating it as though
+it were an authentic physical network. At that point, the next logical step is to provide users with the option to
+never write any Java code at all, i.e.: they configure the network they want via some portable, high-level
+configuration file and spin-up a Packet Courier emulation from the command-line. This is exactly what the standalone
+Packet Courier emulator does.
+
+\subsection{Key Components}
 
 \subsection{Protobuf Integration}
 
