@@ -1032,7 +1032,20 @@ maps.
 
 \subsection{Protocol Buffer Integration}\label{subsection:protocol_buffer_integration}
 
-TODO
+Packet Courier uses Google's Protocol Buffer library\cite{google_protobuf} to define configuration syntax for files
+that in turn outline the parameters for an emulation, as per Section~\ref{subsubsection:google_protocol_buffer}. The
+full syntax and semantics of Packet Courier's \texttt{.courierconfig} file can be found in the \texttt{README.md} of
+the GitHub repository\cite{packet_courier}. At a technical level, the Protocol Buffer library is used to convert the
+file into a parse-tree which is then traversed by the
+\texttt{PacketCourierSimulationConfigurationProtoParser<NodeInfo>} class to then build a
+\texttt{PacketCourierSimulation.Configuration<NodeInfo>} from scratch. This combined with the
+\texttt{PacketCourierMain} class enables users to run an emulation from the command line without having to write a
+single line of Java code via the following process:
+\begin{quote}
+    \texttt{> cd path/to/packet/courier/root/} \\
+    \texttt{> mvn package -DskipTests} \\
+    \texttt{> java -jar "target/packet-courier-[version].jar"} \\ \texttt{"path/to/configuration\_file.courierconfig"}
+\end{quote}
 
 
 \section{Debugging Features}\label{section:debugging_features}
