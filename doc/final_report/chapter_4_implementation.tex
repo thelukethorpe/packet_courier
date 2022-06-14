@@ -1050,14 +1050,24 @@ single line of Java code via the following process:
 
 \section{Debugging Features}\label{section:debugging_features}
 
+Packet Courier implements a suite of debugging features to help developers understand what is happening within Packet
+Courier itself without needing to consult a lower level code debugging tool such as \texttt{jdb}\cite{jdb}.
+
+\subsection{Meta Logging}\label{subsection:meta_logging}
+
+The \texttt{Logger} interface has not been discussed thus far in the report and that has been because the API that
+surrounds it is elementary. Packet Courier loggers simply provide users with a clean and easy mechanism to track
+output from workers. \emph{Meta logging}, however, does not involve workers at all and instead enables the Packet
+Courier internals to log meaningful information. For example, Packet Courier is instrumented to measure the average
+time it takes to execute a simulation tick; the result is periodically \emph{meta logged}. Other more procedural
+information is meta logged as well, such as which nodes have been set to work and when, when the simulation has
+finished and when the loggers are being flushed and closed. If Packet Courier happened to crash for whatever reason,
+then meta logging may help to identify when the crash occurred and what might have caused it.
+
 \subsection{Process Monitor}\label{subsection:process_monitor}
 
 TODO
 
 \subsection{Crash Dumps}\label{subsection:crash_dumps}
-
-TODO
-
-\subsection{Meta Logging}\label{subsection:meta_logging}
 
 TODO
