@@ -33,7 +33,11 @@ if __name__ == "__main__":
     while True:
         raw_data, address = private_socket.recvfrom(datagram_buffer_size)
         datetime_of_receipt = datetime.datetime.now()
-        data = raw_data.decode("utf-8")
+        try:
+            data = raw_data.decode("utf-8")
+        except:
+            log("Junk!")
+            continue
         data_elements = data.split(data_delimiter)
 
         if len(data_elements) != 6:

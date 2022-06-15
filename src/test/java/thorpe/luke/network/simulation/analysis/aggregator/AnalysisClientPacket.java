@@ -1,5 +1,6 @@
 package thorpe.luke.network.simulation.analysis.aggregator;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -14,11 +15,14 @@ public class AnalysisClientPacket {
   private final String clientName;
   private final int packetId;
   private final LocalDateTime dateTimeOfSending;
+  private final int size;
 
-  public AnalysisClientPacket(String clientName, int packetId, LocalDateTime dateTimeOfSending) {
+  public AnalysisClientPacket(
+      String clientName, int packetId, LocalDateTime dateTimeOfSending, int size) {
     this.clientName = clientName;
     this.packetId = packetId;
     this.dateTimeOfSending = dateTimeOfSending;
+    this.size = size;
   }
 
   public static AnalysisClientPacket parse(String logLine) throws AnalysisMessageParseException {
@@ -36,7 +40,8 @@ public class AnalysisClientPacket {
       String clientName = dataElements[1];
       int packetId = Integer.parseInt(dataElements[2]);
       LocalDateTime dateTimeOfSending = LocalDateTime.parse(dataElements[3], DATE_TIME_FORMATTER);
-      return new AnalysisClientPacket(clientName, packetId, dateTimeOfSending);
+      int size = logLine.trim().getBytes(StandardCharsets.UTF_8).length;
+      return new AnalysisClientPacket(clientName, packetId, dateTimeOfSending, size);
     } catch (Exception e) {
       throw new AnalysisMessageParseException(e);
     }
@@ -56,5 +61,9 @@ public class AnalysisClientPacket {
 
   public LocalDateTime getDateTimeOfSending() {
     return dateTimeOfSending;
+  }
+
+  public int getSize() {
+    return size;
   }
 }
