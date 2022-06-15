@@ -148,6 +148,14 @@ public class AnalysisAggregatorMain {
         numberOfPacketsSentByClients / (double) durationInMilliseconds;
     double packetReceiptRatePerMillisecond =
         numberOfPacketsReceivedByServer / (double) durationInMilliseconds;
+    double meanPacketSizeInBytes =
+        uniquePacketIdToClientPacketMap
+            .values()
+            .stream()
+            .map(AnalysisClientPacket::getSize)
+            .mapToDouble(Integer::doubleValue)
+            .average()
+            .orElse(0.0);
 
     // Print aggregated statistics.
     print("Info: Aggregation complete - printing results of analysis...");
@@ -171,6 +179,7 @@ public class AnalysisAggregatorMain {
         100 * (packetChecksumCorruptionRate + packetJunkRate));
     print("Packet send rate (ms⁻¹):               %.2f", packetSendRatePerMillisecond);
     print("Packet receipt rate (ms⁻¹):            %.2f", packetReceiptRatePerMillisecond);
+    print("Mean packet size (byte):               %.2f", meanPacketSizeInBytes);
     print("############################################################");
     print("Unmatched Packets:");
     print(
