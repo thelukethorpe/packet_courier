@@ -1,4 +1,4 @@
-\section{Methodology}
+\section{Methodology}\label{section:methodology}
 
 \lettrine{T}{he} prospective solution was ultimately named \emph{Packet Courier} for reasons that the ensuing design
 documentation aims to make clear. In summary, Packet Courier listens for packets being sent by nodes on its virtual
@@ -26,9 +26,9 @@ emulation mode, which leveraged the base simulation APIs to further empower Pack
 UDP packets in real-time.
 
 
-\section{High-Level Architecture}
+\section{High-Level Architecture}\label{section:high_level_architecture}
 
-\subsection{Simulation Semantics}
+\subsection{Simulation Semantics}\label{subsection:simulation_semantics}
 
 \lettrine{M}{any} of Packet Courier's core abstractions are inspired by the Elixir programming language\cite{elixir}.
 One of Elixir's major selling points is how elegantly it removes unnecessary detail when interfacing with the
@@ -87,7 +87,7 @@ Courier is no different: nodes can only directly send mail to their immediate ne
 
 \newpage
 
-\subsection{Network Condition Semantics}
+\subsection{Network Condition Semantics}\label{subsection:network_condition_semantics}
 
 \lettrine{W}{hen} it comes to the \emph{network} aspect of the network simulation framework that Packet Courier offers,
 \texttt{tc-netem}\cite{tc_netem_wiki, tc_netem_8_man,tc_netem_src} provides an excellent template to draw from.
@@ -145,7 +145,7 @@ subtle tweaks, namely:
 
 \newpage
 
-\subsection{Event-Based Semantics}
+\subsection{Event-Based Semantics}\label{subsection:event_based_semantics}
 
 \lettrine{I}{n} addition to simple Bernoulli sampling, \texttt{tc-netem} offers two different stateful methods to
 model packet
@@ -316,7 +316,7 @@ converting them into a format that is more easily read and understood by humans.
 
 \newpage
 
-\subsection{Algorithms}
+\subsection{Algorithms}\label{subsection:algorithms}
 
 \lettrine{M}{ost} of the Packet Courier semantics as defined up until this point should map more or less directly onto a
 programmed implementation. There are a few instances where this isn't the case, however, namely when sampling the
@@ -324,7 +324,7 @@ statistical distributions which sit at the heart of Packet Courier's network sim
 distributions are particularly problematic since neither has a closed form inverse cumulative distribution function,
 ergo neither can be trivially sampled by percentile.
 
-\subsubsection{Normal Distribution Sampler}
+\subsubsection{Normal Distribution Sampler}\label{subsubsection:normal_distribution_sampler}
 
 The Box-Muller transform converts a pair of independent, uniform, random variables, $U_1, U_2 \sim U(0, 1)$ into a pair
 of independent, normal, random variables $Z_0, Z_1 \sim \mathcal{N}(0, 1)$\cite{box_muller_transform} via the
@@ -344,7 +344,7 @@ Note that this algorithm would only need to be run every other sample, since it 
 variables. Moreover, it can be readily be adapted to any arbitrary normal distribution, since $Z \sim \mathcal{N}(0,
 1) \implies \mu + \sigma Z \sim \mathcal{N}(\mu, \sigma^2)$.
 
-\subsubsection{Poisson Distribution Sampler}
+\subsubsection{Poisson Distribution Sampler}\label{subsubsection:poisson_distribution_sampler}
 
 The Poisson cumulative distribution function for $X \sim Poi(\lambda)$ as defined as follows:
 \begin{align*}
@@ -395,14 +395,14 @@ $U \sim [0, 1)$.
 \end{algorithm}
 
 
-\section{Top-Down Specification}
+\section{Top-Down Specification}\label{section:top_down_specification}
 
 \lettrine{N}{ow} that Packet Courier's core simulation and network semantics have been established, the next
 important consideration is how this proposed functionality will be delivered to users. The path of least resistance
 is to implement the framework in a way that is highly accessible for programmers to immediately interface with. From
 there, more complex features can be built on top of this initial API to broaden the scope of the tool ad hoc.
 
-\subsection{Application-Programmer Interface}
+\subsection{Application-Programmer Interface}\label{subsection:application_programmer_interface}
 
 At the bare minimum, a Packet Courier simulation needs to be provided with the following parameters:
 \begin{itemize}
@@ -494,7 +494,7 @@ something akin to Algorithm~\ref{alg:simulation_configuration_example}; the logg
     wait for $simulation$ to end
 \end{algorithm}
 
-\subsection{Emulation Semantics}
+\subsection{Emulation Semantics}\label{subsection:emulation_semantics}
 
 Although Packet Courier would be able provide value to users via APIs, it would likely alienate many developers who
 were not already using the same programming language as the Packet Courier framework. Forcing prospective users to
