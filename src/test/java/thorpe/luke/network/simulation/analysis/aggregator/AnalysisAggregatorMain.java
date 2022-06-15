@@ -7,7 +7,10 @@ import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 public class AnalysisAggregatorMain {
   private static final int EXIT_CODE_SUCCESS = 0;
@@ -90,7 +93,7 @@ public class AnalysisAggregatorMain {
     int numberOfPacketsSentByClients = uniquePacketIdToClientPacketMap.size();
     int numberOfPacketsReceivedByServer = numberOfJunkPackets;
     int numberOfUnexpectedArrivals = 0;
-    int numberOfUnmatchedPackets = 0;
+    int numberOfMissingArrivals = 0;
     int numberOfChecksumCorruptedPackets = 0;
     List<Long> packetLatenciesInMilliseconds = new LinkedList<>();
     LocalDateTime timeOfFirstPacketSend = LocalDateTime.MAX;
@@ -108,7 +111,7 @@ public class AnalysisAggregatorMain {
           uniquePacketIdToServerPacketsMap.get(uniquePacketId);
       uniquePacketIdToServerPacketsMap.remove(uniquePacketId);
       if (serverPackets == null || serverPackets.isEmpty()) {
-        numberOfUnmatchedPackets++;
+        numberOfMissingArrivals++;
         continue;
       }
       numberOfPacketsReceivedByServer += serverPackets.size();
@@ -136,11 +139,11 @@ public class AnalysisAggregatorMain {
         uniquePacketIdToServerPacketsMap.values().stream().mapToInt(List::size).sum();
     numberOfPacketsReceivedByServer += leftoverPackets;
     numberOfChecksumCorruptedPackets += leftoverPackets;
-    double meanNumberOfUnexpectedArrivalsPerClientSend =
+    double meanUnexpectedArrivalsPerSend =
         numberOfUnexpectedArrivals / (double) numberOfPacketsSentByClients;
     double meanPacketLatencyInMilliseconds =
         packetLatenciesInMilliseconds.stream().mapToDouble(Long::doubleValue).average().orElse(0.0);
-    double packetMismatchRate = numberOfUnmatchedPackets / (double) numberOfPacketsSentByClients;
+    double missingArrivalRate = numberOfMissingArrivals / (double) numberOfPacketsSentByClients;
     double packetChecksumCorruptionRate =
         numberOfChecksumCorruptedPackets / (double) numberOfPacketsReceivedByServer;
     double packetJunkRate = numberOfJunkPackets / (double) numberOfPacketsReceivedByServer;
@@ -165,15 +168,13 @@ public class AnalysisAggregatorMain {
     print("Number of packets sent by clients:     %d", numberOfPacketsSentByClients);
     print("Number of packets received by server:  %d", numberOfPacketsReceivedByServer);
     print("Number of unexpected arrivals:         %d", numberOfUnexpectedArrivals);
-    print("Number of unmatched packets:           %d", numberOfUnmatchedPackets);
+    print("Number of missing arrivals:            %d", numberOfMissingArrivals);
     print("Number of checksum corrupted packets:  %d", numberOfChecksumCorruptedPackets);
     print("Number of junk packets:                %d", numberOfJunkPackets);
     print("############################################################");
-    print(
-        "Mean number of unexpected arrivals per client send: %.2f",
-        meanNumberOfUnexpectedArrivalsPerClientSend);
     print("Mean latency of packets (ms):          %.2f", meanPacketLatencyInMilliseconds);
-    print("Packet mismatch rate:                  %.2f%%", 100 * packetMismatchRate);
+    print("Mean unexpected arrivals per send:     %.2f", meanUnexpectedArrivalsPerSend);
+    print("Missing arrival rate:                  %.2f%%", 100 * missingArrivalRate);
     print("Packet checksum corruption rate:       %.2f%%", 100 * packetChecksumCorruptionRate);
     print("Packet junk rate:                      %.2f%%", 100 * packetJunkRate);
     print(
@@ -183,9 +184,9 @@ public class AnalysisAggregatorMain {
     print("Packet receipt rate (ms⁻¹):            %.2f", packetReceiptRatePerMillisecond);
     print("Mean packet size (byte):               %.2f", meanPacketSizeInBytes);
     print("############################################################");
-    print("Unexpected arrivals:");
+    print("Unexpected Arrivals:");
     print("   Packets with IDs that the server has already seen.");
-    print("Unmatched Packets:");
+    print("Missing Arrivals:");
     print(
         "   Packets that were sent by a client but couldn't be reliably identified by the server. This could either be because they were dropped or because they were junk upon arrival.");
     print("Checksum Corrupted Packets:");
