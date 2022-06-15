@@ -1,6 +1,28 @@
 \section{Unit Testing}\label{section:unit_testing}
 
-TODO
+Whilst unit testing is often seen to be a menial aspect of ensuring robustness in software engineering projects,
+unit tests in Packet Courier are used to verify the correctness of the statistical distribution implementations,
+which is somewhat non-trivial. Each distribution is subjected to two different tests:
+\begin{itemize}
+    \item $n$ samples are taken of the distribution variable $X$ and their mean $\bar{X}$ must lie within an $\alpha
+    = 0.01$ confidence interval. $n$ is set to $10,000$ for this test. This is exactly why the \texttt{mean} and
+    \texttt{variance} methods in \texttt{Distribution<T>} are necessary, as per the end of
+    Section~\ref{subsection:statistical_distribution_api}. The benefit of this test is that it assures statistical
+    distribution API users that the distributions they are using are unbiased and boast the correct expected value.
+    \item $n$ samples are taken of the distribution variable $X$ and separated into $m$ contiguous bins, $B_1, \dots ,
+    B_m$ delimited by boundary values $b_1, \dots , b_m, b_{m+1}$. The contents of each bin $B_i$ must reflect the
+    following property: $\frac{|B_i|}{m} - \delta \leq F_X(b_{i+1}) - F_X(b_i) \leq \frac{|B_i|}{m} + \delta$ for
+    $\delta = 0.01$. $n$ is set to $50,000$ for this test. The benefit of this test is that is assures statistical
+    distribution API users that the distributions have roughly the correct shape. In this way, one could think about
+    this test like the proof of calculus' Trapezoidal Rule\cite{trapezoidal_rule}, whereby the trapezoids under the
+    curve are analogous to the bins under the probability density function.
+\end{itemize}
+
+This is technically achieved by having a base abstract \texttt{DistributionTest<T>} class that implements tests
+generically using the \texttt{Distribution<T>} interface. The key abstract method is
+\texttt{getSomeDistributionsWithCdfTables} which generates a selection of distributions and tabulated cumulative
+distribution functions. In turn, a suite of test classes inherit from \texttt{DistributionTest<T>} and supply it with
+some distributions and CDF-tables to conduct tests on.
 
 
 \section{System Testing}\label{section:system_testing}
