@@ -54,7 +54,8 @@ Java 8\cite{java_8} was chosen as the foundational language for Packet Courier d
 \begin{itemize}
     \item Its excellent breadth of supported platforms\cite{java_8_support}, which lends itself well to objective 4.a).
     \item The vast number of popular and easily importable libraries available to it\cite{java_relevance}.
-    \item Its object-oriented nature, which maps nicely onto the abstract semantics laid out in the design section.
+    \item Its object-oriented nature, which maps nicely onto the abstract semantics laid out in
+    Section~\ref{section:high_level_architecture}.
     \item Its relatively high levels of time-efficiency, as shown in
     Figure~\ref{fig:chapter_4_implementation-programming_language_comparison}.
     \item Its suite of concurrency abstractions\cite{java_util_concurrent}.
@@ -542,15 +543,17 @@ and the next time the state will become active again is in 300 seconds, meanwhil
 \begin{figure}[!h]
     \includegraphics[width=0.65\textwidth]{images/chapter_4_implementation/worker_api_tree}
     \centering~\caption{A diagram showing the class inheritance tree of the worker API. Some of these classes are
-    specific to Packet Courier's emulator functionality and thus will be discussed in a later section.}
+    specific to Packet Courier's emulator functionality and thus will be discussed in
+    Section~\ref{section:standalone_emulator}.}
     \label{fig:chapter_4_implementation-worker_api_tree}
 \end{figure}
 
 \subsubsection{Worker}\label{subsubsection:worker}
 
-As described in the design section, a Packet Courier worker is simply an agent within the simulation that performs
-work and is owned by a particular node. The \texttt{Worker<NodeInfo>} class is implemented as a wrapper for a Java
-\texttt{Thread}\cite{java_Thread} with a couple of useful abstractions layered on top.
+As described in the Section~\ref{subsection:simulation_semantics}, a Packet Courier worker is simply an agent within
+the simulation that performs work and is owned by a particular node. The \texttt{Worker<NodeInfo>} class is
+implemented as a wrapper for a Java \texttt{Thread}\cite{java_Thread} with a couple of useful abstractions layered on
+top.
 \begin{lstlisting}[language=Java,caption={A cut-down version of the \texttt{Worker<NodeInfo>} class.},
     label={code:worker_class},captionpos=b]
 public class Worker<NodeInfo> {
@@ -634,8 +637,8 @@ ensuring that any new workers are logged in a relevant address book.
 \subsubsection{WorkerManager \& WorkerScript}\label{subsubsection:worker_manager_and_worker_script}
 
 The \texttt{WorkerManager<NodeInfo>} class is where most of the magic happens regarding the worker API. As per the
-semantics presented in the design section, it is the black box that enables a worker to interact with the wider
-simulation. In this way, a \texttt{WorkerScript<NodeInfo>} is defined as in
+semantics presented in Section~\ref{subsection:application_programmer_interface}, it is the black box that enables a
+worker to interact with the wider simulation. In this way, a \texttt{WorkerScript<NodeInfo>} is defined as in
 Code-Snippet~\ref{code:worker_script_interface}.
 \begin{lstlisting}[language=Java,caption={The \texttt{WorkerScript<NodeInfo>} interface exactly as it appears in the
 codebase.},label={code:worker_script_interface},captionpos=b]
@@ -702,9 +705,10 @@ attributes together: \texttt{source} and \texttt{destination}.
 
 The most interesting aspect of the node API is the \texttt{NodeInfoGenerator<NodeInfo>} interface which is defined in
 Code-Snippet~\ref{code:node_info_generator_interface}. It is this component that allows users to define what
-information workers in their simulation have access to. As per the design section, each node generates its own
-info-package on simulation startup which then gets handed out to each worker operating on that particular node. This
-is why many of the classes and interfaces in the node and worker APIs are type parameterised by \texttt{NodeInfo}.
+information workers in their simulation have access to. As per
+Section~\ref{subsection:application_programmer_interface}, each node generates its own info-package on simulation
+startup which then gets handed out to each worker operating on that particular node. This is why many of the classes
+and interfaces in the node and worker APIs are type parameterised by \texttt{NodeInfo}.
 \begin{lstlisting}[language=Java,caption={The \texttt{NodeInfoGenerator<NodeInfo>} interface exactly as it appears in
 the
 codebase.},label={code:node_info_generator_interface},captionpos=b]
@@ -905,7 +909,7 @@ virtual or simulated sense.
 Packet Courier achieves language agnosticism by offering UDP interoperability. As a consequeunce, any binary that
 uses UDP (directly or indirectly) to send and receive packets can enjoy what the Packet Courier API has to offer.
 This is achieved by giving each node a pair of public and private ip-addresses and opening a UDP socket for each
-public ip-address, as per the emulation semantics outlined in the design section.
+public ip-address, as per the emulation semantics outlined in Section~\ref{subsection:emulation_semantics}.
 
 Packet Courier users can in principle mix and match the API with the UDP adaptive solution, i.e.: have workers that
 use custom Java code and nodes that are communicating with a binary over UDP \emph{in the same simulation/emulation}.
