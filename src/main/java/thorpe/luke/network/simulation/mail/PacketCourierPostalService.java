@@ -35,9 +35,7 @@ public class PacketCourierPostalService<NodeInfo> implements PostalService {
       NodeConnection<NodeInfo> nodeConnection = networkConditionEntry.getKey();
       PacketPipeline<Mail> packetPipeline = networkConditionEntry.getValue();
       packetPipeline.tick(now);
-      packetPipeline
-          .tryDequeue()
-          .ifPresent(packet -> nodeConnection.getDestination().deliver(packet));
+      packetPipeline.tryDequeue().ifPresent(mail -> nodeConnection.getDestination().deliver(mail));
     }
   }
 

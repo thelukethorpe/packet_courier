@@ -107,7 +107,7 @@ supported environment variables:
 - `PORT` corresponds to the port that nodes have been configured to listen on.
 - `DATAGRAM_BUFFER_SIZE` corresponds to the buffer size of the UDP sockets that Packet Courier is listening on.
 - `NEIGHBOUR_IPS` corresponds to the names and public IP addresses of neighbouring nodes.
-- `FLOOP_IPS_BY_DISTANCE=[distance]` generates the names and public IP addresses of a basic flood search with search
+- `FLOOD_IPS_BY_DISTANCE=[distance]` generates the names and public IP addresses of a basic flood search with search
   radius`distance`.
 - `TOPOLOGY_IPS` corresponds to the names and public IP addresses of the entire topology, including nodes that this node
   isn't adjacent to and therefore cannot communicate with directly.
