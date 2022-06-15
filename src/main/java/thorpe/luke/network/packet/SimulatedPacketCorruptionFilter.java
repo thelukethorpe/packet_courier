@@ -44,7 +44,8 @@ public class SimulatedPacketCorruptionFilter<Wrapper extends PacketWrapper<Wrapp
         packet -> {
           List<Byte> bytes = packet.getData();
           int byteCorruptionIndex = byteCorruptionDistribution.sample(random) % bytes.size();
-          int bitFlippingMask = bitFlippingDistribution.sample(random) % Byte.SIZE;
+          int bitFlippingIndex = bitFlippingDistribution.sample(random) & (Byte.SIZE - 1);
+          int bitFlippingMask = 1 << bitFlippingIndex;
           byte byteToCorrupt = bytes.get(byteCorruptionIndex);
           bytes.set(byteCorruptionIndex, (byte) (byteToCorrupt ^ bitFlippingMask));
           return new Packet(bytes);
