@@ -181,9 +181,6 @@ public class AnalysisAggregatorMain {
     print("Unidentifiable arrival rate:           %.2f%%", 100 * unidentifiableArrivalRate);
     print("Packet checksum corruption rate:       %.2f%%", 100 * packetChecksumCorruptionRate);
     print("Packet junk rate:                      %.2f%%", 100 * packetJunkRate);
-    print(
-        "Maximum packet corruption rate:        %.2f%%",
-        100 * (packetChecksumCorruptionRate + packetJunkRate));
     print("Packet send rate (ms⁻¹):               %.2f", packetSendRatePerMillisecond);
     print("Packet receipt rate (ms⁻¹):            %.2f", packetReceiptRatePerMillisecond);
     print("Mean packet size (byte):               %.2f", meanPacketSizeInBytes);
