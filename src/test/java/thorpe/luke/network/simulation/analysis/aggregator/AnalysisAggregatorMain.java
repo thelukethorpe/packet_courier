@@ -135,15 +135,17 @@ public class AnalysisAggregatorMain {
         ChronoUnit.MILLIS.between(timeOfFirstPacketSend, timeOfLastPacketReceipt);
     HourMinuteSecondMillisecondDuration durationInHoursMinutesSecondsMilliseconds =
         HourMinuteSecondMillisecondDuration.fromMilliseconds(durationInMilliseconds);
-    int leftoverPackets =
+    int numberOfUnidentifiableArrivals =
         uniquePacketIdToServerPacketsMap.values().stream().mapToInt(List::size).sum();
-    numberOfPacketsReceivedByServer += leftoverPackets;
-    numberOfChecksumCorruptedPackets += leftoverPackets;
+    numberOfPacketsReceivedByServer += numberOfUnidentifiableArrivals;
+    numberOfChecksumCorruptedPackets += numberOfUnidentifiableArrivals;
     double meanUnexpectedArrivalsPerSend =
         numberOfUnexpectedArrivals / (double) numberOfPacketsSentByClients;
     double meanPacketLatencyInMilliseconds =
         packetLatenciesInMilliseconds.stream().mapToDouble(Long::doubleValue).average().orElse(0.0);
     double missingArrivalRate = numberOfMissingArrivals / (double) numberOfPacketsSentByClients;
+    double unidentifiableArrivalRate =
+        numberOfUnidentifiableArrivals / (double) numberOfPacketsSentByClients;
     double packetChecksumCorruptionRate =
         numberOfChecksumCorruptedPackets / (double) numberOfPacketsReceivedByServer;
     double packetJunkRate = numberOfJunkPackets / (double) numberOfPacketsReceivedByServer;
@@ -169,16 +171,18 @@ public class AnalysisAggregatorMain {
     print("Number of packets received by server:  %d", numberOfPacketsReceivedByServer);
     print("Number of unexpected arrivals:         %d", numberOfUnexpectedArrivals);
     print("Number of missing arrivals:            %d", numberOfMissingArrivals);
+    print("Number of unidentifiable arrivals:     %d", numberOfUnidentifiableArrivals);
     print("Number of checksum corrupted packets:  %d", numberOfChecksumCorruptedPackets);
     print("Number of junk packets:                %d", numberOfJunkPackets);
     print("############################################################");
     print("Mean latency of packets (ms):          %.2f", meanPacketLatencyInMilliseconds);
     print("Mean unexpected arrivals per send:     %.2f", meanUnexpectedArrivalsPerSend);
     print("Missing arrival rate:                  %.2f%%", 100 * missingArrivalRate);
+    print("Unidentifiable arrival rate:           %.2f%%", 100 * unidentifiableArrivalRate);
     print("Packet checksum corruption rate:       %.2f%%", 100 * packetChecksumCorruptionRate);
     print("Packet junk rate:                      %.2f%%", 100 * packetJunkRate);
     print(
-        "Overall packet corruption rate:        %.2f%%",
+        "Maximum packet corruption rate:        %.2f%%",
         100 * (packetChecksumCorruptionRate + packetJunkRate));
     print("Packet send rate (ms⁻¹):               %.2f", packetSendRatePerMillisecond);
     print("Packet receipt rate (ms⁻¹):            %.2f", packetReceiptRatePerMillisecond);
