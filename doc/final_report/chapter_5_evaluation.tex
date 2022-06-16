@@ -27,7 +27,14 @@ some distributions and CDF-tables to conduct tests on.
 
 \section{System Testing}\label{section:system_testing}
 
-TODO
+Packet Courier takes advantage of system testing to ensure that the aggregate properties of packets sent over an
+emulated network accurately reflect those specified in the \texttt{.courierconfig} file. A selection of
+configurations have been specified in \texttt{src/test/resources/thorpe/luke/network/simulation/analysis} to cover
+the six fundamental offerings: corruption, drop, duplication, latency, limit and throttle. These can be run from the
+root of the directory using \texttt{run\_basic\_analysis\_suite.sh}. Each configuration consists of a star topology
+with either 5, 25, 50, 75 or 100 clients which send 50 packets per second to a server. Clients log the contents of
+their packet and when they sent them. The server logs the contents of the packet it has received and when it received
+them. The logs are then dumped to a file and analysed in post.
 
 
 \section{User Feedback}\label{section:user_feedback}
