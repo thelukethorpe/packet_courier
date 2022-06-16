@@ -18,8 +18,8 @@ public class PacketThrottlingFilter<Wrapper extends PacketWrapper<Wrapper>>
   public PacketThrottlingFilter(
       int byteThrottleRate, int byteDropThreshold, ChronoUnit timeUnit, LocalDateTime startTime) {
     this.packetLatencyFilter = new PacketLatencyFilter<>(startTime);
-    this.byteThrottleRate = byteThrottleRate;
-    this.timeDropThreshold = byteDropThreshold / byteThrottleRate;
+    this.byteThrottleRate = 2 * byteThrottleRate;
+    this.timeDropThreshold = 2L * byteDropThreshold / byteThrottleRate;
     this.timeUnit = timeUnit;
     this.timeDelta = 0.0;
     this.now = startTime;
@@ -28,7 +28,8 @@ public class PacketThrottlingFilter<Wrapper extends PacketWrapper<Wrapper>>
 
   @Override
   public void tick(LocalDateTime now) {
-    if (previousScheduledDequeueTime.isBefore(now)) {
+    long timeElapsed = timeUnit.between(previousScheduledDequeueTime, now);
+    if (timeElapsed > 0) {
       previousScheduledDequeueTime = now;
       timeDelta = 0.0;
     }
