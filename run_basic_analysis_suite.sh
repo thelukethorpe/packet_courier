@@ -9,7 +9,7 @@ echo "Compiling Packet Courier"
 mvn package --quiet -DskipTests
 
 # Run basic analysis suite.
-for analysis_type in "corruption" "drop" "duplication" "latency" "limit"
+for analysis_type in "corruption" "drop" "duplication" "latency" "limit" "throttle"
 do
   for topology_size in "5" "25" "50" "75" "100"
   do

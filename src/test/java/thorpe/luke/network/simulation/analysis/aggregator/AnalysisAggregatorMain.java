@@ -7,10 +7,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class AnalysisAggregatorMain {
   private static final int EXIT_CODE_SUCCESS = 0;
@@ -53,6 +50,8 @@ public class AnalysisAggregatorMain {
     Map<UniquePacketId, AnalysisClientPacket> uniquePacketIdToClientPacketMap = new HashMap<>();
     Map<UniquePacketId, List<AnalysisServerPacket>> uniquePacketIdToServerPacketsMap =
         new HashMap<>();
+    TreeMap<LocalDateTime, List<AnalysisServerPacket>> dateTimeOfReceiptToServerPacketsMap =
+        new TreeMap<>();
     int numberOfJunkPackets = 0;
 
     // Parse data from log file.
@@ -75,6 +74,11 @@ public class AnalysisAggregatorMain {
                 analysisServerPacket.getUniquePacketId(), new LinkedList<>());
             uniquePacketIdToServerPacketsMap
                 .get(analysisServerPacket.getUniquePacketId())
+                .add(analysisServerPacket);
+            dateTimeOfReceiptToServerPacketsMap.putIfAbsent(
+                analysisServerPacket.getDateTimeOfReceipt(), new LinkedList<>());
+            dateTimeOfReceiptToServerPacketsMap
+                .get(analysisServerPacket.getDateTimeOfReceipt())
                 .add(analysisServerPacket);
           } else {
             throw new AnalysisMessageParseException();
@@ -162,6 +166,21 @@ public class AnalysisAggregatorMain {
             .average()
             .orElse(0.0);
 
+    long quantileDurationInMilliseconds = durationInMilliseconds / 4;
+    LocalDateTime startTimeOfSecondQuantile =
+        timeOfFirstPacketSend.plus(quantileDurationInMilliseconds, ChronoUnit.MILLIS);
+    LocalDateTime finishTimeOfThirdQuantile =
+        timeOfLastPacketReceipt.minus(quantileDurationInMilliseconds, ChronoUnit.MILLIS);
+    double bytesReceivedByServerDuringMiddleQuantiles =
+        dateTimeOfReceiptToServerPacketsMap
+            .subMap(startTimeOfSecondQuantile, finishTimeOfThirdQuantile)
+            .values()
+            .stream()
+            .mapToDouble(serverPackets -> serverPackets.size() * meanPacketSizeInBytes)
+            .sum();
+    double byteRateDuringMiddleQuantiles =
+        bytesReceivedByServerDuringMiddleQuantiles / (quantileDurationInMilliseconds * 2.0);
+
     // Print aggregated statistics.
     print("Info: Aggregation complete - printing results of analysis...");
     print("############################################################");
@@ -184,6 +203,11 @@ public class AnalysisAggregatorMain {
     print("Packet send rate (ms⁻¹):               %.2f", packetSendRatePerMillisecond);
     print("Packet receipt rate (ms⁻¹):            %.2f", packetReceiptRatePerMillisecond);
     print("Mean packet size (byte):               %.2f", meanPacketSizeInBytes);
+    print("############################################################");
+    print(
+        "Bytes received during middle quantiles:    %.2f",
+        bytesReceivedByServerDuringMiddleQuantiles);
+    print("Bytes rate during middle quantiles (ms⁻¹): %.2f", byteRateDuringMiddleQuantiles);
     print("############################################################");
     print("Unexpected Arrivals:");
     print("   Packets with IDs that the server has already seen.");
