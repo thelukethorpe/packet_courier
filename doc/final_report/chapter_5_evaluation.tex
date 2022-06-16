@@ -36,6 +36,62 @@ with either 5, 25, 50, 75 or 100 clients which send 50 packets per second to a s
 their packet and when they sent them. The server logs the contents of the packet it has received and when it received
 them. The logs are then dumped to a file and analysed in post.
 
+\subsection{Analysis Methodology}\label{subsection:analysis_methodology}
+
+Each client process runs the \texttt{analysis\_client.py} script which has been designed to send packets that
+encapsulate all the information required to assess any transformations they may have undergone during transit. This
+information includes:
+\begin{itemize}
+    \item A special prefix, \texttt{!} so that it is clear from the logs that this is a client send.
+    \item The name of the client.
+    \item The ordinality of the packet, i.e.: was it the 1\textsuperscript{st}, 4\textsuperscript{th} or
+    17\textsuperscript{th} packet sent by that particular client?
+    \item The date and time of sending.
+    \item A checksum of the above information using the SHA-256 cryptographic hash\cite{sha256_hash,
+        python_sha256_hash}.
+\end{itemize}
+
+Each of the above properties are delimited using the \texttt{~} symbol and encoded into bytes using the UTF-8
+standard\cite{utf8}, the result of which tends to take up between 132 and 133 bytes, so the datagram buffer size is
+set to 136 to prevent truncation. Clients log the contents of each packet they send to the server.
+
+The server running \texttt{analysis\_server.py} will listen for packets and log the date and time of receipt
+immediately before attempting to parse the packet for its contents. If the packet cannot be decoded using UTF-8 or
+does not have the correct number of elements after having been split based on the delimiter \texttt{~}, then the
+packet will be logged as \texttt{Junk!} Otherwise the elements of the packet will be hashed and compared with the
+checksum to check for corruption. The server will then log the following contents:
+\begin{itemize}
+    \item A special prefix, \texttt{?}, so that it is clear from the logs that this is a server receipt.
+    \item The name of the server.
+    \item The date and time of receipt.
+    \item The name of the client.
+    \item The ordinality of the packet, i.e.: was it the 1\textsuperscript{st}, 4\textsuperscript{th} or
+    17\textsuperscript{th} packet sent by that particular client?
+    \item The date and time of sending.
+    \item A \texttt{True} if the packet had been corrupted according to the checksum; \texttt{False} otherwise.
+\end{itemize}
+
+Note that a sent packet can be uniquely identified by the sending client's name and its ordinal number: this is
+referred to as the packet-id. As such, the log files containing this information can be used to aggregate the
+following statistics:
+\begin{itemize}
+    \item \textbf{The duration of the analysis run.} \\
+    \emph{The last uncorrupted receipt minus the first uncorrupted send.}
+    \item \textbf{The number of packets sent by clients.}
+    \item \textbf{The number of packets received by the server.}
+    \item \textbf{The number of unexpected arrivals.} \\
+    \emph{How many times the server receives a packet-id that it has already seen.}
+    \item \textbf{The number of missing arrivals.} \\
+    \emph{How many packets that were sent by a client but couldn't be reliably identified by the server. This could
+    either be because they were dropped or because they were junk upon arrival.}
+    \item \textbf{The number of unidentifiable arrivals.} \\
+    \emph{How many times the server receives a packet-id that was never sent by any of the clients.}
+    \item \textbf{The number of checksum corrupted packets.}
+    \item \textbf{The number of junk packets.}
+\end{itemize}
+
+These key metrics can be used to verify the correctness and robustness of each core Packet Courier functionality.
+
 
 \section{User Feedback}\label{section:user_feedback}
 
