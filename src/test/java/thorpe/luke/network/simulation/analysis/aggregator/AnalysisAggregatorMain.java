@@ -214,6 +214,8 @@ public class AnalysisAggregatorMain {
     print("Missing Arrivals:");
     print(
         "   Packets that were sent by a client but couldn't be reliably identified by the server. This could either be because they were dropped or because they were junk upon arrival.");
+    print("Unidentifiable Arrivals:");
+    print("   Packets IDs that didn't match anything sent by clients.");
     print("Checksum Corrupted Packets:");
     print("   Packets that had an invalid checksum upon arrival.");
     print("Junk Packets:");
