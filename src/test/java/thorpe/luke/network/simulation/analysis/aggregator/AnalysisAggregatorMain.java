@@ -1,13 +1,9 @@
 package thorpe.luke.network.simulation.analysis.aggregator;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
+import thorpe.luke.log.SimpleLogger;
 
 public class AnalysisAggregatorMain {
   private static final int EXIT_CODE_SUCCESS = 0;
@@ -37,177 +33,79 @@ public class AnalysisAggregatorMain {
               + " arguments, but only requires a path to an analysis log.");
     }
 
-    // Set up buffered reader to poll lines from log file.
-    BufferedReader bufferedReader;
+    File file = new File(args[0]);
+    AggregatedStatistics aggregatedStatistics;
     try {
-      bufferedReader = new BufferedReader(new FileReader(args[0]));
-    } catch (FileNotFoundException e) {
-      exit(EXIT_CODE_IO_FAILURE, "Log file not found: " + e.getMessage());
+      aggregatedStatistics =
+          AggregatedStatistics.parse(file, new SimpleLogger(AnalysisAggregatorMain::print));
+    } catch (IOException e) {
+      exit(EXIT_CODE_IO_FAILURE, e.getMessage());
       return;
     }
-
-    // Prepare data structures to aggregate data from log file.
-    Map<UniquePacketId, AnalysisClientPacket> uniquePacketIdToClientPacketMap = new HashMap<>();
-    Map<UniquePacketId, List<AnalysisServerPacket>> uniquePacketIdToServerPacketsMap =
-        new HashMap<>();
-    TreeMap<LocalDateTime, List<AnalysisServerPacket>> dateTimeOfReceiptToServerPacketsMap =
-        new TreeMap<>();
-    int numberOfJunkPackets = 0;
-
-    // Parse data from log file.
-    print("Info: Parsing data from log file...");
-    do {
-      String logLine;
-      try {
-        logLine = bufferedReader.readLine();
-        if (logLine == null) {
-          break;
-        }
-        try {
-          if (logLine.startsWith(AnalysisClientPacket.PREFIX)) {
-            AnalysisClientPacket analysisClientPacket = AnalysisClientPacket.parse(logLine);
-            uniquePacketIdToClientPacketMap.put(
-                analysisClientPacket.getUniquePacketId(), analysisClientPacket);
-          } else if (logLine.startsWith(AnalysisServerPacket.PREFIX)) {
-            AnalysisServerPacket analysisServerPacket = AnalysisServerPacket.parse(logLine);
-            uniquePacketIdToServerPacketsMap.putIfAbsent(
-                analysisServerPacket.getUniquePacketId(), new LinkedList<>());
-            uniquePacketIdToServerPacketsMap
-                .get(analysisServerPacket.getUniquePacketId())
-                .add(analysisServerPacket);
-            dateTimeOfReceiptToServerPacketsMap.putIfAbsent(
-                analysisServerPacket.getDateTimeOfReceipt(), new LinkedList<>());
-            dateTimeOfReceiptToServerPacketsMap
-                .get(analysisServerPacket.getDateTimeOfReceipt())
-                .add(analysisServerPacket);
-          } else {
-            throw new AnalysisMessageParseException();
-          }
-        } catch (AnalysisMessageParseException e) {
-          numberOfJunkPackets++;
-        }
-      } catch (IOException e) {
-        exit(EXIT_CODE_IO_FAILURE, "Failed to read from log file: " + e.getMessage());
-        return;
-      }
-    } while (true);
-
-    // Aggregate data into useful statistics.
-    print("Info: Aggregating parsed data...");
-    int numberOfPacketsSentByClients = uniquePacketIdToClientPacketMap.size();
-    int numberOfPacketsReceivedByServer = numberOfJunkPackets;
-    int numberOfUnexpectedArrivals = 0;
-    int numberOfMissingArrivals = 0;
-    int numberOfChecksumCorruptedPackets = 0;
-    List<Long> packetLatenciesInMilliseconds = new LinkedList<>();
-    LocalDateTime timeOfFirstPacketSend = LocalDateTime.MAX;
-    LocalDateTime timeOfLastPacketReceipt = LocalDateTime.MIN;
-
-    for (Map.Entry<UniquePacketId, AnalysisClientPacket> packetIdToClientPacketEntry :
-        uniquePacketIdToClientPacketMap.entrySet()) {
-      UniquePacketId uniquePacketId = packetIdToClientPacketEntry.getKey();
-      AnalysisClientPacket clientPacket = packetIdToClientPacketEntry.getValue();
-      if (clientPacket.getDateTimeOfSending().isBefore(timeOfFirstPacketSend)) {
-        timeOfFirstPacketSend = clientPacket.getDateTimeOfSending();
-      }
-
-      List<AnalysisServerPacket> serverPackets =
-          uniquePacketIdToServerPacketsMap.get(uniquePacketId);
-      uniquePacketIdToServerPacketsMap.remove(uniquePacketId);
-      if (serverPackets == null || serverPackets.isEmpty()) {
-        numberOfMissingArrivals++;
-        continue;
-      }
-      numberOfPacketsReceivedByServer += serverPackets.size();
-      numberOfUnexpectedArrivals += serverPackets.size() - 1;
-      for (AnalysisServerPacket serverPacket : serverPackets) {
-        if (serverPacket.isChecksumCorrupted()) {
-          numberOfChecksumCorruptedPackets++;
-          continue;
-        }
-        if (timeOfLastPacketReceipt.isBefore(serverPacket.getDateTimeOfReceipt())) {
-          timeOfLastPacketReceipt = serverPacket.getDateTimeOfReceipt();
-        }
-        long packetLatencyInMilliseconds =
-            ChronoUnit.MILLIS.between(
-                clientPacket.getDateTimeOfSending(), serverPacket.getDateTimeOfReceipt());
-        packetLatenciesInMilliseconds.add(packetLatencyInMilliseconds);
-      }
-    }
-
-    long durationInMilliseconds =
-        ChronoUnit.MILLIS.between(timeOfFirstPacketSend, timeOfLastPacketReceipt);
-    HourMinuteSecondMillisecondDuration durationInHoursMinutesSecondsMilliseconds =
-        HourMinuteSecondMillisecondDuration.fromMilliseconds(durationInMilliseconds);
-    int numberOfUnidentifiableArrivals =
-        uniquePacketIdToServerPacketsMap.values().stream().mapToInt(List::size).sum();
-    numberOfPacketsReceivedByServer += numberOfUnidentifiableArrivals;
-    numberOfChecksumCorruptedPackets += numberOfUnidentifiableArrivals;
-    double meanUnexpectedArrivalsPerSend =
-        numberOfUnexpectedArrivals / (double) numberOfPacketsSentByClients;
-    double meanPacketLatencyInMilliseconds =
-        packetLatenciesInMilliseconds.stream().mapToDouble(Long::doubleValue).average().orElse(0.0);
-    double missingArrivalRate = numberOfMissingArrivals / (double) numberOfPacketsSentByClients;
-    double unidentifiableArrivalRate =
-        numberOfUnidentifiableArrivals / (double) numberOfPacketsSentByClients;
-    double packetChecksumCorruptionRate =
-        numberOfChecksumCorruptedPackets / (double) numberOfPacketsReceivedByServer;
-    double packetJunkRate = numberOfJunkPackets / (double) numberOfPacketsReceivedByServer;
-    double packetSendRatePerMillisecond =
-        numberOfPacketsSentByClients / (double) durationInMilliseconds;
-    double packetReceiptRatePerMillisecond =
-        numberOfPacketsReceivedByServer / (double) durationInMilliseconds;
-    double meanPacketSizeInBytes =
-        uniquePacketIdToClientPacketMap
-            .values()
-            .stream()
-            .map(AnalysisClientPacket::getSize)
-            .mapToDouble(Integer::doubleValue)
-            .average()
-            .orElse(0.0);
-
-    long quantileDurationInMilliseconds = durationInMilliseconds / 4;
-    LocalDateTime startTimeOfSecondQuantile =
-        timeOfFirstPacketSend.plus(quantileDurationInMilliseconds, ChronoUnit.MILLIS);
-    LocalDateTime finishTimeOfThirdQuantile =
-        timeOfLastPacketReceipt.minus(quantileDurationInMilliseconds, ChronoUnit.MILLIS);
-    double bytesReceivedByServerDuringMiddleQuantiles =
-        dateTimeOfReceiptToServerPacketsMap
-            .subMap(startTimeOfSecondQuantile, finishTimeOfThirdQuantile)
-            .values()
-            .stream()
-            .mapToDouble(serverPackets -> serverPackets.size() * meanPacketSizeInBytes)
-            .sum();
-    double byteRateDuringMiddleQuantiles =
-        bytesReceivedByServerDuringMiddleQuantiles / (quantileDurationInMilliseconds * 2.0);
 
     // Print aggregated statistics.
     print("Info: Aggregation complete - printing results of analysis...");
     print("############################################################");
-    print("Duration: %s", durationInHoursMinutesSecondsMilliseconds);
+    print(
+        "Duration: %s",
+        HourMinuteSecondMillisecondDuration.fromMilliseconds(
+            aggregatedStatistics.getDurationInMilliseconds()));
     print("############################################################");
-    print("Number of packets sent by clients:     %d", numberOfPacketsSentByClients);
-    print("Number of packets received by server:  %d", numberOfPacketsReceivedByServer);
-    print("Number of unexpected arrivals:         %d", numberOfUnexpectedArrivals);
-    print("Number of missing arrivals:            %d", numberOfMissingArrivals);
-    print("Number of unidentifiable arrivals:     %d", numberOfUnidentifiableArrivals);
-    print("Number of checksum corrupted packets:  %d", numberOfChecksumCorruptedPackets);
-    print("Number of junk packets:                %d", numberOfJunkPackets);
+    print(
+        "Number of packets sent by clients:     %d",
+        aggregatedStatistics.getNumberOfPacketsSentByClients());
+    print(
+        "Number of packets received by server:  %d",
+        aggregatedStatistics.getNumberOfPacketsReceivedByServer());
+    print(
+        "Number of unexpected arrivals:         %d",
+        aggregatedStatistics.getNumberOfUnexpectedArrivals());
+    print(
+        "Number of missing arrivals:            %d",
+        aggregatedStatistics.getNumberOfMissingArrivals());
+    print(
+        "Number of unidentifiable arrivals:     %d",
+        aggregatedStatistics.getNumberOfUnidentifiableArrivals());
+    print(
+        "Number of checksum corrupted packets:  %d",
+        aggregatedStatistics.getNumberOfChecksumCorruptedPackets());
+    print(
+        "Number of junk packets:                %d", aggregatedStatistics.getNumberOfJunkPackets());
     print("############################################################");
-    print("Mean latency of packets (ms):          %.2f", meanPacketLatencyInMilliseconds);
-    print("Mean unexpected arrivals per send:     %.2f", meanUnexpectedArrivalsPerSend);
-    print("Missing arrival rate:                  %.2f%%", 100 * missingArrivalRate);
-    print("Unidentifiable arrival rate:           %.2f%%", 100 * unidentifiableArrivalRate);
-    print("Packet checksum corruption rate:       %.2f%%", 100 * packetChecksumCorruptionRate);
-    print("Packet junk rate:                      %.2f%%", 100 * packetJunkRate);
-    print("Packet send rate (ms⁻¹):               %.2f", packetSendRatePerMillisecond);
-    print("Packet receipt rate (ms⁻¹):            %.2f", packetReceiptRatePerMillisecond);
-    print("Mean packet size (byte):               %.2f", meanPacketSizeInBytes);
+    print(
+        "Mean latency of packets (ms):          %.2f",
+        aggregatedStatistics.getMeanPacketLatencyInMilliseconds());
+    print(
+        "Mean unexpected arrivals per send:     %.2f",
+        aggregatedStatistics.getMeanUnexpectedArrivalsPerSend());
+    print(
+        "Missing arrival rate:                  %.2f%%",
+        100 * aggregatedStatistics.getMissingArrivalRate());
+    print(
+        "Unidentifiable arrival rate:           %.2f%%",
+        100 * aggregatedStatistics.getUnidentifiableArrivalRate());
+    print(
+        "Packet checksum corruption rate:       %.2f%%",
+        100 * aggregatedStatistics.getPacketChecksumCorruptionRate());
+    print(
+        "Packet junk rate:                      %.2f%%",
+        100 * aggregatedStatistics.getPacketJunkRate());
+    print(
+        "Packet send rate (ms⁻¹):               %.2f",
+        aggregatedStatistics.getPacketSendRatePerMillisecond());
+    print(
+        "Packet receipt rate (ms⁻¹):            %.2f",
+        aggregatedStatistics.getPacketReceiptRatePerMillisecond());
+    print(
+        "Mean packet size (byte):               %.2f",
+        aggregatedStatistics.getMeanPacketSizeInBytes());
     print("############################################################");
     print(
         "Bytes received during middle quantiles:    %.2f",
-        bytesReceivedByServerDuringMiddleQuantiles);
-    print("Bytes rate during middle quantiles (ms⁻¹): %.2f", byteRateDuringMiddleQuantiles);
+        aggregatedStatistics.getBytesReceivedByServerDuringMiddleQuantiles());
+    print(
+        "Bytes rate during middle quantiles (ms⁻¹): %.2f",
+        aggregatedStatistics.getByteRateDuringMiddleQuantiles());
     print("############################################################");
     print("Unexpected Arrivals:");
     print("   Packets with IDs that the server has already seen.");
@@ -254,8 +152,7 @@ public class AnalysisAggregatorMain {
 
     @Override
     public String toString() {
-      return String.format(
-          "%d hours, %d minutes, %d.%03d seconds", hours, minutes, seconds, milliseconds);
+      return String.format("%d.%03d seconds", 3600 * hours + 60 * minutes + seconds, milliseconds);
     }
   }
 }
