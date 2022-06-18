@@ -853,6 +853,22 @@ corruption is working as intended.
     \label{table:analysis_results_drop}
 \end{table}
 
+The levels of packet drop shown by Table~\ref{table:analysis_results_drop} seem to be almost unanimously in line with
+what should be expected from a configuration with \texttt{dropProbability} set to 0.42. The only major outliers are,
+as the control would suggest, the larger VM topologies, although even these results can be explained analytically.
+
+Taking the VM scenario with 100 clients as an example, the control packet drop rate is $12.36\%$. However in this
+scenario, $42\%$ of packets should be dropped before they even reach the server, so reasoning crudely, packet drop
+due to buffer overflow should drop by $42\%$, i.e.: $(100 - 42)\% \times 12.36\% = 7.17\%$. Therefore, of the $58\%$
+of packets that are making it to the server, $58\% \times 7.17\% = 4.16\%$ are being dropped due to overflow issues.
+In turn, a more sensible estimate of network packet drop would be $45.59\% - 4.16\% = 41.43\%$. This new value is
+slightly lower than what one might expect due to the crude assumption that packet drop due to buffer overflow scales
+linearly with the number of packets sent, when even Table~\ref{table:analysis_results_control} would suggest it
+follows a more exponential or Pareto distribution, meaning that the $7.17\%$ approximation is likely to be too high.
+
+In conclusion, Table~\ref{table:analysis_results_drop} and its ensuing analysis strongly suggest that packet
+drop is working as intended.
+
 \subsubsection{Packet Duplication}\label{subsubsection:duplication_analysis}
 
 \begin{table}[!h]
