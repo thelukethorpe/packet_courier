@@ -34,7 +34,11 @@ the six fundamental offerings: corruption, drop, duplication, latency, limit and
 root of the directory using \texttt{run\_basic\_analysis\_suite.sh}. Each configuration consists of a star topology
 with either 5, 25, 50, 75 or 100 clients which send 50 packets per second to a server. Clients log the contents of
 their packet and when they sent them. The server logs the contents of the packet it has received and when it received
-them. The logs are then dumped to a file and analysed in post.
+them. The logs are then dumped to a file and analysed in post. Each client runs for a total of 4 minutes while the
+server runs for 6 minutes; the additional 2 minutes allows the server to receive any packets that might be trailing
+inside the Packet Courier instance due to latency or a performance bottleneck. The server only runs for 4 minutes in
+the cases of packet limiting and bandwidth throttling, however, since the purpose of the test is to analyse how much
+data makes it through the timeline within a particular timeframe.
 
 \subsection{Analysis Methodology}\label{subsection:analysis_methodology}
 
@@ -89,9 +93,1615 @@ following statistics:
     \item \textbf{The number of checksum corrupted packets.}
     \item \textbf{The number of junk packets.}
     \item \textbf{The mean packet size.}
+    \item \textbf{The mean packet latency.}
+    \item \textbf{The mean bandwidth.}
 \end{itemize}
 
 These key metrics can be used to verify the correctness and robustness of each core Packet Courier functionality.
+
+\subsection{Hardware}\label{subsection:hardware}
+
+Three sets of system testing data have been collected, each using different hardware. All three machines were running
+a Ubuntu 20.04 LTS\cite{ubuntu_20_04}. Their specifications as per \texttt{sudo lshw -short} are listed in
+Table~\ref{table:hardware}:
+
+\begin{table}[h!]
+    \centering
+    \resizebox{\textwidth}{!}{
+        \begin{tabular}{|l|c|c|c|}
+            \hline
+            \textbf{Machine} & Laptop & PC
+            & VM \\ \hline
+            \textbf{System} & Computer & Computer
+            & oVirt Node \\ \hline
+            \textbf{Processor} & Intel(R) Core(TM) i7-10750K CPU @ 2.60GHz & Intel(R) Core(TM) i7-4770K CPU @ 3.50GHz
+            & AMD EPYC Processor
+            \\ \hline
+            \textbf{Memory} & 8GiB System Memory & 25GiB System memory
+            & 8GiB System Memory \\ \hline
+        \end{tabular}
+    }
+    \caption{The hardware specifications for the machines used to gather system test data.}
+    \label{table:hardware}
+\end{table}
+
+\subsection{Analysis Results}\label{subsection:analysis_results}
+
+\subsubsection{Control Tests}\label{subsubsection:control}
+
+\begin{table}[!h]
+    \centering
+    \resizebox{\textwidth}{!}{
+        \begin{tabular}{|l|ccccc|ccccc|ccccc|}
+            \hline
+            \textbf{Machine} & &
+            & Laptop & & &
+            & & PC & &
+            & & & VM &
+            & \\ \hline
+            \textbf{Number of clients} & \multicolumn{1}{c|}{5} & \multicolumn{1}{c|}{25}
+            & \multicolumn{1}{c|}{50}
+            & \multicolumn{1}{c|}{75}
+            & \multicolumn{1}{c|}{100}
+            & \multicolumn{1}{c|}{5}
+            & \multicolumn{1}{c|}{25}
+            & \multicolumn{1}{c|}{50}
+            & \multicolumn{1}{c|}{75}
+            & \multicolumn{1}{c|}{100}
+            & \multicolumn{1}{c|}{5}
+            & \multicolumn{1}{c|}{25}
+            & \multicolumn{1}{c|}{50}
+            & \multicolumn{1}{c|}{75}
+            & \multicolumn{1}{c|}{100}
+            \\ \hline
+            \textbf{Duration (s)} & \multicolumn{1}{c|}{239.874} & \multicolumn{1}{c|}{240.256}
+            & \multicolumn{1}{c|}{240.43}
+            & \multicolumn{1}{c|}{240.368}
+            & \multicolumn{1}{c|}{240.429}
+            & \multicolumn{1}{c|}{239.745}
+            & \multicolumn{1}{c|}{240.168}
+            & \multicolumn{1}{c|}{240.389}
+            & \multicolumn{1}{c|}{240.551}
+            & \multicolumn{1}{c|}{240.609}
+            & \multicolumn{1}{c|}{239.523}
+            & \multicolumn{1}{c|}{240.364}
+            & \multicolumn{1}{c|}{241.425}
+            & \multicolumn{1}{c|}{242.842}
+            & \multicolumn{1}{c|}{237.688}
+            \\ \hline
+            \textbf{Packets sent by clients} & \multicolumn{1}{c|}{59410} & \multicolumn{1}{c|}{296527}
+            & \multicolumn{1}{c|}{593433}
+            & \multicolumn{1}{c|}{890789}
+            & \multicolumn{1}{c|}{1184590}
+            & \multicolumn{1}{c|}{59108}
+            & \multicolumn{1}{c|}{295757}
+            & \multicolumn{1}{c|}{593803}
+            & \multicolumn{1}{c|}{890294}
+            & \multicolumn{1}{c|}{1187308}
+            & \multicolumn{1}{c|}{59009}
+            & \multicolumn{1}{c|}{295865}
+            & \multicolumn{1}{c|}{589474}
+            & \multicolumn{1}{c|}{881802}
+            & \multicolumn{1}{c|}{1170842}
+            \\ \hline
+            \textbf{Packets received by server} & \multicolumn{1}{c|}{59371} & \multicolumn{1}{c|}{296161}
+            & \multicolumn{1}{c|}{590202}
+            & \multicolumn{1}{c|}{883584}
+            & \multicolumn{1}{c|}{1164871}
+            & \multicolumn{1}{c|}{59025}
+            & \multicolumn{1}{c|}{295678}
+            & \multicolumn{1}{c|}{593779}
+            & \multicolumn{1}{c|}{889720}
+            & \multicolumn{1}{c|}{1186787}
+            & \multicolumn{1}{c|}{58888}
+            & \multicolumn{1}{c|}{294770}
+            & \multicolumn{1}{c|}{582948}
+            & \multicolumn{1}{c|}{859074}
+            & \multicolumn{1}{c|}{1026076}
+            \\ \hline
+            \textbf{Number of unexpected arrivals} & \multicolumn{1}{c|}{0} & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            \\ \hline
+            \textbf{Number of missing arrivals} & \multicolumn{1}{c|}{39} & \multicolumn{1}{c|}{366}
+            & \multicolumn{1}{c|}{3231}
+            & \multicolumn{1}{c|}{7205}
+            & \multicolumn{1}{c|}{19719}
+            & \multicolumn{1}{c|}{83}
+            & \multicolumn{1}{c|}{79}
+            & \multicolumn{1}{c|}{24}
+            & \multicolumn{1}{c|}{574}
+            & \multicolumn{1}{c|}{521}
+            & \multicolumn{1}{c|}{121}
+            & \multicolumn{1}{c|}{1095}
+            & \multicolumn{1}{c|}{6526}
+            & \multicolumn{1}{c|}{22728}
+            & \multicolumn{1}{c|}{144766}
+            \\ \hline
+            \textbf{Number of unidentifiable arrivals} & \multicolumn{1}{c|}{0} & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            \\ \hline
+            \textbf{Packets with checksum corruption} & \multicolumn{1}{c|}{0} & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            \\ \hline
+            \textbf{Junk packets} & \multicolumn{1}{c|}{0} & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            \\ \hline
+            \textbf{Mean packet size (bytes)} & \multicolumn{1}{c|}{132.07} & \multicolumn{1}{c|}{132.70}
+            & \multicolumn{1}{c|}{132.88}
+            & \multicolumn{1}{c|}{132.94}
+            & \multicolumn{1}{c|}{132.98}
+            & \multicolumn{1}{c|}{132.06}
+            & \multicolumn{1}{c|}{132.70}
+            & \multicolumn{1}{c|}{132.88}
+            & \multicolumn{1}{c|}{132.94}
+            & \multicolumn{1}{c|}{132.98}
+            & \multicolumn{1}{c|}{132.06}
+            & \multicolumn{1}{c|}{132.70}
+            & \multicolumn{1}{c|}{132.88}
+            & \multicolumn{1}{c|}{132.94}
+            & \multicolumn{1}{c|}{132.97}
+            \\ \hline
+            \textbf{Mean packet latency (ms)} & \multicolumn{1}{c|}{0.01} & \multicolumn{1}{c|}{0.30}
+            & \multicolumn{1}{c|}{0.43}
+            & \multicolumn{1}{c|}{0.49}
+            & \multicolumn{1}{c|}{1.07}
+            & \multicolumn{1}{c|}{0.02}
+            & \multicolumn{1}{c|}{0.04}
+            & \multicolumn{1}{c|}{0.13}
+            & \multicolumn{1}{c|}{0.38}
+            & \multicolumn{1}{c|}{0.74}
+            & \multicolumn{1}{c|}{0.09}
+            & \multicolumn{1}{c|}{0.90}
+            & \multicolumn{1}{c|}{5.64}
+            & \multicolumn{1}{c|}{13.16}
+            & \multicolumn{1}{c|}{44.86}
+            \\ \hline
+            \textbf{Mean bandwidth (bytes/ms)} & \multicolumn{1}{c|}{32.70} & \multicolumn{1}{c|}{163.99}
+            & \multicolumn{1}{c|}{326.96}
+            & \multicolumn{1}{c|}{489.21}
+            & \multicolumn{1}{c|}{645.70}
+            & \multicolumn{1}{c|}{32.52}
+            & \multicolumn{1}{c|}{163.50}
+            & \multicolumn{1}{c|}{328.80}
+            & \multicolumn{1}{c|}{493.27}
+            & \multicolumn{1}{c|}{657.66}
+            & \multicolumn{1}{c|}{32.46}
+            & \multicolumn{1}{c|}{163.53}
+            & \multicolumn{1}{c|}{321.21}
+            & \multicolumn{1}{c|}{480.51}
+            & \multicolumn{1}{c|}{588.36}
+            \\ \hline
+            \textbf{Packet drop rate (\%)} & \multicolumn{1}{c|}{0.07} & \multicolumn{1}{c|}{0.12}
+            & \multicolumn{1}{c|}{0.54}
+            & \multicolumn{1}{c|}{0.81}
+            & \multicolumn{1}{c|}{1.66}
+            & \multicolumn{1}{c|}{0.14}
+            & \multicolumn{1}{c|}{0.03}
+            & \multicolumn{1}{c|}{0.00}
+            & \multicolumn{1}{c|}{0.06}
+            & \multicolumn{1}{c|}{0.04}
+            & \multicolumn{1}{c|}{0.21}
+            & \multicolumn{1}{c|}{0.37}
+            & \multicolumn{1}{c|}{1.11}
+            & \multicolumn{1}{c|}{2.58}
+            & \multicolumn{1}{c|}{12.36}
+            \\ \hline
+        \end{tabular}
+    }
+    \caption{Aggregated statistics for a configuration with no network conditions. Packet drop rate is the proportion
+    of missing arrivals with respect to packets sent by clients.}
+    \label{table:analysis_results_control}
+\end{table}
+
+The key finding from Table~\ref{table:analysis_results_control} is that mean packet latency and packet drop rate
+trend upwards with the number of clients (with the exception of packet drop for the PC). Given that there these
+scenarios boasted no emulated network conditions, the mean latencies are simply a measure of the overhead generated
+by the components involved in getting a packet from client to server, i.e.:
+\begin{itemize}
+    \item The time taken by the \texttt{analysis\_client.py} to send a packet from its UDP socket.
+    \item The time taken by Packet Courier to receive the packet, route and propegate it through the correct packet
+    pipeline before forwarding it to the server.
+    \item The time taken by the \texttt{analysis\_server.py} to poll the packet from its UDP socket.
+\end{itemize}
+
+Given that packet latency is canonically measured in milliseconds\cite{latency_vs_throughput}, any overhead that is
+under half a millisecond will ensure that the mean packet latency rounds to the expected value of the chosen
+distribution and thus unlikely to be a cause for concern for developers. In this way, it is pleasing to see that the
+Laptop and PC test vessels can support 75 nodes before this threshold is breached. The same cannot be said about the
+VM, however, which has become arguably unusable when trying to juggle 75 or more clients. An absence of network
+conditions should be synonymous with ``perfect'' network conditions; naturally, mean latencies of 13.16 and 44.86
+milliseconds do not accurately reflect this sentiment at all.
+
+Packet Courier's real-time emulation functionality depends upon being able to process packets quickly enough so that
+the processing overhead is negligible. This idea is totally analogous to video gaming, where frames need to be
+churned out quickly enough so that the player's immersion isn't broken and their experience isn't compromised. It
+follows that this phenomenon is a function of how powerful the machine's hardware is, hence why video games tend to
+have minimum system specifications\cite{intel_gaming_system_requirements}. Packet Courier is no different, so it is
+no surprise that systems with weaker hardware are less capable of accurately delivering emulated network scenarios
+under heavy loads. The fact that the exact same scenarios work excellently on a PC using hardware that is nearly a
+decade old as of June 2022\cite{intel_i7_4770k} is a testament to Packet Courier's calibre as a tool.
+
+The packet drop seen in Table~\ref{table:analysis_results_control} is a consequence of buffer overflow, i.e.: the
+server's inability to poll its UDP socket quickly enough to receive every packet being sent to it. This is not a
+Packet Courier issue, however, since Packet Courier is not responsible for polling the server's UDP socket, the
+server is. If anything, Packet Courier is showing its value in this scenario. For example, Packet Courier has shown
+that the server running on the Laptop is experiencing twice the packet drop due to buffer overflow when going from
+serving 75 clients to 100. Thus, Packet Courier could be used by developers to estimate how much traffic one instance
+of their server could receive before an unacceptable number of packets are being dropped by the network device.
+
+\subsubsection{Packet Corruption}\label{subsubsection:corruption_analysis}
+
+\begin{table}[!h]
+    \centering
+    \resizebox{\textwidth}{!}{
+        \begin{tabular}{|l|ccccc|ccccc|ccccc|}
+            \hline
+            \textbf{Machine} & &
+            & Laptop & & &
+            & & PC & &
+            & & & VM &
+            & \\ \hline
+            \textbf{Number of clients} & \multicolumn{1}{c|}{5} & \multicolumn{1}{c|}{25}
+            & \multicolumn{1}{c|}{50}
+            & \multicolumn{1}{c|}{75}
+            & \multicolumn{1}{c|}{100}
+            & \multicolumn{1}{c|}{5}
+            & \multicolumn{1}{c|}{25}
+            & \multicolumn{1}{c|}{50}
+            & \multicolumn{1}{c|}{75}
+            & \multicolumn{1}{c|}{100}
+            & \multicolumn{1}{c|}{5}
+            & \multicolumn{1}{c|}{25}
+            & \multicolumn{1}{c|}{50}
+            & \multicolumn{1}{c|}{75}
+            & \multicolumn{1}{c|}{100}
+            \\ \hline
+            \textbf{Duration (s)} & \multicolumn{1}{c|}{239.854} & \multicolumn{1}{c|}{240.238}
+            & \multicolumn{1}{c|}{240.402}
+            & \multicolumn{1}{c|}{240.672}
+            & \multicolumn{1}{c|}{240.819}
+            & \multicolumn{1}{c|}{239.809}
+            & \multicolumn{1}{c|}{240.207}
+            & \multicolumn{1}{c|}{240.285}
+            & \multicolumn{1}{c|}{240.461}
+            & \multicolumn{1}{c|}{240.633}
+            & \multicolumn{1}{c|}{239.749}
+            & \multicolumn{1}{c|}{240.869}
+            & \multicolumn{1}{c|}{242.283}
+            & \multicolumn{1}{c|}{244.238}
+            & \multicolumn{1}{c|}{248.107}
+            \\ \hline
+            \textbf{Packets sent by clients} & \multicolumn{1}{c|}{59338} & \multicolumn{1}{c|}{296524}
+            & \multicolumn{1}{c|}{592968}
+            & \multicolumn{1}{c|}{889641}
+            & \multicolumn{1}{c|}{1185581}
+            & \multicolumn{1}{c|}{59090}
+            & \multicolumn{1}{c|}{295641}
+            & \multicolumn{1}{c|}{592285}
+            & \multicolumn{1}{c|}{889792}
+            & \multicolumn{1}{c|}{1186089}
+            & \multicolumn{1}{c|}{59145}
+            & \multicolumn{1}{c|}{296076}
+            & \multicolumn{1}{c|}{590639}
+            & \multicolumn{1}{c|}{882647}
+            & \multicolumn{1}{c|}{1174125}
+            \\ \hline
+            \textbf{Packets received by server} & \multicolumn{1}{c|}{58644} & \multicolumn{1}{c|}{293119}
+            & \multicolumn{1}{c|}{583496}
+            & \multicolumn{1}{c|}{869164}
+            & \multicolumn{1}{c|}{1152305}
+            & \multicolumn{1}{c|}{58402}
+            & \multicolumn{1}{c|}{292686}
+            & \multicolumn{1}{c|}{586574}
+            & \multicolumn{1}{c|}{880933}
+            & \multicolumn{1}{c|}{1165360}
+            & \multicolumn{1}{c|}{58529}
+            & \multicolumn{1}{c|}{292213}
+            & \multicolumn{1}{c|}{577882}
+            & \multicolumn{1}{c|}{838412}
+            & \multicolumn{1}{c|}{1040802}
+            \\ \hline
+            \textbf{Number of unexpected arrivals} & \multicolumn{1}{c|}{208} & \multicolumn{1}{c|}{1220}
+            & \multicolumn{1}{c|}{2549}
+            & \multicolumn{1}{c|}{4189}
+            & \multicolumn{1}{c|}{5635}
+            & \multicolumn{1}{c|}{226}
+            & \multicolumn{1}{c|}{1224}
+            & \multicolumn{1}{c|}{2600}
+            & \multicolumn{1}{c|}{4386}
+            & \multicolumn{1}{c|}{5578}
+            & \multicolumn{1}{c|}{219}
+            & \multicolumn{1}{c|}{1174}
+            & \multicolumn{1}{c|}{2532}
+            & \multicolumn{1}{c|}{3990}
+            & \multicolumn{1}{c|}{4704}
+            \\ \hline
+            \textbf{Number of missing arrivals} & \multicolumn{1}{c|}{13040} & \multicolumn{1}{c|}{66240}
+            & \multicolumn{1}{c|}{134445}
+            & \multicolumn{1}{c|}{206186}
+            & \multicolumn{1}{c|}{279507}
+            & \multicolumn{1}{c|}{12968}
+            & \multicolumn{1}{c|}{65723}
+            & \multicolumn{1}{c|}{130853}
+            & \multicolumn{1}{c|}{198155}
+            & \multicolumn{1}{c|}{269201}
+            & \multicolumn{1}{c|}{13063}
+            & \multicolumn{1}{c|}{66128}
+            & \multicolumn{1}{c|}{135834}
+            & \multicolumn{1}{c|}{223131}
+            & \multicolumn{1}{c|}{354864}
+            \\ \hline
+            \textbf{Number of unidentifiable arrivals} & \multicolumn{1}{c|}{4858} & \multicolumn{1}{c|}{24995}
+            & \multicolumn{1}{c|}{49772}
+            & \multicolumn{1}{c|}{73500}
+            & \multicolumn{1}{c|}{97975}
+            & \multicolumn{1}{c|}{4890}
+            & \multicolumn{1}{c|}{24937}
+            & \multicolumn{1}{c|}{49987}
+            & \multicolumn{1}{c|}{75068}
+            & \multicolumn{1}{c|}{98604}
+            & \multicolumn{1}{c|}{4975}
+            & \multicolumn{1}{c|}{24985}
+            & \multicolumn{1}{c|}{49406}
+            & \multicolumn{1}{c|}{71039}
+            & \multicolumn{1}{c|}{87835}
+            \\ \hline
+            \textbf{Packets with checksum corruption} & \multicolumn{1}{c|}{16337} & \multicolumn{1}{c|}{82001}
+            & \multicolumn{1}{c|}{163293}
+            & \multicolumn{1}{c|}{243654}
+            & \multicolumn{1}{c|}{323595}
+            & \multicolumn{1}{c|}{16275}
+            & \multicolumn{1}{c|}{81734}
+            & \multicolumn{1}{c|}{164017}
+            & \multicolumn{1}{c|}{247919}
+            & \multicolumn{1}{c|}{326534}
+            & \multicolumn{1}{c|}{16509}
+            & \multicolumn{1}{c|}{82235}
+            & \multicolumn{1}{c|}{162510}
+            & \multicolumn{1}{c|}{235375}
+            & \multicolumn{1}{c|}{291778}
+            \\ \hline
+            \textbf{Junk packets} & \multicolumn{1}{c|}{7280} & \multicolumn{1}{c|}{36620}
+            & \multicolumn{1}{c|}{72652}
+            & \multicolumn{1}{c|}{108020}
+            & \multicolumn{1}{c|}{142621}
+            & \multicolumn{1}{c|}{7164}
+            & \multicolumn{1}{c|}{36607}
+            & \multicolumn{1}{c|}{72555}
+            & \multicolumn{1}{c|}{109842}
+            & \multicolumn{1}{c|}{144290}
+            & \multicolumn{1}{c|}{7253}
+            & \multicolumn{1}{c|}{36106}
+            & \multicolumn{1}{c|}{71139}
+            & \multicolumn{1}{c|}{103867}
+            & \multicolumn{1}{c|}{129002}
+            \\ \hline
+            \textbf{Mean packet size (bytes)} & \multicolumn{1}{c|}{132.06} & \multicolumn{1}{c|}{132.70}
+            & \multicolumn{1}{c|}{132.88}
+            & \multicolumn{1}{c|}{132.94}
+            & \multicolumn{1}{c|}{132.98}
+            & \multicolumn{1}{c|}{132.06}
+            & \multicolumn{1}{c|}{132.70}
+            & \multicolumn{1}{c|}{132.88}
+            & \multicolumn{1}{c|}{132.94}
+            & \multicolumn{1}{c|}{132.98}
+            & \multicolumn{1}{c|}{132.06}
+            & \multicolumn{1}{c|}{132.70}
+            & \multicolumn{1}{c|}{132.88}
+            & \multicolumn{1}{c|}{132.94}
+            & \multicolumn{1}{c|}{132.97}
+            \\ \hline
+            \textbf{Mean packet latency (ms)} & \multicolumn{1}{c|}{0.02} & \multicolumn{1}{c|}{0.42}
+            & \multicolumn{1}{c|}{0.70}
+            & \multicolumn{1}{c|}{1.41}
+            & \multicolumn{1}{c|}{1.28}
+            & \multicolumn{1}{c|}{0.01}
+            & \multicolumn{1}{c|}{0.04}
+            & \multicolumn{1}{c|}{0.19}
+            & \multicolumn{1}{c|}{0.86}
+            & \multicolumn{1}{c|}{1.21}
+            & \multicolumn{1}{c|}{0.10}
+            & \multicolumn{1}{c|}{1.11}
+            & \multicolumn{1}{c|}{7.05}
+            & \multicolumn{1}{c|}{19.59}
+            & \multicolumn{1}{c|}{51.75}
+            \\ \hline
+            \textbf{Mean bandwidth (bytes/ms)} & \multicolumn{1}{c|}{28.36} & \multicolumn{1}{c|}{141.84}
+            & \multicolumn{1}{c|}{283.16}
+            & \multicolumn{1}{c|}{422.08}
+            & \multicolumn{1}{c|}{560.73}
+            & \multicolumn{1}{c|}{28.15}
+            & \multicolumn{1}{c|}{141.69}
+            & \multicolumn{1}{c|}{284.45}
+            & \multicolumn{1}{c|}{427.56}
+            & \multicolumn{1}{c|}{565.12}
+            & \multicolumn{1}{c|}{28.21}
+            & \multicolumn{1}{c|}{141.43}
+            & \multicolumn{1}{c|}{279.59}
+            & \multicolumn{1}{c|}{409.40}
+            & \multicolumn{1}{c|}{515.51}
+            \\ \hline
+            \textbf{Estimated corruption rate (\%)} & \multicolumn{1}{c|}{40.97} & \multicolumn{1}{c|}{41.15}
+            & \multicolumn{1}{c|}{41.39}
+            & \multicolumn{1}{c|}{41.83}
+            & \multicolumn{1}{c|}{42.13}
+            & \multicolumn{1}{c|}{40.83}
+            & \multicolumn{1}{c|}{41.03}
+            & \multicolumn{1}{c|}{40.91}
+            & \multicolumn{1}{c|}{41.20}
+            & \multicolumn{1}{c|}{41.44}
+            & \multicolumn{1}{c|}{41.22}
+            & \multicolumn{1}{c|}{41.27}
+            & \multicolumn{1}{c|}{41.72}
+            & \multicolumn{1}{c|}{43.45}
+            & \multicolumn{1}{c|}{47.19}
+            \\ \hline
+        \end{tabular}
+    }
+    \caption{Aggregated statistics for a configuration where \texttt{corruptionProbability} is set to 0.42.}
+    \label{table:analysis_results_corruption}
+\end{table}
+
+\subsubsection{Packet Drop}\label{subsubsection:drop_analysis}
+
+\begin{table}[!h]
+    \centering
+    \resizebox{\textwidth}{!}{
+        \begin{tabular}{|l|ccccc|ccccc|ccccc|}
+            \hline
+            \textbf{Machine} & &
+            & Laptop & & &
+            & & PC & &
+            & & & VM &
+            & \\ \hline
+            \textbf{Number of clients} & \multicolumn{1}{c|}{5} & \multicolumn{1}{c|}{25}
+            & \multicolumn{1}{c|}{50}
+            & \multicolumn{1}{c|}{75}
+            & \multicolumn{1}{c|}{100}
+            & \multicolumn{1}{c|}{5}
+            & \multicolumn{1}{c|}{25}
+            & \multicolumn{1}{c|}{50}
+            & \multicolumn{1}{c|}{75}
+            & \multicolumn{1}{c|}{100}
+            & \multicolumn{1}{c|}{5}
+            & \multicolumn{1}{c|}{25}
+            & \multicolumn{1}{c|}{50}
+            & \multicolumn{1}{c|}{75}
+            & \multicolumn{1}{c|}{100}
+            \\ \hline
+            \textbf{Duration (s)} & \multicolumn{1}{c|}{239.769} & \multicolumn{1}{c|}{240.195}
+            & \multicolumn{1}{c|}{240.178}
+            & \multicolumn{1}{c|}{240.595}
+            & \multicolumn{1}{c|}{240.514}
+            & \multicolumn{1}{c|}{239.758}
+            & \multicolumn{1}{c|}{240.133}
+            & \multicolumn{1}{c|}{240.17}
+            & \multicolumn{1}{c|}{240.52}
+            & \multicolumn{1}{c|}{240.534}
+            & \multicolumn{1}{c|}{239.97}
+            & \multicolumn{1}{c|}{240.621}
+            & \multicolumn{1}{c|}{242.041}
+            & \multicolumn{1}{c|}{245.036}
+            & \multicolumn{1}{c|}{246.858}
+            \\ \hline
+            \textbf{Packets sent by clients} & \multicolumn{1}{c|}{59220} & \multicolumn{1}{c|}{296846}
+            & \multicolumn{1}{c|}{593475}
+            & \multicolumn{1}{c|}{890111}
+            & \multicolumn{1}{c|}{1186774}
+            & \multicolumn{1}{c|}{59120}
+            & \multicolumn{1}{c|}{295674}
+            & \multicolumn{1}{c|}{593684}
+            & \multicolumn{1}{c|}{891096}
+            & \multicolumn{1}{c|}{1184138}
+            & \multicolumn{1}{c|}{59284}
+            & \multicolumn{1}{c|}{296379}
+            & \multicolumn{1}{c|}{590242}
+            & \multicolumn{1}{c|}{886255}
+            & \multicolumn{1}{c|}{1178730}
+            \\ \hline
+            \textbf{Packets received by server} & \multicolumn{1}{c|}{34435} & \multicolumn{1}{c|}{171878}
+            & \multicolumn{1}{c|}{342714}
+            & \multicolumn{1}{c|}{511423}
+            & \multicolumn{1}{c|}{679470}
+            & \multicolumn{1}{c|}{34367}
+            & \multicolumn{1}{c|}{171535}
+            & \multicolumn{1}{c|}{343668}
+            & \multicolumn{1}{c|}{515807}
+            & \multicolumn{1}{c|}{681406}
+            & \multicolumn{1}{c|}{34434}
+            & \multicolumn{1}{c|}{171525}
+            & \multicolumn{1}{c|}{339145}
+            & \multicolumn{1}{c|}{503540}
+            & \multicolumn{1}{c|}{641392}
+            \\ \hline
+            \textbf{Number of unexpected arrivals} & \multicolumn{1}{c|}{0} & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            \\ \hline
+            \textbf{Number of missing arrivals} & \multicolumn{1}{c|}{24785} & \multicolumn{1}{c|}{124968}
+            & \multicolumn{1}{c|}{250761}
+            & \multicolumn{1}{c|}{378688}
+            & \multicolumn{1}{c|}{507304}
+            & \multicolumn{1}{c|}{24753}
+            & \multicolumn{1}{c|}{124139}
+            & \multicolumn{1}{c|}{250016}
+            & \multicolumn{1}{c|}{375289}
+            & \multicolumn{1}{c|}{502732}
+            & \multicolumn{1}{c|}{24850}
+            & \multicolumn{1}{c|}{124854}
+            & \multicolumn{1}{c|}{251097}
+            & \multicolumn{1}{c|}{382715}
+            & \multicolumn{1}{c|}{537338}
+            \\ \hline
+            \textbf{Number of unidentifiable arrivals} & \multicolumn{1}{c|}{0} & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            \\ \hline
+            \textbf{Packets with checksum corruption} & \multicolumn{1}{c|}{0} & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            \\ \hline
+            \textbf{Junk packets} & \multicolumn{1}{c|}{0} & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            \\ \hline
+            \textbf{Mean packet size (bytes)} & \multicolumn{1}{c|}{132.06} & \multicolumn{1}{c|}{132.70}
+            & \multicolumn{1}{c|}{132.88}
+            & \multicolumn{1}{c|}{132.94}
+            & \multicolumn{1}{c|}{132.98}
+            & \multicolumn{1}{c|}{132.06}
+            & \multicolumn{1}{c|}{132.70}
+            & \multicolumn{1}{c|}{132.88}
+            & \multicolumn{1}{c|}{132.95}
+            & \multicolumn{1}{c|}{132.98}
+            & \multicolumn{1}{c|}{132.06}
+            & \multicolumn{1}{c|}{132.70}
+            & \multicolumn{1}{c|}{132.88}
+            & \multicolumn{1}{c|}{132.94}
+            & \multicolumn{1}{c|}{132.98}
+            \\ \hline
+            \textbf{Mean packet latency (ms)} & \multicolumn{1}{c|}{0.03} & \multicolumn{1}{c|}{0.13}
+            & \multicolumn{1}{c|}{0.33}
+            & \multicolumn{1}{c|}{0.52}
+            & \multicolumn{1}{c|}{0.57}
+            & \multicolumn{1}{c|}{0.01}
+            & \multicolumn{1}{c|}{0.03}
+            & \multicolumn{1}{c|}{0.11}
+            & \multicolumn{1}{c|}{0.07}
+            & \multicolumn{1}{c|}{1.15}
+            & \multicolumn{1}{c|}{0.07}
+            & \multicolumn{1}{c|}{0.61}
+            & \multicolumn{1}{c|}{4.98}
+            & \multicolumn{1}{c|}{17.95}
+            & \multicolumn{1}{c|}{50.28}
+            \\ \hline
+            \textbf{Mean bandwidth (bytes/ms)} & \multicolumn{1}{c|}{18.95} & \multicolumn{1}{c|}{94.84}
+            & \multicolumn{1}{c|}{189.82}
+            & \multicolumn{1}{c|}{282.92}
+            & \multicolumn{1}{c|}{375.50}
+            & \multicolumn{1}{c|}{18.95}
+            & \multicolumn{1}{c|}{94.94}
+            & \multicolumn{1}{c|}{190.25}
+            & \multicolumn{1}{c|}{285.59}
+            & \multicolumn{1}{c|}{377.01}
+            & \multicolumn{1}{c|}{18.91}
+            & \multicolumn{1}{c|}{95.02}
+            & \multicolumn{1}{c|}{187.97}
+            & \multicolumn{1}{c|}{279.45}
+            & \multicolumn{1}{c|}{365.24}
+            \\ \hline
+            \textbf{Packet drop rate (\%)} & \multicolumn{1}{c|}{41.85} & \multicolumn{1}{c|}{42.10}
+            & \multicolumn{1}{c|}{42.25}
+            & \multicolumn{1}{c|}{42.54}
+            & \multicolumn{1}{c|}{42.75}
+            & \multicolumn{1}{c|}{41.87}
+            & \multicolumn{1}{c|}{41.99}
+            & \multicolumn{1}{c|}{42.11}
+            & \multicolumn{1}{c|}{42.12}
+            & \multicolumn{1}{c|}{42.46}
+            & \multicolumn{1}{c|}{41.92}
+            & \multicolumn{1}{c|}{42.13}
+            & \multicolumn{1}{c|}{42.54}
+            & \multicolumn{1}{c|}{43.18}
+            & \multicolumn{1}{c|}{45.59}
+            \\ \hline
+        \end{tabular}
+    }
+    \caption{Aggregated statistics for a configuration where \texttt{dropProbability} is set to 0.42.}
+    \label{table:analysis_results_drop}
+\end{table}
+
+\subsubsection{Packet Duplication}\label{subsubsection:duplication_analysis}
+
+\begin{table}[!h]
+    \centering
+    \resizebox{\textwidth}{!}{
+        \begin{tabular}{|l|ccccc|ccccc|ccccc|}
+            \hline
+            \textbf{Machine} & &
+            & Laptop & & &
+            & & PC & &
+            & & & VM &
+            & \\ \hline
+            \textbf{Number of clients} & \multicolumn{1}{c|}{5} & \multicolumn{1}{c|}{25}
+            & \multicolumn{1}{c|}{50}
+            & \multicolumn{1}{c|}{75}
+            & \multicolumn{1}{c|}{100}
+            & \multicolumn{1}{c|}{5}
+            & \multicolumn{1}{c|}{25}
+            & \multicolumn{1}{c|}{50}
+            & \multicolumn{1}{c|}{75}
+            & \multicolumn{1}{c|}{100}
+            & \multicolumn{1}{c|}{5}
+            & \multicolumn{1}{c|}{25}
+            & \multicolumn{1}{c|}{50}
+            & \multicolumn{1}{c|}{75}
+            & \multicolumn{1}{c|}{100}
+            \\ \hline
+            \textbf{Duration (s)} & \multicolumn{1}{c|}{240.084} & \multicolumn{1}{c|}{240.209}
+            & \multicolumn{1}{c|}{240.284}
+            & \multicolumn{1}{c|}{240.531}
+            & \multicolumn{1}{c|}{242.416}
+            & \multicolumn{1}{c|}{239.989}
+            & \multicolumn{1}{c|}{240.264}
+            & \multicolumn{1}{c|}{240.343}
+            & \multicolumn{1}{c|}{240.546}
+            & \multicolumn{1}{c|}{240.693}
+            & \multicolumn{1}{c|}{239.978}
+            & \multicolumn{1}{c|}{240.843}
+            & \multicolumn{1}{c|}{242.329}
+            & \multicolumn{1}{c|}{244.281}
+            & \multicolumn{1}{c|}{273.565}
+            \\ \hline
+            \textbf{Packets sent by clients} & \multicolumn{1}{c|}{59361} & \multicolumn{1}{c|}{296728}
+            & \multicolumn{1}{c|}{593045}
+            & \multicolumn{1}{c|}{889091}
+            & \multicolumn{1}{c|}{1182487}
+            & \multicolumn{1}{c|}{59109}
+            & \multicolumn{1}{c|}{296367}
+            & \multicolumn{1}{c|}{593177}
+            & \multicolumn{1}{c|}{890447}
+            & \multicolumn{1}{c|}{1185019}
+            & \multicolumn{1}{c|}{59157}
+            & \multicolumn{1}{c|}{296473}
+            & \multicolumn{1}{c|}{591756}
+            & \multicolumn{1}{c|}{886410}
+            & \multicolumn{1}{c|}{1177913}
+            \\ \hline
+            \textbf{Packets received by server} & \multicolumn{1}{c|}{308444} & \multicolumn{1}{c|}{1529599}
+            & \multicolumn{1}{c|}{2992023}
+            & \multicolumn{1}{c|}{4103614}
+            & \multicolumn{1}{c|}{4171789}
+            & \multicolumn{1}{c|}{307074}
+            & \multicolumn{1}{c|}{1539518}
+            & \multicolumn{1}{c|}{2819896}
+            & \multicolumn{1}{c|}{3554968}
+            & \multicolumn{1}{c|}{4459457}
+            & \multicolumn{1}{c|}{306995}
+            & \multicolumn{1}{c|}{1517835}
+            & \multicolumn{1}{c|}{2824401}
+            & \multicolumn{1}{c|}{2540631}
+            & \multicolumn{1}{c|}{1758789}
+            \\ \hline
+            \textbf{Number of unexpected arrivals} & \multicolumn{1}{c|}{249103} & \multicolumn{1}{c|}{1235243}
+            & \multicolumn{1}{c|}{2413935}
+            & \multicolumn{1}{c|}{3305636}
+            & \multicolumn{1}{c|}{3355681}
+            & \multicolumn{1}{c|}{247985}
+            & \multicolumn{1}{c|}{1243371}
+            & \multicolumn{1}{c|}{2246215}
+            & \multicolumn{1}{c|}{2715107}
+            & \multicolumn{1}{c|}{3326490}
+            & \multicolumn{1}{c|}{247853}
+            & \multicolumn{1}{c|}{1225239}
+            & \multicolumn{1}{c|}{2264335}
+            & \multicolumn{1}{c|}{1801101}
+            & \multicolumn{1}{c|}{1101837}
+            \\ \hline
+            \textbf{Number of missing arrivals} & \multicolumn{1}{c|}{20} & \multicolumn{1}{c|}{2372}
+            & \multicolumn{1}{c|}{14957}
+            & \multicolumn{1}{c|}{91113}
+            & \multicolumn{1}{c|}{366379}
+            & \multicolumn{1}{c|}{20}
+            & \multicolumn{1}{c|}{220}
+            & \multicolumn{1}{c|}{19496}
+            & \multicolumn{1}{c|}{50586}
+            & \multicolumn{1}{c|}{52052}
+            & \multicolumn{1}{c|}{15}
+            & \multicolumn{1}{c|}{3877}
+            & \multicolumn{1}{c|}{31690}
+            & \multicolumn{1}{c|}{146880}
+            & \multicolumn{1}{c|}{520961}
+            \\ \hline
+            \textbf{Number of unidentifiable arrivals} & \multicolumn{1}{c|}{0} & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            \\ \hline
+            \textbf{Packets with checksum corruption} & \multicolumn{1}{c|}{0} & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            \\ \hline
+            \textbf{Junk packets} & \multicolumn{1}{c|}{0} & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            \\ \hline
+            \textbf{Mean packet size (bytes)} & \multicolumn{1}{c|}{132.06} & \multicolumn{1}{c|}{132.70}
+            & \multicolumn{1}{c|}{132.88}
+            & \multicolumn{1}{c|}{132.94}
+            & \multicolumn{1}{c|}{132.98}
+            & \multicolumn{1}{c|}{132.06}
+            & \multicolumn{1}{c|}{132.70}
+            & \multicolumn{1}{c|}{132.88}
+            & \multicolumn{1}{c|}{132.94}
+            & \multicolumn{1}{c|}{132.98}
+            & \multicolumn{1}{c|}{132.06}
+            & \multicolumn{1}{c|}{132.70}
+            & \multicolumn{1}{c|}{132.88}
+            & \multicolumn{1}{c|}{132.94}
+            & \multicolumn{1}{c|}{132.98}
+            \\ \hline
+            \textbf{Mean packet latency (ms)} & \multicolumn{1}{c|}{0.06} & \multicolumn{1}{c|}{0.54}
+            & \multicolumn{1}{c|}{1.18}
+            & \multicolumn{1}{c|}{2.58}
+            & \multicolumn{1}{c|}{8.16}
+            & \multicolumn{1}{c|}{0.05}
+            & \multicolumn{1}{c|}{0.55}
+            & \multicolumn{1}{c|}{1.53}
+            & \multicolumn{1}{c|}{1.69}
+            & \multicolumn{1}{c|}{2.86}
+            & \multicolumn{1}{c|}{0.64}
+            & \multicolumn{1}{c|}{4.45}
+            & \multicolumn{1}{c|}{16.20}
+            & \multicolumn{1}{c|}{55.00}
+            & \multicolumn{1}{c|}{32817.70}
+            \\ \hline
+            \textbf{Mean bandwidth (bytes/ms)} & \multicolumn{1}{c|}{169.44} & \multicolumn{1}{c|}{846.93}
+            & \multicolumn{1}{c|}{1656.97}
+            & \multicolumn{1}{c|}{2377.15}
+            & \multicolumn{1}{c|}{2622.61}
+            & \multicolumn{1}{c|}{169.79}
+            & \multicolumn{1}{c|}{851.97}
+            & \multicolumn{1}{c|}{1560.43}
+            & \multicolumn{1}{c|}{1850.06}
+            & \multicolumn{1}{c|}{2342.33}
+            & \multicolumn{1}{c|}{168.58}
+            & \multicolumn{1}{c|}{842.27}
+            & \multicolumn{1}{c|}{1566.77}
+            & \multicolumn{1}{c|}{1440.23}
+            & \multicolumn{1}{c|}{791.18}
+            \\ \hline
+            \textbf{Packet drop rate (\%)} & \multicolumn{1}{c|}{0.03} & \multicolumn{1}{c|}{0.80}
+            & \multicolumn{1}{c|}{2.52}
+            & \multicolumn{1}{c|}{10.25}
+            & \multicolumn{1}{c|}{30.98}
+            & \multicolumn{1}{c|}{0.03}
+            & \multicolumn{1}{c|}{0.07}
+            & \multicolumn{1}{c|}{3.29}
+            & \multicolumn{1}{c|}{5.68}
+            & \multicolumn{1}{c|}{4.39}
+            & \multicolumn{1}{c|}{0.03}
+            & \multicolumn{1}{c|}{1.31}
+            & \multicolumn{1}{c|}{5.36}
+            & \multicolumn{1}{c|}{16.57}
+            & \multicolumn{1}{c|}{44.23}
+            \\ \hline
+            \textbf{Mean number of packet duplications} & \multicolumn{1}{c|}{4.20} & \multicolumn{1}{c|}{4.16}
+            & \multicolumn{1}{c|}{4.07}
+            & \multicolumn{1}{c|}{3.72}
+            & \multicolumn{1}{c|}{2.84}
+            & \multicolumn{1}{c|}{4.20}
+            & \multicolumn{1}{c|}{4.20}
+            & \multicolumn{1}{c|}{3.79}
+            & \multicolumn{1}{c|}{3.05}
+            & \multicolumn{1}{c|}{2.81}
+            & \multicolumn{1}{c|}{4.19}
+            & \multicolumn{1}{c|}{4.13}
+            & \multicolumn{1}{c|}{3.83}
+            & \multicolumn{1}{c|}{2.03}
+            & \multicolumn{1}{c|}{0.94}
+            \\ \hline
+        \end{tabular}
+    }
+    \caption{Aggregated statistics for a configuration where \texttt{meanDuplications} is set to 4.2.}
+    \label{table:analysis_results_duplication}
+\end{table}
+
+\subsubsection{Packet Latency}\label{subsubsection:latency_analysis}
+
+\begin{table}[!h]
+    \centering
+    \resizebox{\textwidth}{!}{
+        \begin{tabular}{|l|ccccc|ccccc|ccccc|}
+            \hline
+            \textbf{Machine} & & &
+            Laptop & & &
+            & & PC & &
+            & & & VM &
+            & \\ \hline
+            \textbf{Number of clients} & \multicolumn{1}{c|}{5} & \multicolumn{1}{c|}{25} &
+            \multicolumn{1}{c|}{50}
+            & \multicolumn{1}{c|}{75}
+            & \multicolumn{1}{c|}{100}
+            & \multicolumn{1}{c|}{5}
+            & \multicolumn{1}{c|}{25}
+            & \multicolumn{1}{c|}{50}
+            & \multicolumn{1}{c|}{75}
+            & \multicolumn{1}{c|}{100}
+            & \multicolumn{1}{c|}{5}
+            & \multicolumn{1}{c|}{25}
+            & \multicolumn{1}{c|}{50}
+            & \multicolumn{1}{c|}{75}
+            & \multicolumn{1}{c|}{100}
+            \\ \hline
+            \textbf{Duration (s)} & \multicolumn{1}{c|}{240.224} & \multicolumn{1}{c|}{240.68} &
+            \multicolumn{1}{c|}{240.769}
+            & \multicolumn{1}{c|}{240.877}
+            & \multicolumn{1}{c|}{241.072}
+            & \multicolumn{1}{c|}{240.34}
+            & \multicolumn{1}{c|}{240.669}
+            & \multicolumn{1}{c|}{240.651}
+            & \multicolumn{1}{c|}{240.865}
+            & \multicolumn{1}{c|}{241.029}
+            & \multicolumn{1}{c|}{240.322}
+            & \multicolumn{1}{c|}{241.106}
+            & \multicolumn{1}{c|}{242.56}
+            & \multicolumn{1}{c|}{244.967}
+            & \multicolumn{1}{c|}{246.926}
+            \\ \hline
+            \textbf{Packets sent by clients} & \multicolumn{1}{c|}{59290} & \multicolumn{1}{c|}{296400}
+            & \multicolumn{1}{c|}{592570}
+            & \multicolumn{1}{c|}{890040}
+            & \multicolumn{1}{c|}{1186908}
+            & \multicolumn{1}{c|}{59256}
+            & \multicolumn{1}{c|}{296585}
+            & \multicolumn{1}{c|}{593362}
+            & \multicolumn{1}{c|}{890513}
+            & \multicolumn{1}{c|}{1187435}
+            & \multicolumn{1}{c|}{59121}
+            & \multicolumn{1}{c|}{296678}
+            & \multicolumn{1}{c|}{591206}
+            & \multicolumn{1}{c|}{881376}
+            & \multicolumn{1}{c|}{1177216}
+            \\ \hline
+            \textbf{Packets received by server} & \multicolumn{1}{c|}{59233} & \multicolumn{1}{c|}{296095}
+            & \multicolumn{1}{c|}{586237}
+            & \multicolumn{1}{c|}{876592}
+            & \multicolumn{1}{c|}{1164650}
+            & \multicolumn{1}{c|}{59233}
+            & \multicolumn{1}{c|}{296578}
+            & \multicolumn{1}{c|}{593299}
+            & \multicolumn{1}{c|}{890488}
+            & \multicolumn{1}{c|}{1183488}
+            & \multicolumn{1}{c|}{59095}
+            & \multicolumn{1}{c|}{295952}
+            & \multicolumn{1}{c|}{586017}
+            & \multicolumn{1}{c|}{829364}
+            & \multicolumn{1}{c|}{1062506}
+            \\ \hline
+            \textbf{Number of unexpected arrivals} & \multicolumn{1}{c|}{0} & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            \\ \hline
+            \textbf{Number of missing arrivals} & \multicolumn{1}{c|}{57} & \multicolumn{1}{c|}{305}
+            & \multicolumn{1}{c|}{6333}
+            & \multicolumn{1}{c|}{13448}
+            & \multicolumn{1}{c|}{22258}
+            & \multicolumn{1}{c|}{23}
+            & \multicolumn{1}{c|}{7}
+            & \multicolumn{1}{c|}{63}
+            & \multicolumn{1}{c|}{25}
+            & \multicolumn{1}{c|}{3947}
+            & \multicolumn{1}{c|}{26}
+            & \multicolumn{1}{c|}{726}
+            & \multicolumn{1}{c|}{5189}
+            & \multicolumn{1}{c|}{52012}
+            & \multicolumn{1}{c|}{114710}
+            \\ \hline
+            \textbf{Number of unidentifiable arrivals} & \multicolumn{1}{c|}{0} & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            \\ \hline
+            \textbf{Packets with checksum corruption} & \multicolumn{1}{c|}{0} & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            \\ \hline
+            \textbf{Junk packets} & \multicolumn{1}{c|}{0} & \multicolumn{1}{c|}{0} &
+            \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            \\ \hline
+            \textbf{Mean packet size (bytes)} & \multicolumn{1}{c|}{132.06} & \multicolumn{1}{c|}{132.70}
+            & \multicolumn{1}{c|}{132.88}
+            & \multicolumn{1}{c|}{132.94}
+            & \multicolumn{1}{c|}{132.98}
+            & \multicolumn{1}{c|}{132.06}
+            & \multicolumn{1}{c|}{132.70}
+            & \multicolumn{1}{c|}{132.88}
+            & \multicolumn{1}{c|}{132.94}
+            & \multicolumn{1}{c|}{132.98}
+            & \multicolumn{1}{c|}{132.06}
+            & \multicolumn{1}{c|}{132.70}
+            & \multicolumn{1}{c|}{132.88}
+            & \multicolumn{1}{c|}{132.93}
+            & \multicolumn{1}{c|}{132.98}
+            \\ \hline
+            \textbf{Mean packet latency (ms)} & \multicolumn{1}{c|}{419.39} & \multicolumn{1}{c|}{419.91}
+            & \multicolumn{1}{c|}{420.84}
+            & \multicolumn{1}{c|}{420.82}
+            & \multicolumn{1}{c|}{421.08}
+            & \multicolumn{1}{c|}{420.02}
+            & \multicolumn{1}{c|}{420.03}
+            & \multicolumn{1}{c|}{420.19}
+            & \multicolumn{1}{c|}{420.69}
+            & \multicolumn{1}{c|}{421.05}
+            & \multicolumn{1}{c|}{418.93}
+            & \multicolumn{1}{c|}{419.94}
+            & \multicolumn{1}{c|}{422.95}
+            & \multicolumn{1}{c|}{441.35}
+            & \multicolumn{1}{c|}{455.92}
+            \\ \hline
+            \textbf{Mean bandwidth (bytes/ms)} & \multicolumn{1}{c|}{32.62} & \multicolumn{1}{c|}{163.72}
+            & \multicolumn{1}{c|}{324.00}
+            & \multicolumn{1}{c|}{483.88}
+            & \multicolumn{1}{c|}{644.81}
+            & \multicolumn{1}{c|}{32.61}
+            & \multicolumn{1}{c|}{163.99}
+            & \multicolumn{1}{c|}{328.51}
+            & \multicolumn{1}{c|}{493.29}
+            & \multicolumn{1}{c|}{655.40}
+            & \multicolumn{1}{c|}{32.55}
+            & \multicolumn{1}{c|}{163.87}
+            & \multicolumn{1}{c|}{324.10}
+            & \multicolumn{1}{c|}{461.80}
+            & \multicolumn{1}{c|}{597.96}
+            \\ \hline
+            \textbf{Packet drop rate (\%)} & \multicolumn{1}{c|}{0.10} & \multicolumn{1}{c|}{0.10}
+            & \multicolumn{1}{c|}{1.07}
+            & \multicolumn{1}{c|}{1.51}
+            & \multicolumn{1}{c|}{1.88}
+            & \multicolumn{1}{c|}{0.04}
+            & \multicolumn{1}{c|}{0.00}
+            & \multicolumn{1}{c|}{0.01}
+            & \multicolumn{1}{c|}{0.00}
+            & \multicolumn{1}{c|}{0.33}
+            & \multicolumn{1}{c|}{0.04}
+            & \multicolumn{1}{c|}{0.24}
+            & \multicolumn{1}{c|}{0.88}
+            & \multicolumn{1}{c|}{5.90}
+            & \multicolumn{1}{c|}{9.74}
+            \\ \hline
+        \end{tabular}
+    }
+    \caption{Aggregated statistics for a configuration where latency is set to 420 milliseconds, i.e.:
+    \texttt{uniform} where the \texttt{minimum} and \texttt{maximum} are both 420 with \texttt{timeUnit} set to
+    \texttt{``MILLI\_SECONDS''}.}
+    \label{table:analysis_results_latency}
+\end{table}
+
+\subsubsection{Packet Limiting}\label{subsubsection:limit_analysis}
+
+\begin{table}[!h]
+    \centering
+    \resizebox{\textwidth}{!}{
+        \begin{tabular}{|l|ccccc|ccccc|ccccc|}
+            \hline
+            \textbf{Machine} & &
+            & Laptop & & &
+            & & PC & &
+            & & & VM &
+            & \\ \hline
+            \textbf{Number of clients} & \multicolumn{1}{c|}{5} & \multicolumn{1}{c|}{25}
+            & \multicolumn{1}{c|}{50}
+            & \multicolumn{1}{c|}{75}
+            & \multicolumn{1}{c|}{100}
+            & \multicolumn{1}{c|}{5}
+            & \multicolumn{1}{c|}{25}
+            & \multicolumn{1}{c|}{50}
+            & \multicolumn{1}{c|}{75}
+            & \multicolumn{1}{c|}{100}
+            & \multicolumn{1}{c|}{5}
+            & \multicolumn{1}{c|}{25}
+            & \multicolumn{1}{c|}{50}
+            & \multicolumn{1}{c|}{75}
+            & \multicolumn{1}{c|}{100}
+            \\ \hline
+            \textbf{Duration (s)} & \multicolumn{1}{c|}{239.045} & \multicolumn{1}{c|}{240
+            .098} & \multicolumn{1}{c|}{240.103}
+            & \multicolumn{1}{c|}{240.088}
+            & \multicolumn{1}{c|}{240.037}
+            & \multicolumn{1}{c|}{239.093}
+            & \multicolumn{1}{c|}{240.0}
+            & \multicolumn{1}{c|}{239.992}
+            & \multicolumn{1}{c|}{240.034}
+            & \multicolumn{1}{c|}{240.05}
+            & \multicolumn{1}{c|}{238.84}
+            & \multicolumn{1}{c|}{240.682}
+            & \multicolumn{1}{c|}{241.612}
+            & \multicolumn{1}{c|}{243.55}
+            & \multicolumn{1}{c|}{246.478}
+            \\ \hline
+            \textbf{Packets sent by clients} & \multicolumn{1}{c|}{59374} &
+            \multicolumn{1}{c|}{296928}
+            & \multicolumn{1}{c|}{593681}
+            & \multicolumn{1}{c|}{890175}
+            & \multicolumn{1}{c|}{1187168}
+            & \multicolumn{1}{c|}{59130}
+            & \multicolumn{1}{c|}{296420}
+            & \multicolumn{1}{c|}{593713}
+            & \multicolumn{1}{c|}{889664}
+            & \multicolumn{1}{c|}{1188447}
+            & \multicolumn{1}{c|}{59240}
+            & \multicolumn{1}{c|}{296088}
+            & \multicolumn{1}{c|}{592168}
+            & \multicolumn{1}{c|}{886163}
+            & \multicolumn{1}{c|}{1176538}
+            \\ \hline
+            \textbf{Packets received by server} & \multicolumn{1}{c|}{11944} & \multicolumn{1}{c|}{59963}
+            & \multicolumn{1}{c|}{119925}
+            & \multicolumn{1}{c|}{179955}
+            & \multicolumn{1}{c|}{239985}
+            & \multicolumn{1}{c|}{11944}
+            & \multicolumn{1}{c|}{59963}
+            & \multicolumn{1}{c|}{119993}
+            & \multicolumn{1}{c|}{179955}
+            & \multicolumn{1}{c|}{239985}
+            & \multicolumn{1}{c|}{11944}
+            & \multicolumn{1}{c|}{59893}
+            & \multicolumn{1}{c|}{120219}
+            & \multicolumn{1}{c|}{179009}
+            & \multicolumn{1}{c|}{235158}
+            \\ \hline
+            \textbf{Number of unexpected arrivals} & \multicolumn{1}{c|}{0} & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            \\ \hline
+            \textbf{Number of missing arrivals} & \multicolumn{1}{c|}{47430} & \multicolumn{1}{c|}{236965}
+            & \multicolumn{1}{c|}{473756}
+            & \multicolumn{1}{c|}{710220}
+            & \multicolumn{1}{c|}{947183}
+            & \multicolumn{1}{c|}{47186}
+            & \multicolumn{1}{c|}{236457}
+            & \multicolumn{1}{c|}{473720}
+            & \multicolumn{1}{c|}{709709}
+            & \multicolumn{1}{c|}{948462}
+            & \multicolumn{1}{c|}{47296}
+            & \multicolumn{1}{c|}{236195}
+            & \multicolumn{1}{c|}{471949}
+            & \multicolumn{1}{c|}{707154}
+            & \multicolumn{1}{c|}{941380}
+            \\ \hline
+            \textbf{Number of unidentifiable arrivals} & \multicolumn{1}{c|}{0} & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            \\ \hline
+            \textbf{Packets with checksum corruption} & \multicolumn{1}{c|}{0} & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            \\ \hline
+            \textbf{Junk packets} & \multicolumn{1}{c|}{0} & \multicolumn{1}{c|}{0} & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            \\ \hline
+            \textbf{Mean packet size (bytes)} & \multicolumn{1}{c|}{132.06} & \multicolumn{1}{c|}{132.70}
+            & \multicolumn{1}{c|}{132.88}
+            & \multicolumn{1}{c|}{132.94}
+            & \multicolumn{1}{c|}{132.98}
+            & \multicolumn{1}{c|}{132.06}
+            & \multicolumn{1}{c|}{132.70}
+            & \multicolumn{1}{c|}{132.88}
+            & \multicolumn{1}{c|}{132.94}
+            & \multicolumn{1}{c|}{132.99}
+            & \multicolumn{1}{c|}{132.06}
+            & \multicolumn{1}{c|}{132.70}
+            & \multicolumn{1}{c|}{132.88}
+            & \multicolumn{1}{c|}{132.94}
+            & \multicolumn{1}{c|}{132.98}
+            \\ \hline
+            \textbf{Mean packet latency (ms)} & \multicolumn{1}{c|}{0.02} & \multicolumn{1}{c|}{0.14}
+            & \multicolumn{1}{c|}{0.02}
+            & \multicolumn{1}{c|}{0.59}
+            & \multicolumn{1}{c|}{0.74}
+            & \multicolumn{1}{c|}{0.02}
+            & \multicolumn{1}{c|}{0.02}
+            & \multicolumn{1}{c|}{0.03}
+            & \multicolumn{1}{c|}{0.38}
+            & \multicolumn{1}{c|}{0.40}
+            & \multicolumn{1}{c|}{0.11}
+            & \multicolumn{1}{c|}{0.79}
+            & \multicolumn{1}{c|}{8.68}
+            & \multicolumn{1}{c|}{13.74}
+            & \multicolumn{1}{c|}{31.55}
+            \\ \hline
+            \textbf{Mean bandwidth (bytes/ms)} & \multicolumn{1}{c|}{6.63} & \multicolumn{1}{c|}{33.23}
+            & \multicolumn{1}{c|}{66.56}
+            & \multicolumn{1}{c|}{99.84}
+            & \multicolumn{1}{c|}{133.08}
+            & \multicolumn{1}{c|}{6.63}
+            & \multicolumn{1}{c|}{33.18}
+            & \multicolumn{1}{c|}{66.44}
+            & \multicolumn{1}{c|}{99.84}
+            & \multicolumn{1}{c|}{133.09}
+            & \multicolumn{1}{c|}{6.62}
+            & \multicolumn{1}{c|}{33.08}
+            & \multicolumn{1}{c|}{66.55}
+            & \multicolumn{1}{c|}{99.78}
+            & \multicolumn{1}{c|}{131.63}
+            \\ \hline
+            \textbf{Packet drop rate (\%)} & \multicolumn{1}{c|}{79.88} & \multicolumn{1}{c|}{79.81}
+            & \multicolumn{1}{c|}{79.80}
+            & \multicolumn{1}{c|}{79.78}
+            & \multicolumn{1}{c|}{79.79}
+            & \multicolumn{1}{c|}{79.80}
+            & \multicolumn{1}{c|}{79.77}
+            & \multicolumn{1}{c|}{79.79}
+            & \multicolumn{1}{c|}{79.77}
+            & \multicolumn{1}{c|}{79.81}
+            & \multicolumn{1}{c|}{79.84}
+            & \multicolumn{1}{c|}{79.77}
+            & \multicolumn{1}{c|}{79.70}
+            & \multicolumn{1}{c|}{79.80}
+            & \multicolumn{1}{c|}{80.01}
+            \\ \hline
+            \textbf{Mean packet rate per client (packets/s)} & \multicolumn{1}{c|}{9.99} & \multicolumn{1}{c|}{9.99}
+            & \multicolumn{1}{c|}{9.99}
+            & \multicolumn{1}{c|}{9.99}
+            & \multicolumn{1}{c|}{10.00}
+            & \multicolumn{1}{c|}{9.99}
+            & \multicolumn{1}{c|}{9.99}
+            & \multicolumn{1}{c|}{10.00}
+            & \multicolumn{1}{c|}{10.00}
+            & \multicolumn{1}{c|}{10.00}
+            & \multicolumn{1}{c|}{10.00}
+            & \multicolumn{1}{c|}{9.95}
+            & \multicolumn{1}{c|}{9.95}
+            & \multicolumn{1}{c|}{9.80}
+            & \multicolumn{1}{c|}{9.54}
+            \\ \hline
+        \end{tabular}
+    }
+    \caption{Aggregated statistics for a configuration where packet limit is set to 10 per second, i.e.:
+    \texttt{packetLimitRate} is 10 and \texttt{timeUnit} is \texttt{``SECONDS''}.}
+    \label{table:analysis_results_limit}
+\end{table}
+
+\subsubsection{Packet Throttling}\label{subsubsection:throttle_analysis}
+
+\begin{table}[!h]
+    \centering
+    \resizebox{\textwidth}{!}{
+        \begin{tabular}{|l|ccccc|ccccc|ccccc|}
+            \hline
+            \textbf{Machine} & & & Laptop
+            & & & &
+            & PC & & &
+            & & VM & &
+            \\ \hline
+            \textbf{Number of clients} & \multicolumn{1}{c|}{5} & \multicolumn{1}{c|}{25} & \multicolumn{1}{c|}{50}
+            & \multicolumn{1}{c|}{75}
+            & \multicolumn{1}{c|}{100}
+            & \multicolumn{1}{c|}{5}
+            & \multicolumn{1}{c|}{25}
+            & \multicolumn{1}{c|}{50}
+            & \multicolumn{1}{c|}{75}
+            & \multicolumn{1}{c|}{100}
+            & \multicolumn{1}{c|}{5}
+            & \multicolumn{1}{c|}{25}
+            & \multicolumn{1}{c|}{50}
+            & \multicolumn{1}{c|}{75}
+            & \multicolumn{1}{c|}{100}
+            \\ \hline
+            \textbf{Duration (s)} & \multicolumn{1}{c|}{239.904} & \multicolumn{1}{c|}{239.921} &
+            \multicolumn{1}{c|}{239.92}
+            & \multicolumn{1}{c|}{239.915}
+            & \multicolumn{1}{c|}{239.857}
+            & \multicolumn{1}{c|}{239.89}
+            & \multicolumn{1}{c|}{239.867}
+            & \multicolumn{1}{c|}{239.784}
+            & \multicolumn{1}{c|}{239.862}
+            & \multicolumn{1}{c|}{239.834}
+            & \multicolumn{1}{c|}{239.659}
+            & \multicolumn{1}{c|}{239.626}
+            & \multicolumn{1}{c|}{241.962}
+            & \multicolumn{1}{c|}{243.588}
+            & \multicolumn{1}{c|}{241.493}
+            \\ \hline
+            \textbf{Packets sent by clients} & \multicolumn{1}{c|}{59375} & \multicolumn{1}{c|}{296931}
+            & \multicolumn{1}{c|}{593688}
+            & \multicolumn{1}{c|}{890178}
+            & \multicolumn{1}{c|}{1186787}
+            & \multicolumn{1}{c|}{59191}
+            & \multicolumn{1}{c|}{296464}
+            & \multicolumn{1}{c|}{594549}
+            & \multicolumn{1}{c|}{891682}
+            & \multicolumn{1}{c|}{1188651}
+            & \multicolumn{1}{c|}{59314}
+            & \multicolumn{1}{c|}{296373}
+            & \multicolumn{1}{c|}{591022}
+            & \multicolumn{1}{c|}{883543}
+            & \multicolumn{1}{c|}{1181090}
+            \\ \hline
+            \textbf{Packets received by server} & \multicolumn{1}{c|}{45211} & \multicolumn{1}{c|}{105827}
+            & \multicolumn{1}{c|}{116323}
+            & \multicolumn{1}{c|}{227823}
+            & \multicolumn{1}{c|}{343505}
+            & \multicolumn{1}{c|}{48427}
+            & \multicolumn{1}{c|}{122681}
+            & \multicolumn{1}{c|}{205144}
+            & \multicolumn{1}{c|}{308732}
+            & \multicolumn{1}{c|}{398687}
+            & \multicolumn{1}{c|}{51569}
+            & \multicolumn{1}{c|}{104429}
+            & \multicolumn{1}{c|}{193554}
+            & \multicolumn{1}{c|}{310153}
+            & \multicolumn{1}{c|}{444144}
+            \\ \hline
+            \textbf{Number of unexpected arrivals} & \multicolumn{1}{c|}{0} & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            \\ \hline
+            \textbf{Number of missing arrivals} & \multicolumn{1}{c|}{14164} & \multicolumn{1}{c|}{191104}
+            & \multicolumn{1}{c|}{477365}
+            & \multicolumn{1}{c|}{662355}
+            & \multicolumn{1}{c|}{843282}
+            & \multicolumn{1}{c|}{10764}
+            & \multicolumn{1}{c|}{173783}
+            & \multicolumn{1}{c|}{389405}
+            & \multicolumn{1}{c|}{582950}
+            & \multicolumn{1}{c|}{789964}
+            & \multicolumn{1}{c|}{7745}
+            & \multicolumn{1}{c|}{191944}
+            & \multicolumn{1}{c|}{397468}
+            & \multicolumn{1}{c|}{573390}
+            & \multicolumn{1}{c|}{736946}
+            \\ \hline
+            \textbf{Number of unidentifiable arrivals} & \multicolumn{1}{c|}{0} & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            \\ \hline
+            \textbf{Packets with checksum corruption} & \multicolumn{1}{c|}{0} & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            \\ \hline
+            \textbf{Junk packets} & \multicolumn{1}{c|}{0} & \multicolumn{1}{c|}{0} & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            & \multicolumn{1}{c|}{0}
+            \\ \hline
+            \textbf{Mean packet size (bytes)} & \multicolumn{1}{c|}{132.06} & \multicolumn{1}{c|}{132.70}
+            & \multicolumn{1}{c|}{132.88}
+            & \multicolumn{1}{c|}{132.94}
+            & \multicolumn{1}{c|}{132.98}
+            & \multicolumn{1}{c|}{132.06}
+            & \multicolumn{1}{c|}{132.70}
+            & \multicolumn{1}{c|}{132.89}
+            & \multicolumn{1}{c|}{132.95}
+            & \multicolumn{1}{c|}{132.99}
+            & \multicolumn{1}{c|}{132.06}
+            & \multicolumn{1}{c|}{132.70}
+            & \multicolumn{1}{c|}{132.88}
+            & \multicolumn{1}{c|}{132.94}
+            & \multicolumn{1}{c|}{132.98}
+            \\ \hline
+            \textbf{Mean packet latency (ms)} & \multicolumn{1}{c|}{5713.17} & \multicolumn{1}{c|}{5587.47}
+            & \multicolumn{1}{c|}{5284.10}
+            & \multicolumn{1}{c|}{5518.61}
+            & \multicolumn{1}{c|}{5618.52}
+            & \multicolumn{1}{c|}{5736.95}
+            & \multicolumn{1}{c|}{5633.76}
+            & \multicolumn{1}{c|}{5613.01}
+            & \multicolumn{1}{c|}{5629.79}
+            & \multicolumn{1}{c|}{5674.76}
+            & \multicolumn{1}{c|}{5805.65}
+            & \multicolumn{1}{c|}{5633.94}
+            & \multicolumn{1}{c|}{5891.65}
+            & \multicolumn{1}{c|}{6029.84}
+            & \multicolumn{1}{c|}{5945.08}
+            \\ \hline
+            \textbf{Mean bandwidth (bytes/ms)} & \multicolumn{1}{c|}{24.55} & \multicolumn{1}{c|}{56.67}
+            & \multicolumn{1}{c|}{59.16}
+            & \multicolumn{1}{c|}{121.10}
+            & \multicolumn{1}{c|}{180.43}
+            & \multicolumn{1}{c|}{26.44}
+            & \multicolumn{1}{c|}{66.31}
+            & \multicolumn{1}{c|}{106.19}
+            & \multicolumn{1}{c|}{161.72}
+            & \multicolumn{1}{c|}{214.78}
+            & \multicolumn{1}{c|}{28.34}
+            & \multicolumn{1}{c|}{57.32}
+            & \multicolumn{1}{c|}{106.70}
+            & \multicolumn{1}{c|}{170.32}
+            & \multicolumn{1}{c|}{254.66}
+            \\ \hline
+            \textbf{Mean bandwidth per client (bytes/s)} & \multicolumn{1}{c|}{4910.37} & \multicolumn{1}{c|}{2266.74}
+            & \multicolumn{1}{c|}{1183.27}
+            & \multicolumn{1}{c|}{1614.64}
+            & \multicolumn{1}{c|}{1804.33}
+            & \multicolumn{1}{c|}{5288.46}
+            & \multicolumn{1}{c|}{2652.48}
+            & \multicolumn{1}{c|}{2123.81}
+            & \multicolumn{1}{c|}{2156.22}
+            & \multicolumn{1}{c|}{2147.81}
+            & \multicolumn{1}{c|}{5668.16}
+            & \multicolumn{1}{c|}{2292.85}
+            & \multicolumn{1}{c|}{2133.97}
+            & \multicolumn{1}{c|}{2270.90}
+            & \multicolumn{1}{c|}{2546.57}
+            \\ \hline
+            \textbf{Packet drop rate (\%)} & \multicolumn{1}{c|}{23.86} & \multicolumn{1}{c|}{64.36}
+            & \multicolumn{1}{c|}{80.41}
+            & \multicolumn{1}{c|}{74.41}
+            & \multicolumn{1}{c|}{71.06}
+            & \multicolumn{1}{c|}{18.19}
+            & \multicolumn{1}{c|}{58.62}
+            & \multicolumn{1}{c|}{65.50}
+            & \multicolumn{1}{c|}{65.38}
+            & \multicolumn{1}{c|}{66.46}
+            & \multicolumn{1}{c|}{13.06}
+            & \multicolumn{1}{c|}{64.76}
+            & \multicolumn{1}{c|}{67.25}
+            & \multicolumn{1}{c|}{64.90}
+            & \multicolumn{1}{c|}{62.40}
+            \\ \hline
+        \end{tabular}
+    }
+    \caption{Aggregated statistics for a configuration where the bandwidth throttle is set to 3,000 bytes per second
+    with a drop threshold of 10,000 bytes, i.e.: \texttt{byteThrottleRate} is 3,000, \texttt{byteDropThreshold} is
+    10,000 and \texttt{timeUnit} is \texttt{``SECONDS''}.}
+    \label{table:analysis_results_throttle}
+\end{table}
 
 
 \section{User Feedback}\label{section:user_feedback}
