@@ -1623,7 +1623,7 @@ the duration is modulated back down to 4 minutes, then the mean packet rate per 
 $\frac{235158}{240 \times 1000} = 9.80 \; packets/s$.
 
 There are many explanations for this time keeping issue. The first is that each client might be starting at a
-different time. Suppose it takes the VM 60 milliseconds to spin-up a Java Process\cite{java_Process}. Whilst this
+different time. Suppose it takes the VM 60 milliseconds to spin-up a Java process\cite{java_Process}. Whilst this
 might seem reasonable for a fairly heavyweight user-level operation, if done in serial, then the last process will be
 launched $60ms \times 100 = 60,000ms = 6s$ after the first. In reality it will almost certainly be more complex than
 that, insofar as there is probably some parallelism and context switching going on, but it illustrates the potential
@@ -1636,7 +1636,7 @@ Process\cite{java_Process} API to kill the server after the allotted time has pa
 at the bare minimum been the subject of some controversy\cite{java_timeout_reliability}, so it wouldn't necessarily
 be surprising to find that the timeout feature of the \texttt{waitFor} method in \texttt{Process} becomes inaccurate
 when starved of resources. In this way, the clients and servers may not be starting and finishing in a way that is
-accutely synchronised, resulting in the same amount of packets being sent over a broader span of time, diluting the
+acutely synchronised, resulting in the same amount of packets being sent over a broader span of time, diluting the
 mean packet rate per client.
 
 In conclusion, Table~\ref{table:analysis_results_limit} and its ensuing analysis strongly suggest that packet
@@ -1912,7 +1912,157 @@ Tetris and minimise the time gaps between packets as to not overly throttle them
 
 \section{User Feedback}\label{section:user_feedback}
 
-TODO
+Six participants were generous enough to spend some of their time to road test Packet Courier and provide feedback.
+Four of the participants took part in the user testing phase remotely and expressed their feedback via Microsoft
+Forms\cite{microsoft_forms}; the other two provided their feedback in person, which enables notes to be taken as they
+were observed interacting with the tool in addition to writing down their comments.
+
+\subsection{Survey Results}\label{subsection:survey_results}
+
+Participants were asked to download a \texttt{.zip} file of the repository before compiling Packet Courier and
+completing a selection of tasks. Each of the questions was carefully worded as not to invoke any biases and gave only
+the bare minimum context for solving the particular problem. The rationale behind this is that Packet Courier's
+\texttt{README.md} should provide users with all the necessary context and troubleshooting information they might
+need. Thus, if any of the participants were finding certain tasks unintuitive in a way that the \texttt{README.md}
+was failing to address, then this is hugely useful feedback. Conversely, if the survey held their hand during the
+entire process, then this defeats the point of collecting feedback on how easy to use and intuitive Packet Courier is
+as a tool.
+
+\begin{enumerate}
+    \item \textbf{Please describe your occupation, i.e.: Computing Student, Computing Teacher, Network Engineer,
+        etc.} \\
+    Of the four participants, two where computing students, one was a software engineer and the other a game developer.
+    \item \textbf{What platform will you be using to run Packet Courier?} \\
+    Two participants were using Windows, one was using MacOS and the other Windows Subsystem for Linux.
+    \item \textbf{Packet Courier needs to be compiled using Maven. How would this affect your motivation to use the
+    tool? If you are indifferent, please select 5. (Scale from 0 to 10)} \\
+    Three participants selected 3; one selected 8. Clearly the choice of project management tool was not particularly
+    interesting to the participants.
+    \item \textbf{Packet Courier can either be used as a library or executed as a program from the command line. In
+    both cases Java 8 (or higher) is required. How would this affect your motivation to use the tool? If you are
+    indifferent, please select 5. (Scale from 0 to 10)} \\
+    Responses varied quite substantially with participants giving scores of 4, 7, 8 and 10. On the whole, it would
+    seem as though participants liked the idea of Packet Courier using Java 8.
+    \item \textbf{Packet Courier has no other prerequisites. How would this affect your motivation to use the tool?
+    If you are indifferent, please select 5. (Scale from 0 to 10)} \\
+    One participant selected 8 while the other three gave a score of 10. It would seem that using software with
+    minimal dependencies is a massive upside for users, possibly because of how rare it is for complex tooling such
+    as Packet Courier.
+    \item \textbf{Please read the Introduction section of the README. Does it concisely convey the purpose of the
+    tool and what makes it unique?} \\
+    The responses to this question, 7, 8, 8 and 10, would indicate that README introduction is clear and informative
+    with a little room for improvement.
+    \item \textbf{Please write down any comments or criticisms regarding the Introduction section of the README. Is
+    there anything missing? Is anything unclear or ambiguous?} \\
+    Participants left a variety of comments in this section, ranging from \emph{``no''} to \emph{``could be a little
+    more direct/plain (and therefore shorter)''}. One participant claimed that \emph{``the introduction is clear,
+        with enough technical detail that users can understand what is happening but not so much detail that it would
+        exclude those with lesser knowledge''}, with another saying that \emph{``uniqueness is not self evident''}
+    but that \emph{``a section of the README explaining its benefits over other tools is unnecessary and
+    self-indulgent''}. Whilst there is no clear consensus on this particular point (with some of it being down to
+    taste), it might be worth investigating ways to trim down the README introduction so that users can get stuck
+    straight into the tool. The comments about uniqueness are interesting, perhaps implying that users don't care
+    about the unique selling point of a tool by the time they're skimming through the README and that they just want
+    to get to work actually using it.
+    \item \textbf{Please build the project. How complicated did you find this process?} \\
+    All participants responded 10 to this prompt, reinforcing the choice to use Maven as the project management tool
+    due to its simplicity.
+    \item \textbf{Please explain any difficulties you had compiling Packet Courier.} \\
+    Only one participant opted to leave a common here and suggested that the README mentions Maven's quiet mode to
+    reduce console noise.
+    \item \textbf{Please read \texttt{cmd\_example1.courierconfig}. On first glance, does this file read intuitively
+    for a network emulation configuration? Suppose you were shown this file for the first time and were only told
+    that it was used to configure an emulated network scenario; how well would you understand what the attributes and
+    their values were referring to? If you can't find it, then the README should prove helpful.} \\
+    Participants responded with scores of 8, 9, 9 and 10, indicating that the \texttt{.courierconfig} file format is
+    very user friendly, even to people who are totally new to Packet Courier.
+    \item \textbf{If you had to consult the README to get a better understanding of
+    \texttt{cmd\_example1.courierconfig}, then please rate how helpful it was in clarifying any initial confusion.} \\
+    Three participants opted to respond to this prompt, all giving a 10 rating.
+    \item \textbf{Please write down any comments or criticisms regarding the structure or the contents of
+    \texttt{cmd\_example1.courierconfig}. Did the README do a good job at explaining any components that weren't self
+    evident in their function?} \\
+    Two participants suggested that a YAML\cite{yaml} file would make for a cleaner, more human-readable format,
+    which seems like a very sensible suggestion. Another participant noted that they had to read up on what
+    \emph{``wall-clock''} meant, although the README did help them on that front.
+    \item \textbf{Please run a Packet Courier emulation from the command-line using
+    \texttt{cmd\_example1.courierconfig} as the configuration. How complicated did you find this process? Note that
+    the network code for this configuration uses \texttt{python3}, and is known to work with version 3.8.10.} \\
+    Participants gave scores of 7, 8, 10 and 10 for this section. So far it seems as though Packet Courier is being
+    received as a very easy to use and highly intuitive tool.
+    \item \textbf{Please explain any difficulties you had running a Packet Courier emulation.} \\
+    The participants had a lot to say in response to this prompt. \\ \\
+    Windows users experienced issues at the level of the operating system whereby double-quotes were stripped from
+    Java \texttt{ProcessBuilder} commands\cite{java_ProcessBuilder_double_quote_windows,
+        microsoft_docs_main_function}, which in turn prevented the Python scripts from properly parsing the
+    arguments. Even after hot-fixing that problem, the Windows kernel seemed to block the packets as a security
+    measure. These issues are not bugs or problems with Packet Courier specifically, but operating system quirks that
+    must be worked around and troubleshot. The security/firewalling issue can be investigated and discussed in the
+    README to help Windows users get the most out of the tool as quickly as possible. \\ \\
+    The MacOS user cites that whilst their Packet Courier instance did technically start, it exited nearly
+    immediately due to an attempt to bind an ip-address to an existing socket. This is a genuine design oversight
+    that has been logged as a known bug. Packet Courier should instead attempt to bind its public and private
+    ip-addresses to a socket and retry if they fail instead of presuming that they will succeed. \\ \\
+    The WSL user managed to run the simulation in full but expressed how the README was lacking in its explanation of
+    how to add loggers to the configuration. They also noted that Packet Courier doesn't create missing directories
+    for features such as file logging and crash dumps, which would be a nice quality of life improvement.
+    \item \textbf{Please briefly examine the simple\_client.py and simple\_server.py scripts that are run as part of
+    \texttt{cmd\_example1.courierconfig}. Does the terminal output match what you would expect given the nature of
+    the network code and the configuration file? Perhaps consider the order of the messages, as well as if any are
+    missing.} \\
+    One participant left a long response to this prompt, mentioning how \emph{``I am confused as to why sometimes Bob
+    receives a message before Alice seems to have sent it''}. This is a largely unavoidable consequence of multiple
+    processes competing for the same console output, however it should probably be mentioned somewhere in the README.
+    The participant also suggests \emph{``perhaps more useful log in file form would to have separate files for each
+    command node with a timestamp for each line''} since it \emph{``would allow easier side to side comparison on a
+    specific message basis''}, which is undoubtedly another excellent feature proposition.
+    \item \textbf{What are your general impressions of Packet Courier having used it? (Out of 5 possible stars)} \\
+    Participants scored Packet Courier at an average of 4.25 stars.
+    \item \textbf{How well do you think your actual experience of Packet Courier matches up to the description given
+    in the Introduction of the README?} \\
+    Two participants gave Packet Courier a 6/10 on this front, with the other two scored it 8 and 9 respectively.
+    This is a surprising outcome in light of previous feedback and it is difficult to pinpoint what is motivating
+    this score.
+    \item \textbf{If you ever needed to emulate a network scenario, how likely do you think you would be to use
+    Packet Courier as your tool of choice?} \\
+    Participants gave pleasing ratings on this question: 7, 8, 9 and 10. This paints a picture that even despite the
+    technical issues faced by some of the users, they were impressed enough by the presentation of the tool and
+    understood its potential enough to overlook issues that could be fairly easily solved.
+    \item \textbf{If you'd be hesitant to use Packet Courier again in the future, please explain why.} \\
+    One participant left a comment for this prompt, claiming: \\
+    \emph{``The lack of a GUI can be daunting for complex structures (e.g. multiple layers of nested topologies) but
+    certainly not impossible. As mentioned I haven't seen alternatives but this most certainly does the job it claims
+    with great flexibility.''} \\
+    Whilst a GUI would certainly address this problem, it would require a significant amount of time and resources to
+    develop for a set of fairly niche edge cases. It makes for a compelling suggestion, althougn some research into
+    the demand for that kind of functionality might be useful.
+    \item \textbf{Please write down any comments or criticisms regarding your experience of Packet Courier as a
+    whole.} \\
+    The most significant response to this prompt was: \\
+    \emph{``As its biggest weakness is in troubleshooting the configuration, and linking with my previous feedback,
+        perhaps a GUI tool/form/companion with rigid choices that generates a correct config file could be a useful
+        extension.''}
+\end{enumerate}
+
+One of the participants went to the extra effort of configuring a couple of emulation scenarios from scratch and
+documenting their experience. They said that Packet Courier was \emph{``overall easy to configure''} but had
+difficulty debugging mistakes they had made when writing their configurations due to a number of unhelpful error
+messages. For example, they had forgotten to place a comma between elements when defining a list of joint-mesh
+topologies, to which Packet Courier spat out the following error: \texttt{Configuration error: com.google.protobuf
+.InvalidProtocolBufferException: Repeated field elements cannot be null in field: thorpe.luke.network.simulation
+.JointMeshTopologyProto.jointTopologies}. Whilst this is a Google Protocol Buffer parser exception rather than an
+error message specifically programmed by the Packet Courier APIs, it still plays a role in user experience and thus
+should be duly noted. The participant suggests that Packet Courier should use a parser that ignores trailing commas,
+since most tooling they had worked with afford the users the luxury of not needing to delimit their lists. This may
+be an option, but switching over to a YAML format would negate this problem entirely.
+
+The overall consensus from the survey feedback suggests that users found Packet Courier easy to set up and run due to
+a mixture of straightforward tooling, intuitive configuration files and clear documentation. However, there are
+issues on Windows and MacOS that prevented some users from running emulations. Despite the fact that Java itself is
+largely platform agnostic (and thus Packet Courier did actually \emph{run}), it seems as though the platform-specific
+user space APIs do not always manifest themselves uniformly across all operating systems, i.e.: Windows stripping
+process commands of double quotes and blocking packets. This is all useful feedback that will inform how Packet
+Courier should be developed going forward in Section~\ref{section:future_work}.
 
 
 \section{Analysis of Objectives}\label{section:analysis_of_objectives}
