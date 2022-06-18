@@ -1336,6 +1336,52 @@ duplication is working as intended.
     \label{table:analysis_results_latency}
 \end{table}
 
+The levels of packet latency shown by Table~\ref{table:analysis_results_latency} seem to be almost unanimously in
+line with what should be expected from a configuration with fixed latency of 420 milliseconds. The only major outliers
+are, as the control would suggest, the larger VM topologies.
+
+Discrepancies in this scenario are difficult to account for analytically due to the nature of emulated latency.
+Notice how the control samples in Table~\ref{table:analysis_results_control} cannot be used to explain the outliers
+seen in Table~\ref{table:analysis_results_latency}. Taking the VM scenario with 100 clients as an example, the
+control latency is $51.75ms$, but the measured latency in this scenario is $455.92ms$ making for a discrepancy of
+$455.92ms - 420ms = 35.92ms \not\approx 51.75ms$. The reason why the control latency and observed discrepancies don't
+match up \emph{can} be explained though.
+
+When a packet is imbued with a latency, Packet Courier uses current simulation time to model the ``enqueue time'' and
+computes the length of the latency before combining the two to get the ``dequeue time''. Therefore any overhead
+generated as a consequence of this process is mitigated, since the final ``dequeue time'' is derived from the
+``enqueue time''. This is a deliberate implementation choice to try and reduce this kind of error. As a consequence,
+trying to explain any discrepancies analytically would involve either modifying the code to omit this optimization or
+measuring how long the intermediate distribution sampling took and incorporating that into a multithreading model
+that accounted for the overhead of CPU context switching, etc. However going that far for the sake of a sanity check
+is overkill given that almost all of the values in Table~\ref{table:analysis_results_latency} align with what was
+expected of them. Furthermore, any discrepancies are \emph{lower} than they are in the control as a product of Packet
+Courier's implementation making an effort to mitigate bias introduced by the hardware (and succeeding).
+
+\begin{lstlisting}[language=Java,caption={A cut-down version of the \texttt{SimulatedPacketLatencyFilter<Wrapper>}
+class.},label={code:simulated_latency_enqueue_method},captionpos=b]
+public class SimulatedPacketLatencyFilter<Wrapper> implements PacketFilter<Wrapper> {
+  @Override
+  public void tick(LocalDateTime now) {
+    this.now = now;
+    packetLatencyFilter.tick(now);
+  }
+
+  @Override
+  public void enqueue(Wrapper packetWrapper) {
+    // If this code took 10ms to execute, then "scheduledDequeueTime"
+    // would remain unaffected thanks to the fact that the "now"
+    // attribute is decoupled from this method.
+    long latency = Math.round(latencyDistribution.sample(random));
+    LocalDateTime scheduledDequeueTime = now.plus(Duration.of(latency, timeUnit));
+    packetLatencyFilter.enqueue(new ScheduledPacket<>(scheduledDequeueTime, packetWrapper));
+  }
+}
+\end{lstlisting}
+
+In conclusion, Table~\ref{table:analysis_results_latency} and its ensuing analysis strongly suggest that packet
+latency is working as intended.
+
 \subsubsection{Packet Limiting}\label{subsubsection:limit_analysis}
 
 \begin{table}[!h]
