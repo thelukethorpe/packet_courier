@@ -1097,6 +1097,30 @@ drop is working as intended.
     \label{table:analysis_results_duplication}
 \end{table}
 
+Duplication as shown in Table~\ref{table:analysis_results_duplication} is computed by dividing the number of
+unexpected arrivals by the number of packets sent by clients. These results perfectly demonstrate the buffer overflow
+issues encountered by the server when it is overwhelmed with packets, since packet drop increases along with the
+number of clients. All platforms seem to enjoy the correct level duplication during scenarios with 5 and 25 clients,
+and all see a decline thereafter.
+
+It is very difficult to analytically reconstruct what the true duplication might have been, i.e.: the number of
+duplicate packets that passed through their respective pipelines. This is because drop is (and can only be)
+measured based on what packets the server expects to receive in light of what has been sent. As a consequence, if the
+server receives a packet but its duplicate gets dropped due to buffer overflow, then this is not taken into account.
+Indeed, a system test is supposed to be a black box endeavour, whereby the system is poked and prodded from the
+outside, so whilst this obstacle could be overcome using deeper instrumentation, that would then be a matter of
+\emph{integration} testing\cite{integration_vs_system_testing}.
+
+Nevertheless, crude approximations can be made as a sanity check. Taking the Laptop scenario with 100 clients as an
+example, the number of missing arrivals is $366379$, i.e.: this many packets were sent by the client but never
+arrived. This means that not only were the original packets dropped, but so were all of their duplicates. This
+suggests that roughly $366379 \times 4.2 = 1538791.8$ duplicates were dropped due to buffer overflow (not including
+duplicates of packets where at least one version arrived). As such, at least $\frac{1538791.8}{1182487} = 1.30$ mean
+duplications are missing from the final metric; a more sensible final estimation would be $2.84 + 1.30 = 4.14$.
+
+In conclusion, Table~\ref{table:analysis_results_duplication} and its ensuing analysis strongly suggest that packet
+duplication is working as intended.
+
 \subsubsection{Packet Latency}\label{subsubsection:latency_analysis}
 
 \begin{table}[!h]
