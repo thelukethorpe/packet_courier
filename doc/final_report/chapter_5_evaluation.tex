@@ -1611,6 +1611,37 @@ latency is working as intended.
     \label{table:analysis_results_limit}
 \end{table}
 
+The levels of packet limiting shown by Table~\ref{table:analysis_results_limit} seem to be almost unanimously in
+line with what should be expected from a configuration with a maximum of 10 packets per second. Even the larger VM
+topologies uphold these characteristics by-and-large.
+
+The control data in Table~\ref{table:analysis_results_control} suggests that the VM has difficulty accurately keeping
+track of time; something that seems to persist throughout each dataset. Taking the VM scenario with 100 clients as an
+example, the mean packet rate per client is computed by taking the packet received by the server and dividing them by
+the duration multiplied by the number of clients, i.e.: $\frac{235158}{246.478 \times 1000} = 9.54 packets/s$. If the
+duration is modulated back down to 4 minutes, then the mean packet rate per client becomes
+$\frac{235158}{240 \times 1000} = 9.80 packets/s$.
+
+There are many explanations for this time keeping issue. The first is that each client might be starting at a
+different time. Suppose it takes the VM 60 milliseconds to spin-up a Java Process\cite{java_Process}. Whilst this
+might seem reasonable for a fairly heavyweight user-level operation, if done in serial, then the last process will be
+launched $60ms \times 100 = 60,000ms = 6s$ after the first. In reality it will almost certainly be more complex than
+that, insofar as there is probably some parallelism and context switching going on, but it illustrates the potential
+issue of staggered start times.
+
+There are also considerations of how the clients perform their time keeping operations compared to the server. A
+client will compare the start-time to the current value of the wall clock, stopping if the difference exceeds the
+parameterised duration. The server takes advantage of Packet Courier's timeout feature, which in turn uses Java's
+Process\cite{java_Process} API to kill the server after the allotted time has passed. Java's real-time libraries have
+at the bare minimum been the subject of some controversy\cite{java_timeout_reliability}, so it wouldn't necessarily
+be surprising to find that the timeout feature of the \texttt{waitFor} method in \texttt{Process} becomes inaccurate
+when starved of resources. In this way, the clients and servers may not be starting and finishing in a way that is
+accutely synchronised, resulting in the same amount of packets being sent over a broader span of time, diluting the
+mean packet rate per client.
+
+In conclusion, Table~\ref{table:analysis_results_limit} and its ensuing analysis strongly suggest that packet
+limiting is working as intended.
+
 \subsubsection{Packet Throttling}\label{subsubsection:throttle_analysis}
 
 \begin{table}[!h]
