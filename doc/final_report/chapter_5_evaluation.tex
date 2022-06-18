@@ -55,13 +55,13 @@ information includes:
         python_sha256_hash}.
 \end{itemize}
 
-Each of the above properties are delimited using the \texttt{~} symbol and encoded into bytes using the UTF-8
+Each of the above properties are delimited using the \texttt{$\sim$} symbol and encoded into bytes using the UTF-8
 standard\cite{utf8}, the result of which tends to take up between 132 and 133 bytes, so the datagram buffer size is
 set to 136 to prevent truncation. Clients log the contents of each packet they send to the server.
 
 The server running \texttt{analysis\_server.py} will listen for packets and log the date and time of receipt
 immediately before attempting to parse the packet for its contents. If the packet cannot be decoded using UTF-8 or
-does not have the correct number of elements after having been split based on the delimiter \texttt{~}, then the
+does not have the correct number of elements after having been split based on the delimiter \texttt{$\sim$}, then the
 packet will be logged as \texttt{Junk!} Otherwise the elements of the packet will be hashed and compared with the
 checksum to check for corruption. The server will then log the following contents:
 \begin{itemize}
@@ -589,6 +589,56 @@ of their server could receive before an unacceptable number of packets are being
     \caption{Aggregated statistics for a configuration where \texttt{corruptionProbability} is set to 0.42.}
     \label{table:analysis_results_corruption}
 \end{table}
+
+Corruption rate in Table~\ref{table:analysis_results_corruption} is estimated using the formula $\Delta c = \frac{s
++ c + j - r}{s}$, where $\Delta c = $ corruption rate, $s = $ packets sent by client, $c = $ packets with checksum
+corruption, $j = $ junk packets and $r = $ packets received by server.
+
+A Packet Courier corruption event flips a random bit in a packet. There are four regions that could possibly be hit
+by a corruption in this case:
+\begin{itemize}
+    \item \textbf{Key packet elements such as client name or date-time of sending.} \\
+    \emph{These corruptions will be detected by the checksum. If the checksum itself is corrupted, then the check
+    will still fail, since the checksum computed by the server will differ from the corrupted version in the client's
+    packet. There is also the chance that a corruption of this type will make an element unintelligible, i.e.:
+    \texttt{2022-06)16 17:42:51.968580}, rendering the packet junk.}
+    \item \textbf{Any of the content delimiters \texttt{$\sim$}.} \\
+    \emph{This would make the packet unintelligible rendering it junk.}
+    \item \textbf{The source ip-address.} \\
+    \emph{If the corruption turned the ip-address into a public ip-address for another node, then the packet would
+    simply be claim to be from the wrong client ip-address, but this would not have any impact on the high-level
+    analysis done to generate these statistics\footnote{The reason why this edge case is not accounted for is because
+    the contents of the packet itself go unchanged. The server would then need to log the UDP source ip-address of
+    each receipt in order for the aggregator to check for this circumstance. Specifically, it would need to identify
+    packets that were not checksum corrupted despite the client name not corresponding to the source ip-address. This
+    is quite a lot of extra analysis work for a remarkably unlikely and thus negligible event.}. Otherwise, Packet
+    Courier just drops the packet in a way that would be most accurately characterised by the difference between
+    packets send by clients and packets received by the server.}
+    \item \textbf{The dead zone between packet contents and the end of the UDP buffer.} \\
+    \emph{Corrupting the part of the packet would have no effect but can be estimated probabilistically based on the
+    mean packet size, i.e.: $\frac{136 - 132.06}{140} = 2.81\%$}
+\end{itemize}
+
+Even by this very coarse metric, the levels of corruption seem to be roughly in line with what should be expected
+from a configuration with \texttt{corruptionProbability} set to 0.42. It is also not surprising that the platform
+which seemed to have the least erroneous packet drop during the control tests, the PC, also shows corruption levels
+that are consistently below the expected $42\%$, since the $\Delta c$ estimation of corruption provably underestimates
+the true level of corruption. Taking the PC scenario with 5 clients as an example, the mean packet size is $132.06$
+bytes which means that the average size of the ``dead zone'' that do not make up any meaningful packet contents is
+$136 - 132.06 = 3.94$. Given that the source ip-address can also be corrupted, $136 + 4 = 140$ bytes could possibly be
+corrupted. This means that there is a $2.81\%$ chance a corruption falls in this dead zone and thus $42\% \times 2
+.81\% = 1.18\%$ of corruptions will ultimately go unnoticed. Adding this to the estimated corruption rate yields
+$40.83\% + 1.18\% = 42.01\%$.
+
+Just as in the control samples, the VM seems to fold under heavier loads, producing larger corruption estimations
+than the network conditions would suggest. Taking the VM scenario with 100 clients as an example, the control packet
+drop rate is $12.36\%$, meaning that on average $(100\% - 42\%) \times 12.36\% = 7.17\%$ of packets are aren't
+corrupted but are just failing to make it through to the server's buffer. Accounting for this and the dead zone bias,
+i.e.: $42\% \times \frac{136 - 132.97}{140} = 0.91\%$, yields a more sensible estimation of corruption rate
+$47.19\% - 7.17\% + 0.91\% = 40.93\%$.
+
+In conclusion, Table~\ref{table:analysis_results_corruption} and its ensuing analysis strongly suggest that packet
+corruption is working as intended.
 
 \subsubsection{Packet Drop}\label{subsubsection:drop_analysis}
 
