@@ -1618,9 +1618,9 @@ topologies uphold these characteristics by-and-large.
 The control data in Table~\ref{table:analysis_results_control} suggests that the VM has difficulty accurately keeping
 track of time; something that seems to persist throughout each dataset. Taking the VM scenario with 100 clients as an
 example, the mean packet rate per client is computed by taking the packet received by the server and dividing them by
-the duration multiplied by the number of clients, i.e.: $\frac{235158}{246.478 \times 1000} = 9.54 packets/s$. If the
-duration is modulated back down to 4 minutes, then the mean packet rate per client becomes
-$\frac{235158}{240 \times 1000} = 9.80 packets/s$.
+the duration multiplied by the number of clients, i.e.: $\frac{235158}{246.478 \times 1000} = 9.54 \; packets/s$. If
+the duration is modulated back down to 4 minutes, then the mean packet rate per client becomes
+$\frac{235158}{240 \times 1000} = 9.80 \; packets/s$.
 
 There are many explanations for this time keeping issue. The first is that each client might be starting at a
 different time. Suppose it takes the VM 60 milliseconds to spin-up a Java Process\cite{java_Process}. Whilst this
@@ -1832,21 +1832,6 @@ limiting is working as intended.
             & \multicolumn{1}{c|}{170.32}
             & \multicolumn{1}{c|}{254.66}
             \\ \hline
-            \textbf{Mean bandwidth per client (bytes/s)} & \multicolumn{1}{c|}{4910.37} & \multicolumn{1}{c|}{2266.74}
-            & \multicolumn{1}{c|}{1183.27}
-            & \multicolumn{1}{c|}{1614.64}
-            & \multicolumn{1}{c|}{1804.33}
-            & \multicolumn{1}{c|}{5288.46}
-            & \multicolumn{1}{c|}{2652.48}
-            & \multicolumn{1}{c|}{2123.81}
-            & \multicolumn{1}{c|}{2156.22}
-            & \multicolumn{1}{c|}{2147.81}
-            & \multicolumn{1}{c|}{5668.16}
-            & \multicolumn{1}{c|}{2292.85}
-            & \multicolumn{1}{c|}{2133.97}
-            & \multicolumn{1}{c|}{2270.90}
-            & \multicolumn{1}{c|}{2546.57}
-            \\ \hline
             \textbf{Packet drop rate (\%)} & \multicolumn{1}{c|}{23.86} & \multicolumn{1}{c|}{64.36}
             & \multicolumn{1}{c|}{80.41}
             & \multicolumn{1}{c|}{74.41}
@@ -1862,6 +1847,21 @@ limiting is working as intended.
             & \multicolumn{1}{c|}{64.90}
             & \multicolumn{1}{c|}{62.40}
             \\ \hline
+            \textbf{Mean bandwidth per client (bytes/s)} & \multicolumn{1}{c|}{4910.37} & \multicolumn{1}{c|}{2266.74}
+            & \multicolumn{1}{c|}{1183.27}
+            & \multicolumn{1}{c|}{1614.64}
+            & \multicolumn{1}{c|}{1804.33}
+            & \multicolumn{1}{c|}{5288.46}
+            & \multicolumn{1}{c|}{2652.48}
+            & \multicolumn{1}{c|}{2123.81}
+            & \multicolumn{1}{c|}{2156.22}
+            & \multicolumn{1}{c|}{2147.81}
+            & \multicolumn{1}{c|}{5668.16}
+            & \multicolumn{1}{c|}{2292.85}
+            & \multicolumn{1}{c|}{2133.97}
+            & \multicolumn{1}{c|}{2270.90}
+            & \multicolumn{1}{c|}{2546.57}
+            \\ \hline
         \end{tabular}
     }
     \caption{Aggregated statistics for a configuration where the bandwidth throttle is set to 3,000 bytes per second
@@ -1869,6 +1869,45 @@ limiting is working as intended.
     10,000 and \texttt{timeUnit} is \texttt{``SECONDS''}.}
     \label{table:analysis_results_throttle}
 \end{table}
+
+The mean bandwidth per client metrics observed in Table~\ref{table:analysis_results_throttle} are \textbf{not} in line
+with the expected behaviour of the Packet Courier packet throttler, despite there being \emph{some} consistency if
+one were to squint and ignore the anomalous columns. The three platforms do form a very coarse pattern whereby the
+first scenario seems to be around double the ensuing entries, which might provide some clues as to what is going
+wrong with this functionality. The only other positive is that the scenarios with 5 clients aside, all of the bandwidth
+measurements are below the upper limit of 3,000 bytes per second.
+
+The discrepancies cannot be chalked up to a ``warm up'' bias, i.e.: when the mean is brought down by the bitrate
+gradually ramping up at the start of the emulation. This is because bandwidth is measured from the middle two
+quantiles with respect to time as a deliberate choice to avoid ``warm up'' or ``cool down'' biases.
+
+The packet throttler works by computing the amount of time it should take each packet to travel across the network at
+the throttle rate and making it wait for that length of time. If two or more packets arrive at similar times, then
+they are serialised. If the backlog ends up becoming too long, then new packets are simply dropped. For example, if
+the current time is 12pm and the throttle rate is 1KiB per minute and three packets arrive sized 5KiB, 2KiB and
+10KiB, then they will be scheduled to leave the throttler at 12:05pm, 12:07pm and 12:17pm respectively. As such, the
+1KiB per minute rate is maintained over those 17 minutes. This becomes problematic when gaps are left between packets
+arriving, forming a Tetris style suboptimal bin-packing solution, as illustrated by
+Figure~\ref{fig:chapter_5_evaluation-tetris_gaps}. For instance, suppose the time is 12pm and the throttle rate is
+1KiB per minute, but now only one packet arrives sized 5KiB and thus is made to wait until 12:05pm. Another packet
+sized 3KiB arrives at 12:08pm and thus is made to wait until 12:11pm. The bandwidth across 12 minutes is 0.73KiB per
+minute, when it could have been 1KiB per minute if the second packet had been released immediately to account for the
+fact that there had been no packets to throttle the previous 3 minutes. This is the likely cause of the suboptimal
+throttling statistics seen in Table~\ref{table:analysis_results_throttle}.
+
+\begin{figure}[!h]
+    \includegraphics[width=0.65\textwidth]{images/chapter_5_evaluation/tetris_gaps}
+    \centering~\caption{A bad attempt at playing Tetris\cite{tetris_gaps}.}
+    \label{fig:chapter_5_evaluation-tetris_gaps}
+\end{figure}
+
+In conclusion, Table~\ref{table:analysis_results_throttle} and its ensuing analysis suggest that packet throttling is
+\textbf{not} working as intended (despite showing some promise) and requires further improvement. Specifically, the
+packet throttler needs a better mechanism to ``smooth out'' rough patches such that the aggregate bandwidth is
+approximately in line with the configuration. The current algorithm applies a blanket delay to each packet that
+passes through it and does not take into account the nuance that the pipeline might be experiencing low traffic. To
+use Figure~\ref{fig:chapter_5_evaluation-tetris_gaps} as an analogy, the throttler needs to be better at packet
+Tetris and minimise the time gaps between packets as to not overly throttle them.
 
 
 \section{User Feedback}\label{section:user_feedback}
