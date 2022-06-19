@@ -19,36 +19,103 @@ especially given that it will be released as an open source project on the 21\te
 
 \subsection{Fix Bandwidth Throttling Algorithm}\label{subsection:fix_bandwidth_throttling_algorithm}
 
-TODO
+As discussed in Section~\ref{subsubsection:throttle_analysis}, the bandwidth throttler seems to be the only core
+component of Packet Courier's network condition semantics that is not performing as advertised in
+Section~\ref{subsection:network_condition_semantics}. As part of the analysis conducted in
+Section~\ref{subsubsection:throttle_analysis}, Packet Courier's throttling algorithm appears to face a bin-packing
+issue where packets are imbued with a delay (and thus throttled) indiscriminately, even if traffic is relatively
+light. As such, the current implementation needs to be upgraded to ``balance the scales the other way'' during
+periods of low activity, so to speak. This could be done by constantly measuring the rate of packet flow and
+adjusting the delay packets receive based on that, therefore resulting in low latency during periods of low traffic,
+resulting in packets travelling through the pipeline quickly, i.e.: minimal throttling, and conversely, higher
+latencies when the packet flow is approaching the maximum bandwidth, i.e.: maximum throttling.
 
 \subsection{Add Support for YAML Configuration Files}\label{subsection:support_for_yaml_configuration_files}
 
-TODO
+50\% of survey participants made this precise suggestion as per the results detailed in
+Section~\ref{subsection:survey_results}. Others who participated in user feedback were indirectly in favour of this
+feature, claiming that the \texttt{.courierconfig} file format could be cleaner. Although the Google Protocol Buffer
+API only seems to support JSON parsing\cite{com_google_protobuf_util}, there are plenty of ways to convert YAML into
+JSON\cite{yaml_to_json}. As such, this would be a reasonably simple feature to add.
 
 \subsection{Improve Configuration File Sanitization}\label{subsection:improve_configuration_file_sanitization}
 
-TODO
+Another common criticism seen in Section~\ref{section:user_feedback} is that the errors produced by the
+\texttt{.courierconfig} parser are not always very helpful. One way to mitigate this is to add more custom semantic
+checks into \texttt{PacketCourierSimulationConfigurationProtoParser<NodeInfo>} to ensure that more abstract errors
+such as specifying a negative number of clients for a star topology isn't possible. Most of the problems encountered
+by users came from the Google Protocol Buffer JSON parser itself. There are three possible ways to tackle this issue:
+\begin{itemize}
+    \item Write a custom parser. This would also make the Google Protocol Buffer dependancy redundant. It would be
+    quite a considerable amount of work, however.
+    \item Many parsers integrate some kind of ``error listener'' or ``observer pattern''\cite{observer_pattern} which
+    invokes a method when a parser error is encountered. This could help Packet Courier wrap Google Protocol Buffer
+    errors and make them more context specific and palettable to the user.
+    \item Make a full switch over to a YAML format and squeeze some kind of error checker into the YAML to JSON
+    conversion process. This smells as though it would be fairly fragile, however.
+\end{itemize}
 
 \subsection{Add Platform-Specific Testing to CI}\label{subsection:add_platform_specific_testing_to_ci}
 
-TODO
+One of the areas were Packet Courier didn't quite live up to its expectations was in
+Section~\ref{subsection:survey_results} when it was discovered that there were platform-specific issues on Windows
+and MacOS. As Packet Courier evolves, it cannot rely on user trials to uncover these kinds of problems. The best way
+to avoid them in the future would be to integrate platform testing into the CI. As per
+Section~\ref{subsection:continuous_integration}, CI is currently done using GitHub actions which are
+Dockerized\cite{dockerizing} and thus can be run on virtually any platform. As such, integration and system testing
+should be done across all major platforms to ensure that the production branch works on Windows, MacOS and Linux. In
+this way, ensuring platform agnosticism becomes part of the workflow rather than an afterthought.
 
 \subsection{Integrate System Testing into CI}\label{subsection:integrate_system_testing_into_ci}
 
-TODO
+A huge amount of tooling is currently sat in the Packet Courier repository without any form of automation to take
+advantage of it. It would only seem sensible to have some sort of runner or virtual machine run a selection of system
+tests once or twice a day to ensure that Packet Courier is always performing well end-to-end. Note that any virtual
+machine would likely need to be more powerful than the one used for the system testing in
+Section~\ref{section:system_testing}, because if the control data is anything to go by, the system tests would
+constantly be failing due to hardware constraints.
 
-\subsection{Implement GUI}\label{subsection:implement_gui}
+\subsection{Implement a GUI}\label{subsection:implement_gui}
 
-TODO
+The suggestion of a graphical user interface popped up a few times in Section~\ref{section:user_feedback}. This
+probably falls fairly low down on the list of priorities due to its more superficial nature, it is still a very valid
+potential feature, and one that would add value for more casual users of the tool or perhaps even in education. A
+framework such as JavaFX\cite{java_fx} would work nicely, or possibly even some kind of web-based UI.
 
 \subsection{Add Integration Testing using Mockito}\label{subsection:add_integration_testing_using_mockito}
 
-TODO
+Currently Packet Courier only does unit and system testing. Integration testing would be useful to test isolated
+parts of the APIs such as the packet filters and packet pipelines. One way this could be achieved is by using
+Mockito\cite{mockito} to ``mock'' the components adjacent to pipelines and filters, whereby ``fake'' packets are used
+to verify the correctness of behaviour.
 
 \subsection{Miscellaneous Features}\label{subsection:miscellaneous_features}
 
-TODO
+\begin{itemize}
+    \item Enable users to specify a ``custom'' virtual wall-clock interval, i.e.: 3.65ms.
+    \item Implement a Pareto distribution.
+    \item Implement a lat/long heuristic where nodes are given coordinates and their network conditions are estimated
+    based on that, i.e.: if two locations are closer together based on the Haversine formula\cite{haversine_formula},
+    then their latency will be lower.
+    \item Allow nodes to connect to each other on-the-fly in real time.
+    \item Allow new nodes to spawn in real time.
+    \item Add more complex examples for users to play around with.
+\end{itemize}
 
 \subsection{Miscellaneous Bugfixes}\label{subsection:miscellaneous_bugfixes}
 
-TODO
+\begin{itemize}
+    \item Packet Courier's \texttt{NormalDistribution} implementation takes advantage of Java's
+    \texttt{Random}\cite{java_Random} class to generate a uniformly random \texttt{double} in the interval $[0, 1)$.
+    However, the \texttt{sample} method in \texttt{NormalDistribution} will throw an exception if this number happens
+    to be bang-on 0, which is 1 in 1,056,964,609\cite{floating_point_numbers_in_normal_interval}. Whilst this is
+    astronomically unlikely, it is still technically possible and therefore should be fixed at some stage.
+    \item There is a risk that if the thread inside \texttt{Worker<NodeInfo>} throws an exception, then the worker
+    itself will not be in the \texttt{DEAD} state and therefore never be pruned by the \texttt{GarbageCollector} in
+    \texttt{WorkerAddressBook<NodeInfo>}. This may not be the case, but it is important to investigate.
+    \item Currently the \texttt{waitForAndForwardPackets} method in \texttt{WorkerDatagramForwardingScript<NodeInfo>}
+    seems to assume that the last four bytes of the packet will be a source ip-address, but that might not be the
+    case if the packet was sent using a simple \texttt{WorkerScript<NodeInfo>}. If this bug exists, then it risks
+    blocking the fluid interoperability between Java workers and external processes, perhaps demanding some kind of
+    architectural change to fully fix.
+\end{itemize}
