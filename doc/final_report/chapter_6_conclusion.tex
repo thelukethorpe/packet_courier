@@ -113,7 +113,7 @@ to verify the correctness of behaviour.
     \item There is a risk that if the thread inside \texttt{Worker<NodeInfo>} throws an exception, then the worker
     itself will not be in the \texttt{DEAD} state and therefore never be pruned by the \texttt{GarbageCollector} in
     \texttt{WorkerAddressBook<NodeInfo>}. This may not be the case, but it is important to investigate.
-    \item Currently the \texttt{waitForAndForwardPackets} method in \texttt{WorkerDatagramForwardingScript<NodeInfo>}
+    \item Currently the \texttt{waitForAndForwardPackets} method in \texttt{WorkerDatagramForwardingScript <NodeInfo>}
     seems to assume that the last four bytes of the packet will be a source ip-address, but that might not be the
     case if the packet was sent using a simple \texttt{WorkerScript<NodeInfo>}. If this bug exists, then it risks
     blocking the fluid interoperability between Java workers and external processes, perhaps demanding some kind of
