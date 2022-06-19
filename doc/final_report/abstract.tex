@@ -5,20 +5,22 @@
     \\
 \end{center}
 
-\noindent
+\lettrine{D}{istributed} computing is naturally a field that explores non-trivial levels of parallelism on a large
+scale, and as such, any fledgling distributed system demands a testbed that epitomizes these properties. Network
+simulation is likely to be the apparatus of choice when building such a testbed, yet this thesis finds that even
+some of the most popular frameworks are slightly lacking when it comes to ease of use and platform portability.
+
 The proposed solution produced by this thesis comes in the form of \emph{Packet Courier}, a Java library that doubles
 up as both a Java simulation framework and a standalone emulator. In this way, a prospective user can either
 configure a distributed network simulation programmatically using Java, or they can run the compiled Jar like an
-executable in conjunction with a JSON style configuration file to emulate a distributed network. The benefit of
+executable in conjunction with a JSON-style configuration file to emulate a distributed network. The benefit of
 Packet Courier's emulation component is that it allows users to run arbitrary network code: their distributed
-algorithm can leverage any processes that can be run from the command line, whether that be a Python script, a
-C++ program or a high-level tool such as Kubernetes.
-
-Packet Courier is able to manipulate packets during transit by creating an intermediate routing layer between nodes
-in the network. For example, if Alice sent a packet to Bob, then the Packet Courier framework would silently
-intercept this packet and process it as per the given configuration. Users can define network conditions that will
-govern how packets behave when travelling from node to node, including properties such as packet latency, loss and
-corruption.
+algorithm can leverage any processes that can be run from a command prompt, whether that be a Python script, a
+C++ program or a high-level tool such as Kubernetes. Packet Courier achieves this by manipulating packets during
+transit by creating an intermediate routing layer between nodes in the network. For example, if Alice sent a packet
+to Bob, then the Packet Courier framework would silently intercept this packet and process it as per the given
+configuration. Users can define network conditions that will govern how packets behave when travelling from node to
+node, including properties such as packet latency, loss and corruption.
 
 
 \vfill
