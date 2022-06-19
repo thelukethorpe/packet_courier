@@ -2212,32 +2212,116 @@ bursts of around 100, despite not being from a software engineering discipline. 
 
 \section{Analysis of Objectives}\label{section:analysis_of_objectives}
 
+In light of all the quantitative evidence gathered during unit and system testing, and the qualitative evidence
+presented using user testing iterations, Packet Courier can now be judged on how well it has completed the objectives
+laid out in Section~\ref{section:objectives}.
+
 \subsection{Network Topology Design Interface}\label{subsection:network_topology_design_interface}
 
-\textbf{Objective 1: }\emph{An interface to design an arbitrary network topology.}
+\textbf{Objective 1:} \emph{An interface to design an arbitrary network topology.} \\
+
+Packet Courier has demonstrably completed this objective. Users can (and have been shown to during user trials)
+design their own custom network topologies as part of Packet Courier, which they can then later layer network
+conditions on top of. This can either be achieved using the simulation APIs discussed in
+Section~\ref{subsection:simulation_api} or using the Google Protocol Buffer integration discussed in
+Section~\ref{subsection:protocol_buffer_integration}.
+
+Whilst this functionality does objectively exist within the Packet Courier framework, user feedback suggests that a
+GUI would improve quality of life as it would enable users to visualise their topology more vividly. Not every
+developer would want to use a GUI, but there is clearly a demand for a feature like this and adding a more visual
+interface for users would certainly broaden the appeal of the tool.
+
+Another common theme among user feedback is that the structure of \texttt{.courierconfig} files could be cleaner,
+perhaps adopting a YAML\cite{yaml} format that disposes with braces, for example. The error messages that users
+receive when their topology is incorrectly configured could also be improved.
+
+In conclusion, Packet Courier \textbf{does} achieve this objective, although there is still scope to improve the
+quality of its delivery to users.
 
 \subsection{Network Conditions Configuration Suite}\label{subsection:network_conditions_configuration_suite }
 
-\textbf{Objective 2: }\emph{A configuration suite to define how packets are manipulated during message-passing.}
+\textbf{Objective 2:} \emph{A configuration suite to define how packets are manipulated during message-passing.} \\
+
+Packet Courier has demonstrably completed this objective. Users can (and have been shown to during user trials)
+specify their own custom network conditions. In fact, user feedback suggests that this is one of Packet Courier's
+strengths, in that the parameters encoding for the details of a network condition are very clear and intuitive.
+Packet Courier provides parity with the existing tool \texttt{tc-netem}\cite{tc_netem_wiki, tc_netem_8_man} as per
+Section~\ref{subsection:network_condition_semantics}, but has also gone further to incorperate event-based semantics,
+as detailed in Sections~\ref{subsection:event_based_semantics} and~\ref{subsubsection:simulated_event_pipeline}.
+
+In conclusion, Packet Courier \textbf{does} achieve this objective.
 
 \subsection{Simulation of a Distributed Algorithm}\label{subsection:simulation_of_a_distributed_algorithm}
 
-\textbf{Objective 3: }\emph{A mechanism to run a distributed algorithm across a virtual network topology which
-reflects the
-properties described by the user as per objectives 1) and 2).}
+\textbf{Objective 3:} \emph{A mechanism to run a distributed algorithm across a virtual network topology which
+reflects the properties described by the user as per objectives 1) and 2).} \\
+
+Packet Courier has demonstrably completed this objective. Users can (and have been shown to during user trials)
+specify their own simulation and emulation scenarios as per the topology and network condition interfaces and APIs
+mandated by objectives 1) and 2).
+
+Packet Courier offers users the ability to run their configurations as simulations in the form of Java code or
+emulations using UDP sockets to communicate with arbitrary processes.
+
+The system tests show that five of Packet Courier's six base network manipulation tools operate to a high level of
+engineering precision. Despite the fact that bandwidth throttling does go some way to fulfilling the obligations
+outlined in Section~\ref{subsection:network_condition_semantics}, the data in
+Table~\ref{table:analysis_results_throttle} and its associated analysis in
+Section~\ref{subsubsection:throttle_analysis} show that it is imprecise and demands further refinement.
+
+In conclusion, Packet Courier \textbf{does} achieve this objective, although one of the six core networking features
+needs further iterations before it could be considered ``engineering grade'' by any reasonable metric.
 
 \subsection{Platform Agnosticism}\label{subsection:platform_agnosticism}
 
-\textbf{Objective 4.a: }\emph{Basic usage of the tool should not depend on the operating system or hardware being used
-.} \\ \\
-\textbf{Objective 4.b: }\emph{Users should not be pigeonholed into working with a particular programming language in
-order to
-simulate their solution.}
+\textbf{Objective 4.a:} \emph{Basic usage of the tool should not depend on the operating system or hardware being
+used .} \\
+
+While in principle Packet Courier does \emph{run} on Windows, MacOS and Linux, there are blocking issues on Windows
+and MacOS that are not accounted for in the source code, nor do they have appropriate troubleshooting prompts in the
+\texttt{README}. These are problems that will certainly be ironed before the second iteration of user feedback, but
+as Packet Courier stands at the time of writing this report, these bugs exist and are listed as known issues on the
+project Kanban board.
+
+In conclusion, Packet Courier \textbf{does not} achieve this objective. \\ \\
+
+\textbf{Objective 4.b:} \emph{Users should not be pigeonholed into working with a particular programming language in
+order to simulate their solution.} \\
+
+Packet Courier has demonstrably completed this objective. Users can (and have been shown to during user trials) use
+languages such as Python to write their net-code for Packet Courier emulations. Indeed, the very examples provided in
+GitHub repository use \texttt{python3}. The UDP based design pattern outlined in
+Section~\ref{subsection:emulation_semantics} enables developers to use any \emph{arbitrary binary} that they might
+wish to, let alone their preferred programming language.
+
+In conclusion, Packet Courier \textbf{does} achieve this objective.
 
 \subsection{Plug-and-playability}\label{subsection:plug_and_playability}
 
-\textbf{Objective 5.a: }\emph{Users should need minimal domain-specific knowledge in order to use the full set of
-features on offer.} \\ \\
-\textbf{Objective 5.b: }\emph{The prospective tool should be able to mimic a real network in a way that minimises
+\textbf{Objective 5.a:} \emph{Users should need minimal domain-specific knowledge in order to use the full set of
+features on offer.} \\
+
+Packet Courier has demonstrably completed this objective. Users can (and have been shown to during user trials)
+design and run their own custom Packet Courier emulations by simply referring to the \texttt{README} as a glorified
+glossary of terms.
+
+A common piece of user feedback is that virtually all of Packet Courier's external elements were fairly
+self-explanatory, whereby no complex knowledge or extensive study of documentation is required to get an emulation up
+and running. Even Harry (the user testing participant observed and interviewed as part of
+Section~\ref{subsubsection:harry}) was able to enjoy Packet Courier's offerings as material science student with
+only a baseline technical competence.
+
+On balance, users did specify areas where documentation could be improved, namely with regards to troubleshooting.
+
+In conclusion, Packet Courier \textbf{does} achieve this objective, although the \texttt{README} could still do with
+some refinement. \\ \\
+
+\textbf{Objective 5.b:} \emph{The prospective tool should be able to mimic a real network in a way that minimises
 bespoke set-up, i.e.: if a user normally tests their distributed algorithm using real computers connected over a
 physical network, then transitioning to using the prospective tool should be more or less seamless.}
+
+Packet Courier has demonstrably completed this objective. Users can (and have been shown to during user trials) use
+Packet Courier as a silent process that works in the background to emulate a network that routes UDP packets. This is
+discussed in detail as part of Section~\ref{section:standalone_emulator}.
+
+In conclusion, Packet Courier \textbf{does} achieve this objective.
