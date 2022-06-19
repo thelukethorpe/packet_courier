@@ -68,7 +68,7 @@ expect from the end product, i.e.:
     \item Plug-and-playability:
     \begin{enumerate}
         \item Users should need minimal domain-specific knowledge in order to use the full set of features on offer.
-        \item The prospective tool should be able to mimic a real network in a way that minimises bespoke set-up,
+        \item The prospective tool should be able to mimic a real network in a way that minimises bespoke set up,
         i.e.: if a user normally tests their distributed algorithm using real computers connected over a physical
         network, then transitioning to using the prospective tool should be more or less seamless.
     \end{enumerate}
@@ -77,7 +77,7 @@ expect from the end product, i.e.:
 Not only do these objectives provide the project with a selection of qualitative yet precise aims, they also imbue
 the development process with a sense of direction and purpose. The picture being painted of the end user becomes more
 refined and vivid through the act of clarifying their needs and how they can be met. In this instance, the key
-qualities that would hopefully appeal to prospective users are versatility and ease-of-use. One might conceptualise
+qualities that would hopefully appeal to prospective users are versatility and ease of use. One might conceptualise
 the proposed solution as a black box that appears from the outside to contain an entire network topology, whereby
 users can adjust its shape and behaviour using an intuitive control-panel of dials and knobs. In turn, students,
 developers and enthusiasts alike can probe this black box to achieve whatever network-related ends they see fit, with
@@ -86,4 +86,34 @@ minimal configuration and bespoke setup required.
 
 \section{Contributions}\label{section:contributions}
 
-TODO
+This thesis contributes \emph{Packet Courier}, a Java library that doubles up as both a Java simulation framework and
+a standalone emulator. In this way, a prospective user can either configure a distributed network simulation
+programmatically using Java, or they can run the compiled Jar like an executable in conjunction with a JSON-style
+configuration file to emulate a distributed network.
+
+The specific contributions that Packet Courier makes are formally evaluated in
+Section~\ref{section:analysis_of_objectives} and can be summarised as follows:
+\begin{enumerate}
+    \item Packet Courier provides users with multiple ways to design an arbitrary network topology, fulfilling
+    \textbf{objective 1)}.
+    \item Packet Courier provides users with a configuration suite to define how packets are manipulated during
+    message-passing, fulfilling \textbf{objective 2)}.
+    \item Packet Courier provides users with a mechanism to run a distributed algorithm across a virtual network
+    topology which reflects the properties described by the user as per objectives 1) and 2), whether that be by
+    \emph{simulation} or \emph{emulation}, fulfilling \textbf{objective 3)}.
+    \item Platform agnosticism:
+    \begin{enumerate}
+        \item Whilst Packet Courier can be \emph{run} on Windows and MacOS, there are some unusual
+        operating-system-specific quirks that prevent full emulations from being run. This means that Packet Courier
+        does \textbf{not} fulfill \textbf{objective 4.a)} in its current state.
+        \item Packet Courier users are not be pigeonholed into working with a particular programming language in
+        order to simulate their solution, fulfilling \textbf{objective 4.b)}.
+    \end{enumerate}
+    \item Plug-and-playability:
+    \begin{enumerate}
+        \item Packet Courier users need very little domain-specific knowledge in order to use the full set of
+        features on offer, fulfilling \textbf{objective 5.a)}.
+        \item Packet Courier is able to mimic a real network in a way that minimises bespoke set up, fulfilling
+        \textbf{objective 5.b)}.
+    \end{enumerate}
+\end{enumerate}
