@@ -961,8 +961,8 @@ inject runtime data into their commands:
 For example, if Alice and Bob were configured to be bidirectionally connected, listening on port 1234 with a datagram
 buffer size of 128, then Alice's command:
 \begin{quote}
-    \texttt{python3 server.py \$\{NODE\_NAME\} \$\{PORT\} \$\{DATAGRAM\_BUFFER\_SIZE\} \$\{PRIVATE\_IP\}}
-    \texttt{\$\{PUBLIC\_IP\}} \texttt{\$\{NEIGHBOUR\_IPS\}}
+    \texttt{python3 server.py \$\{NODE\_NAME\} \$\{PORT\} \$\{DATAGRAM\_BUFFER\_SIZE\}}
+    \texttt{\$\{PRIVATE\_IP\} \$\{PUBLIC\_IP\}} \texttt{\$\{NEIGHBOUR\_IPS\}}
 \end{quote}
 \noindent
 \ldots would be translated at runtime into something like:
@@ -995,7 +995,7 @@ the calling code whether the process finished successfully or with a failure, de
 
 \subsubsection{WorkerDatagramForwardingScript}\label{subsubsection:worker_datagram_forwarding_script}
 
-The \texttt{WorkerDatagramForwardingScript<NodeInfo>} class implements the \texttt{WorkerScript<NodeInfo>} interface
+The \texttt{WorkerDatagramForwardingScript<NodeInfo>} class implements the\texttt{WorkerScript <NodeInfo>} interface
 and thus can be run by a worker straight out of the box, whereby its key responsibilities are:
 \begin{itemize}
     \item To run and manage the \texttt{WorkerProcess} for the current node.
