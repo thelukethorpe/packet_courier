@@ -2123,11 +2123,91 @@ led him to discover a hidden edge case in \texttt{cmd\_example1.courierconfig}. 
 Packet Courier bug, it is still problematic to provide users with examples that could easily convince them that the
 framework itself is broken, so this configuration must be made more robust. Otherwise, John seemed to take to using
 the tool like a duck to water, with the minor exception of struggling to type out the long path to the example
-configurations. 
+configurations.
 
 \subsubsection{Harry}\label{subsubsection:harry}
 
-TODO
+Harry is in his fourth year studying material sciences on an integrated master's programme. Whilst he is technically
+competent, he is not a ``seasoned'' software engineer.
+
+Like John, Harry was provided with a computer at the start of the session with an IDE and a WSL terminal open at the
+root of the Packet Courier repository. He was also was told that there was a \texttt{README.md} file in the root of
+the project directory. Harry was asked to read the introductory sections of the \texttt{README} and provide some
+verbal feedback. He noted that \emph{``it is clear what the tool does and [the introduction] provides a nice
+overview''} with the caveat that \emph{``packet manipulation seems very core to the tool and could be mentioned
+earlier''}. When asked if the introduction left him confused or unclear on any particular point, he responded
+\emph{``nothing jumps out as being ambiguous or confusing and the phrase `as though they were running in the real
+world' makes me want to read on and figure out what this entails''}. As such, it seemed as though Harry was more
+intrigued by the introductory sections of the \texttt{README} than anything else.
+
+Harry had never used Maven before and asked if \emph{``Maven was to Java what pip\cite{pip} is to Python''}. He also
+added that it wasn't immediately obvious to him what the \texttt{-DskipTests} option recommended in the
+\texttt{README} had to do with compiling the project. Comments like this are highlight that most developers take this
+kind of information for granted and perhaps the \texttt{README} could be subtly tweaked to be friendlier to those who
+are newer to the paradigm. Harry also mentioned that the initial build process spammed the console with lots of
+\emph{``very intimidating''} text. This links back to some of the survey feedback from
+Section~\ref{subsection:survey_results} that suggested using Maven's quiet mode when compiling.
+
+When Harry was asked to run an example configuration, he had a look through the \texttt{README} and initially
+attempted to use the Google Protocol Buffer grammar, i.e.:
+\texttt{src/main/proto/packet\_courier\_simulation\_configuration.proto} in place of a configuration file. It seems as
+though the \texttt{README} makes it too easy for all of the various paths to be confused for one another and the
+brevity of this section results in potential ambiguity, particularly for first time users. Just as with John, Harry
+expressed how he felt as though the path to example configurations was unreasonably long. Indeed, he did need several
+attempts to get the command right as a consequence of this, but each time Packet Courier gave him an error message to
+let him know that the path wasn't correct. This then led him to conclude that \emph{``even if I hadn't realised I was
+trying to run the grammar rather than a config file, Packet Courier would have told me it was the wrong kind of file
+anyway, so it's not a big problem''}.
+
+Just like John had done, Harry went straight to \texttt{cmd\_example1.courierconfig} as soon as he had found where
+the example configurations were stored. He immediately observed that Bob had received Alice's packets out of order
+and on some occasions, had received these packets before Alice had sent them. He wasn't concerned by the latter issue
+though, since he chalked it up to \emph{``display issues; it's not really indicative of what's going on
+underneath''}. Before inspecting the configuration file itself, Harry reran the emulation to see if it was
+deterministic. He realised that whilst the exact output wasn't the same as before, the underlying behaviour seemed to
+be approximately the same. This time, however, he saw that some packets were missing and decided to look at
+\texttt{cmd\_example1.courierconfig} for an explanation.
+
+Harry instantly identified \texttt{cmd\_example1.courierconfig} as having a \emph{``JSON structure''} with an
+\emph{``8/10 for clarity; even scanning through the file, terms like `drop probability' leap out of the screen''}. To
+supplement his understanding, Harry then compared what he was reading to the \texttt{README} and had a brief look at
+\texttt{simple\_server.py} and \texttt{simple\_client.py}. He was not prompted to do this. He then claimed to
+\emph{``now fully understand what came out of the terminal''}.
+
+Just as with John, Harry then began to fiddle around with the parameters of \texttt{cmd\_example1.courierconfig},
+setting packet drop probability to 0.7. Harry noticed that Bob was receiving none of Alice's packets and ran the
+emulation a second time to verify that this wasn't \emph{``just an unlucky run''}. His instinct was to then consult
+the \texttt{README} in case there was any supplementary information which could explain why this might be happening.
+He conjected that he might have misunderstood what the \texttt{dropProbability} meant, but having realised that it was
+effectively a Bernoulli parameter, he decided to experiment further with the probabilities. He found that a drop
+probability of 0.6 would result in Bob receiving about 100 packets, but 0.65 would see Bob receive none. Harry
+suggested that there was some kind of \emph{``minimum number of packets''} that Bob needed to receive in order to
+display his output.
+
+In light of this new hypothesis, Harry chose to remove all network conditions to ensure that every packet being sent
+by Alice \emph{should} get through to Bob. This test run showed Bob receiving about 200 packets instead of the full
+250. Harry then concluded that the packets appeared to be coming in groups of 100, but admitted that his lack
+of technical knowledge preventing him from understanding exactly why this was happening.
+
+It turns out that Bob would receive packets in groups of 101 specifically, which was discovered by changing the
+number of packets Alice was sending and figuring out the exact threshold for when Bob started to receive them. The
+packets in this configuration were 32 bytes long. This combined with UDP's header size of 8 bytes makes each full
+packet 40 bytes long. Notice that $101 \times 40B = 4040B \approx 4KiB$ which just so happens to be the default page
+size for Linux\cite{default_page_size}. The \texttt{getconf PAGESIZE} command\cite{linux_page_size} revealed that
+this WSL instance did have a page size of 4096 bytes, which would explain why Bob would only receive his packets once
+approximately that specific quantity had accrued, namely since most transfers between buffers are page-wise
+operations at the level of the kernel\cite{paging}.
+
+Whilst Harry wasn't able to come up with insights that were as precise as the explanation provided above, he was able
+to use Packet Courier to identify this behaviour at a high-level, i.e.: Bob was only receiving Alice's packets in
+bursts of around 100, despite not being from a software engineering discipline. He concluded the session by stating:
+\begin{quote}
+    \emph{``This has actually changed my mind about this sort of thing. Usually if I were investigating how some
+    hardware behaved, I'd probably want to run some tests that gave me a load of aggregated statistics at the end of
+    it. In this case I'd guess it'd be stuff like delay or drop rate. However seeing the packets printed individually
+    like this has allowed me to spot patterns in how they arrive, especially since you can just tweak the network
+    conditions really easily. Although, the structure of the config file itself could be friendlier.''}
+\end{quote}
 
 
 \section{Analysis of Objectives}\label{section:analysis_of_objectives}
