@@ -17,14 +17,16 @@ public abstract class DistributionTest<T> {
 
   protected abstract Collection<DistributionWithCdfTable> getSomeDistributionsWithCdfTables();
 
+  private final Collection<DistributionWithCdfTable> someDistributionsWithCdfTables =
+      getSomeDistributionsWithCdfTables();
+
   protected void forManySeeds(BiConsumer<DistributionWithCdfTable, Random> test) {
     Stream.of(0, 1, 42, 100, 200, 1337)
         .map(Random::new)
         .forEach(
             random ->
-                getSomeDistributionsWithCdfTables()
-                    .forEach(
-                        distributedWithCdfTable -> test.accept(distributedWithCdfTable, random)));
+                someDistributionsWithCdfTables.forEach(
+                    distributedWithCdfTable -> test.accept(distributedWithCdfTable, random)));
   }
 
   protected double toDouble(T value) {
