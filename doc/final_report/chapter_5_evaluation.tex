@@ -1948,43 +1948,45 @@ as a tool.
     One participant selected 8 while the other three gave a score of 10. It would seem that using software with
     minimal dependencies is a massive upside for users, possibly because of how rare it is for complex tooling such
     as Packet Courier.
-    \item \textbf{Please read the Introduction section of the README. Does it concisely convey the purpose of the
-    tool and what makes it unique?} \\
-    The responses to this question, 7, 8, 8 and 10, would indicate that README introduction is clear and informative
-    with a little room for improvement.
-    \item \textbf{Please write down any comments or criticisms regarding the Introduction section of the README. Is
-    there anything missing? Is anything unclear or ambiguous?} \\
+    \item \textbf{Please read the Introduction section of the \texttt{README}. Does it concisely convey the purpose
+    of the tool and what makes it unique?} \\
+    The responses to this question, 7, 8, 8 and 10, would indicate that \texttt{README} introduction is clear and
+    informative with a little room for improvement.
+    \item \textbf{Please write down any comments or criticisms regarding the Introduction section of the
+    \texttt{README}. Is there anything missing? Is anything unclear or ambiguous?} \\
     Participants left a variety of comments in this section, ranging from \emph{``no''} to \emph{``could be a little
     more direct/plain (and therefore shorter)''}. One participant claimed that \emph{``the introduction is clear,
         with enough technical detail that users can understand what is happening but not so much detail that it would
         exclude those with lesser knowledge''}, with another saying that \emph{``uniqueness is not self evident''}
-    but that \emph{``a section of the README explaining its benefits over other tools is unnecessary and
+    but that \emph{``a section of the \texttt{README} explaining its benefits over other tools is unnecessary and
     self-indulgent''}. Whilst there is no clear consensus on this particular point (with some of it being down to
-    taste), it might be worth investigating ways to trim down the README introduction so that users can get stuck
-    straight into the tool. The comments about uniqueness are interesting, perhaps implying that users don't care
-    about the unique selling point of a tool by the time they're skimming through the README and that they just want
+    taste), it might be worth investigating ways to trim down the \texttt{README} introduction so that users can get
+    stuck straight into the tool. The comments about uniqueness are interesting, perhaps implying that users don't care
+    about the unique selling point of a tool by the time they're skimming through the \texttt{README} and that they
+    just want
     to get to work actually using it.
     \item \textbf{Please build the project. How complicated did you find this process?} \\
     All participants responded 10 to this prompt, reinforcing the choice to use Maven as the project management tool
     due to its simplicity.
     \item \textbf{Please explain any difficulties you had compiling Packet Courier.} \\
-    Only one participant opted to leave a common here and suggested that the README mentions Maven's quiet mode to
-    reduce console noise.
+    Only one participant opted to leave a common here and suggested that the \texttt{README} mentions Maven's quiet
+    mode to reduce console noise.
     \item \textbf{Please read \texttt{cmd\_example1.courierconfig}. On first glance, does this file read intuitively
     for a network emulation configuration? Suppose you were shown this file for the first time and were only told
     that it was used to configure an emulated network scenario; how well would you understand what the attributes and
-    their values were referring to? If you can't find it, then the README should prove helpful.} \\
+    their values were referring to? If you can't find it, then the \texttt{README} should prove helpful.} \\
     Participants responded with scores of 8, 9, 9 and 10, indicating that the \texttt{.courierconfig} file format is
     very user friendly, even to people who are totally new to Packet Courier.
-    \item \textbf{If you had to consult the README to get a better understanding of
+    \item \textbf{If you had to consult the \texttt{README} to get a better understanding of
     \texttt{cmd\_example1.courierconfig}, then please rate how helpful it was in clarifying any initial confusion.} \\
     Three participants opted to respond to this prompt, all giving a 10 rating.
     \item \textbf{Please write down any comments or criticisms regarding the structure or the contents of
-    \texttt{cmd\_example1.courierconfig}. Did the README do a good job at explaining any components that weren't self
+    \texttt{cmd\_example1.courierconfig}. Did the \texttt{README} do a good job at explaining any components that
+    weren't self
     evident in their function?} \\
     Two participants suggested that a YAML\cite{yaml} file would make for a cleaner, more human-readable format,
     which seems like a very sensible suggestion. Another participant noted that they had to read up on what
-    \emph{``wall-clock''} meant, although the README did help them on that front.
+    \emph{``wall-clock''} meant, although the \texttt{README} did help them on that front.
     \item \textbf{Please run a Packet Courier emulation from the command-line using
     \texttt{cmd\_example1.courierconfig} as the configuration. How complicated did you find this process? Note that
     the network code for this configuration uses \texttt{python3}, and is known to work with version 3.8.10.} \\
@@ -1998,28 +2000,29 @@ as a tool.
     arguments. Even after hot-fixing that problem, the Windows kernel seemed to block the packets as a security
     measure. These issues are not bugs or problems with Packet Courier specifically, but operating system quirks that
     must be worked around and troubleshot. The security/firewalling issue can be investigated and discussed in the
-    README to help Windows users get the most out of the tool as quickly as possible. \\ \\
+    \texttt{README} to help Windows users get the most out of the tool as quickly as possible. \\ \\
     The MacOS user cites that whilst their Packet Courier instance did technically start, it exited nearly
     immediately due to an attempt to bind an ip-address to an existing socket. This is a genuine design oversight
     that has been logged as a known bug. Packet Courier should instead attempt to bind its public and private
     ip-addresses to a socket and retry if they fail instead of presuming that they will succeed. \\ \\
-    The WSL user managed to run the simulation in full but expressed how the README was lacking in its explanation of
-    how to add loggers to the configuration. They also noted that Packet Courier doesn't create missing directories
-    for features such as file logging and crash dumps, which would be a nice quality of life improvement.
+    The WSL user managed to run the simulation in full but expressed how the \texttt{README} was lacking in its
+    explanation of how to add loggers to the configuration. They also noted that Packet Courier doesn't create
+    missing directories for features such as file logging and crash dumps, which would be a nice quality of life
+    improvement.
     \item \textbf{Please briefly examine the simple\_client.py and simple\_server.py scripts that are run as part of
     \texttt{cmd\_example1.courierconfig}. Does the terminal output match what you would expect given the nature of
     the network code and the configuration file? Perhaps consider the order of the messages, as well as if any are
     missing.} \\
     One participant left a long response to this prompt, mentioning how \emph{``I am confused as to why sometimes Bob
     receives a message before Alice seems to have sent it''}. This is a largely unavoidable consequence of multiple
-    processes competing for the same console output, however it should probably be mentioned somewhere in the README.
-    The participant also suggests \emph{``perhaps more useful log in file form would to have separate files for each
-    command node with a timestamp for each line''} since it \emph{``would allow easier side to side comparison on a
-    specific message basis''}, which is undoubtedly another excellent feature proposition.
+    processes competing for the same console output, however it should probably be mentioned somewhere in the
+    \texttt{README}. The participant also suggests \emph{``perhaps more useful log in file form would to have
+    separate files for each command node with a timestamp for each line''} since it \emph{``would allow easier side
+    to side comparison on a specific message basis''}, which is undoubtedly another excellent feature proposition.
     \item \textbf{What are your general impressions of Packet Courier having used it? (Out of 5 possible stars)} \\
     Participants scored Packet Courier at an average of 4.25 stars.
     \item \textbf{How well do you think your actual experience of Packet Courier matches up to the description given
-    in the Introduction of the README?} \\
+    in the Introduction of the \texttt{README}?} \\
     Two participants gave Packet Courier a 6/10 on this front, with the other two scored it 8 and 9 respectively.
     This is a surprising outcome in light of previous feedback and it is difficult to pinpoint what is motivating
     this score.
@@ -2063,6 +2066,68 @@ largely platform agnostic (and thus Packet Courier did actually \emph{run}), it 
 user space APIs do not always manifest themselves uniformly across all operating systems, i.e.: Windows stripping
 process commands of double quotes and blocking packets. This is all useful feedback that will inform how Packet
 Courier should be developed going forward in Section~\ref{section:future_work}.
+
+\subsection{Observation Results}\label{subsection:observation_results}
+
+Two user observation sessions were conducted to monitor how users \emph{behaved} while interacting with Packet Courier
+before interviewing them to get an understanding for their thought processes\cite{user_observation}. The first
+interview was done with ``John'' in a more informal manner in attempt to assess what users might expect from the tool
+when reading the documentation and example configurations for the first time. The second interview was done more
+formally with ``Harry'' to see how a user might debug a network protocol using Packet Courier\footnote{``John'' and
+``Harry'' are aliases being used to preserve anonymity.}.
+
+\subsubsection{John}\label{subsubsection:john}
+
+John has a first class degree in computer science and now works as a full time junior software and DevOps engineer.
+
+John was provided with a laptop at the start of the session with an IDE and a WSL terminal open at the root of the
+Packet Courier repository. He was also was told that there was a \texttt{README.md} file in the root of the project
+directory and was then asked to run an example configuration. John was reasonably comfortable with Java and Maven
+since he had done some development with them at university so had Packet Courier built and running fairly quickly. He
+was able to identify where the example configurations were based on the \texttt{README}, but said that running them
+was \emph{``a bit fiddly''} due to how long the file paths were. The example configurations are buried fairly deep
+inside the directory structure of the project and this could definitely be changed to make them more accessible.
+
+John immediately went to run \texttt{cmd\_example1.courierconfig} which suggests that the naming of the example files
+is intuitive, i.e.: \texttt{cmd\_example1.courierconfig} is the simplest configuration that can be run from the
+command line. He was then prompted to look inside the file he had just run to see if it matched up to what he had
+observed on the console. His initial reaction was that \emph{``it looks as though about half of the packets got
+dropped, so seems on point''}. John had not even been asked whether he understood the contents of the
+\texttt{.courierconfig}; he was instantly able to identify at a glance that about 50\% of the packets travelling from
+Alice to Bob were supposed to be dropped. John then reran the simulation to see if it behaved consistently. He
+confirmed that whilst the output was non-deterministic, the behaviour of Alice and Bob was still commensurate with
+his expectations based on the configuration. He was not put off at all by the fact that sometimes Bob would appear to
+receive packets ``before'' Alice, since he understood that the console output was not necessarily running perfectly
+in tandem with the underlying client and server processes. In this way, John had built a very strong intuition for
+the semantics of Packet Courier quite quickly.
+
+John began to tinker around with the configuration, namely changing the drop probability to 0.9. He was confused to
+see that Bob hadn't received any of the packets that Alice had sent. He reran the configuration to find the same
+outcome. He then tried running the configuration with a drop probability of 0.3 and found that whilst Bob was
+receiving packets from Alice, they were, by eye, less than John would have expected. He then concluded that Packet
+Courier must have some kind of packet dropping bug and summarised his experience as follows:
+\begin{quote}
+    \emph{``I think [Packet Courer] is quite intuitive to use. The configs are quite readable and flexible, in that
+    you don't need to fill [a configuration file] with the same amount of complexity each time. It behaves
+    consistently and mostly as I would have expected, but there was that weird edge case with the super high and
+    super low drops. It could have also benefited from a UI.''}
+\end{quote}
+
+Naturally it was disappointing to hear a user conclude that Packet Courier's drop mechanism is buggy given the rigour
+of the unit and system testing conducted in Sections~\ref{section:unit_testing} and~\ref{section:system_testing}. The
+behaviour that John had uncovered was then promptly investigated. As expected, the root cause of this erroneous
+behaviour did not lie within the Packet Courier framework, but was instead a fragility issue in the way Alice and
+Bob's connection had been set up in \texttt{cmd\_example1.courierconfig}, the details of which were discussed with
+Harry in Section~\ref{subsubsection:harry}. In this way John's feedback had proved invaluable since his curiosity had
+led him to discover a hidden edge case in \texttt{cmd\_example1.courierconfig}. Although this was not the result of a
+Packet Courier bug, it is still problematic to provide users with examples that could easily convince them that the
+framework itself is broken, so this configuration must be made more robust. Otherwise, John seemed to take to using
+the tool like a duck to water, with the minor exception of struggling to type out the long path to the example
+configurations. 
+
+\subsubsection{Harry}\label{subsubsection:harry}
+
+TODO
 
 
 \section{Analysis of Objectives}\label{section:analysis_of_objectives}
