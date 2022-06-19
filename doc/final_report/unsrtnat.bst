@@ -70,6 +70,7 @@ ENTRY
     title
     type
     url
+    urldate
     volume
     year
   }
@@ -286,6 +287,13 @@ FUNCTION {format.url}
 { url empty$
     { "" }
     { new.block "URL \url{" url * "}" * }
+  if$
+}
+
+FUNCTION {format.urldate}
+{ urldate empty$
+    { "" }
+    { new.block "[Accessed " urldate * "]" * }
   if$
 }
 
@@ -721,6 +729,7 @@ FUNCTION {article}
   format.issn output
   format.doi output
   format.url output
+  format.urldate output
   new.block
   note output
   fin.entry
@@ -758,6 +767,7 @@ FUNCTION {book}
   format.isbn output
   format.doi output
   format.url output
+  format.urldate output
   new.block
   note output
   fin.entry
@@ -776,6 +786,7 @@ FUNCTION {booklet}
   format.isbn output
   format.doi output
   format.url output
+  format.urldate output
   new.block
   note output
   fin.entry
@@ -815,6 +826,7 @@ FUNCTION {inbook}
   format.isbn output
   format.doi output
   format.url output
+  format.urldate output
   new.block
   note output
   fin.entry
@@ -845,6 +857,7 @@ FUNCTION {incollection}
   format.isbn output
   format.doi output
   format.url output
+  format.urldate output
   new.block
   note output
   fin.entry
@@ -883,6 +896,7 @@ FUNCTION {inproceedings}
   format.isbn output
   format.doi output
   format.url output
+  format.urldate output
   new.block
   note output
   fin.entry
@@ -903,6 +917,7 @@ FUNCTION {manual}
   format.pages output
   format.date output
   format.url output
+  format.urldate output
   new.block
   note output
   fin.entry
@@ -920,6 +935,7 @@ FUNCTION {mastersthesis}
   address output
   format.date "year" output.check
   format.url output
+  format.urldate output
   new.block
   note output
   fin.entry
@@ -936,6 +952,7 @@ FUNCTION {misc}
   format.date output
   format.issn output
   format.url output
+  format.urldate output
   new.block
   note output
   fin.entry
@@ -954,6 +971,7 @@ FUNCTION {phdthesis}
   address output
   format.date "year" output.check
   format.url output
+  format.urldate output
   new.block
   note output
   fin.entry
@@ -975,6 +993,7 @@ FUNCTION {proceedings}
   format.isbn output
   format.doi output
   format.url output
+  format.urldate output
   new.block
   note output
   fin.entry
@@ -992,6 +1011,7 @@ FUNCTION {techreport}
   address output
   format.date "year" output.check
   format.url output
+  format.urldate output
   new.block
   note output
   fin.entry
@@ -1007,6 +1027,7 @@ FUNCTION {unpublished}
   note "note" output.check
   format.date output
   format.url output
+  format.urldate output
   fin.entry
 }
 
