@@ -1,6 +1,18 @@
 \section{Motivation}\label{section:motivation}
 
-\lettrine{D}{istributed} computing is naturally a field that explores non-trivial levels of parallelism on a large
+\lettrine{M}{odern} day infrastructure is almost entirely built upon concepts of long-range communication. If any of
+us wish to contact a family member, friend or colleague on the other side of the globe, then we scarcely hesitate to
+use one of the many services that enable us to do so. In fact, it is nuisance if we encounter technical issues along
+the way. Yet, this is somewhat of a social paradox, since the various algorithms and interweaving components
+that underpin such powerful technologies are enormously complex. These fundamental protocols are expected to reliably
+deliver a lengthy contract of communicative obligations, whilst deftly navigating the various pitfalls and obstacles
+that are characteristic of the internet. Indeed, such implementations are difficult to test; finding a virtual
+landscape that closely imitates the true chaos of the web is a hard problem. Of course, one could simply use the
+internet itself, setting up machines based in London, Paris and Amsterdam, say. This is a costly operation, however,
+and one that is inflexible, with limited scope for a satisfying variety of test cases. Thus, there is a clear need for
+simulation-based testing.
+
+Distributed computing is naturally a field that explores non-trivial levels of parallelism on a large
 scale, and as such, any fledgling distributed system demands a testbed that epitomizes these properties. It then
 follows that network simulation is likely to be the apparatus of choice, notwithstanding the possibility of expending
 serious resource to conduct ``live'' tests over an existing physical topology, perhaps even the internet itself.
@@ -39,7 +51,7 @@ furnishing insights into distributed algorithms that reality never could.
 it would probably be \emph{to provide those with a curiosity for distributed computer systems with the means to tinker
 around with network technologies as though they were running in the real world.} Indeed, whilst this may capture the
 spirit of what is being worked towards, it is very abstract and unspecific; in order to distill this
-mission-statement into a set of more tangible objectives, it is probably best framed with respect to what users can
+mission statement into a set of more tangible objectives, it is probably best framed with respect to what users can
 expect from the end product, i.e.:
 
 \begin{enumerate}
@@ -56,7 +68,7 @@ expect from the end product, i.e.:
     \item Plug-and-playability:
     \begin{enumerate}
         \item Users should need minimal domain-specific knowledge in order to use the full set of features on offer.
-        \item The prospective tool should be able to mimic a real network in a way that minimises bespoke set-up,
+        \item The prospective tool should be able to mimic a real network in a way that minimises bespoke set up,
         i.e.: if a user normally tests their distributed algorithm using real computers connected over a physical
         network, then transitioning to using the prospective tool should be more or less seamless.
     \end{enumerate}
@@ -65,7 +77,7 @@ expect from the end product, i.e.:
 Not only do these objectives provide the project with a selection of qualitative yet precise aims, they also imbue
 the development process with a sense of direction and purpose. The picture being painted of the end user becomes more
 refined and vivid through the act of clarifying their needs and how they can be met. In this instance, the key
-qualities that would hopefully appeal to prospective users are versatility and ease-of-use. One might conceptualise
+qualities that would hopefully appeal to prospective users are versatility and ease of use. One might conceptualise
 the proposed solution as a black box that appears from the outside to contain an entire network topology, whereby
 users can adjust its shape and behaviour using an intuitive control-panel of dials and knobs. In turn, students,
 developers and enthusiasts alike can probe this black box to achieve whatever network-related ends they see fit, with
@@ -74,4 +86,34 @@ minimal configuration and bespoke setup required.
 
 \section{Contributions}\label{section:contributions}
 
-TODO
+This thesis contributes \emph{Packet Courier}, a Java library that doubles up as both a Java simulation framework and
+a standalone emulator. In this way, a prospective user can either configure a distributed network simulation
+programmatically using Java, or they can run the compiled Jar like an executable in conjunction with a JSON-style
+configuration file to emulate a distributed network.
+
+The specific contributions that Packet Courier makes are formally evaluated in
+Section~\ref{section:analysis_of_objectives} and can be summarised as follows:
+\begin{enumerate}
+    \item Packet Courier provides users with multiple ways to design an arbitrary network topology, fulfilling
+    \textbf{objective 1)}.
+    \item Packet Courier provides users with a configuration suite to define how packets are manipulated during
+    message-passing, fulfilling \textbf{objective 2)}.
+    \item Packet Courier provides users with a mechanism to run a distributed algorithm across a virtual network
+    topology which reflects the properties described by the user as per objectives 1) and 2), whether that be by
+    \emph{simulation} or \emph{emulation}, fulfilling \textbf{objective 3)}.
+    \item Platform agnosticism:
+    \begin{enumerate}
+        \item Whilst Packet Courier can be \emph{run} on Windows and MacOS, there are some unusual
+        operating-system-specific quirks that prevent full emulations from being run. This means that Packet Courier
+        does \textbf{not} fulfill \textbf{objective 4.a)} in its current state.
+        \item Packet Courier users are not be pigeonholed into working with a particular programming language in
+        order to simulate their solution, fulfilling \textbf{objective 4.b)}.
+    \end{enumerate}
+    \item Plug-and-playability:
+    \begin{enumerate}
+        \item Packet Courier users need very little domain-specific knowledge in order to use the full set of
+        features on offer, fulfilling \textbf{objective 5.a)}.
+        \item Packet Courier is able to mimic a real network in a way that minimises bespoke set up, fulfilling
+        \textbf{objective 5.b)}.
+    \end{enumerate}
+\end{enumerate}
