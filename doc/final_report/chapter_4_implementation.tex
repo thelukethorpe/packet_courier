@@ -2,16 +2,16 @@
 
 \subsection{Version Control}\label{subsection:version_control}
 
-Packet Courier was developed using Git\cite{git} as a version control system and the code repository is hosted on
-GitHub\cite{github, packet_courier} at \url{https://github.com/thelukethorpe/packet_courier}. There is no special
-reason for either of these choices; they are simply industry standards being used for a project that doesn't
+\lettrine{P}{acket} Courier was developed using Git\cite{git} as a version control system and the code repository is
+hosted on GitHub\cite{github, packet_courier} at \url{https://github.com/thelukethorpe/packet_courier}. There is no
+special reason for either of these choices; they are simply industry standards being used for a project that doesn't
 innately demand bespoke tooling (unlike data-heavy ventures such as game development, which might benefit from a tool
 like Perforce\cite{perforce, perforce_vs_git}).
 
 \subsection{Ticket Tracking}\label{subsection:ticket_tracking}
 
-GitHub Issues\cite{github_issues} powers Packet Courier's ticket tracking. Tickets, or \emph{issues}, as per the
-GitHub nomenclature, are categorised based on one or more of the following custom tags:
+\lettrine{G}{itHub} Issues\cite{github_issues} powers Packet Courier's ticket tracking. Tickets, or \emph{issues}, as
+per the GitHub nomenclature, are categorised based on one or more of the following custom tags:
 \begin{itemize}
     \item \textbf{Bug:} \emph{Something isn't working.}
     \item \textbf{CI:} \emph{Change to pipeline.}
@@ -50,7 +50,7 @@ from it.
 
 \subsection{Programming Languages}\label{subsection:programming_languages}
 
-Java 8\cite{java_8} was chosen as the foundational language for Packet Courier due to:
+\lettrine{J}{ava} 8\cite{java_8} was chosen as the foundational language for Packet Courier due to:
 \begin{itemize}
     \item Its excellent breadth of supported platforms\cite{java_8_support}, which lends itself well to objective 4.a).
     \item The vast number of popular and easily importable libraries available to it\cite{java_relevance}.
@@ -95,10 +95,10 @@ primitives\cite{python_gil} are the main reasons why it wasn't used more promine
 
 \subsection{Build and Dependency Management}\label{subsection:build_and_dependency_management}
 
-Packet Courier uses Apache Maven 3.6.3\cite{maven} to manage its build phases and dependencies. Maven is convenient,
-lightweight, widely supported, boasts a huge repository of libraries\cite{maven_repository} and with a single
-command can compile the project into a portable \texttt{.jar} file that can be used as an executable binary or a Java
-library.
+\lettrine{P}{acket} Courier uses Apache Maven 3.6.3\cite{maven} to manage its build phases and dependencies. Maven is
+convenient, lightweight, widely supported, boasts a huge repository of libraries\cite{maven_repository} and with a
+single command can compile the project into a portable \texttt{.jar} file that can be used as an executable binary or
+a Java library.
 
 \subsubsection{JUnit 4}\label{subsubsection:junit_4}
 
@@ -196,11 +196,11 @@ by adding an extra compilation step at compile time to plug this gap.
 
 \subsection{Continuous Integration}\label{subsection:continuous_integration}
 
-The Packet Courier repository uses GitHub actions\cite{github_actions} to implement a continuous integration
-pipeline\cite{aws_ci} where code is linted and tested, both of which are done using Maven. Linting is enforced using
-\texttt{fmt-maven-plugin}\cite{fmt_maven_plugin}, which provides users with an automated way to check for and fix Java
-code that does not adhere to the Google Java Style Guide\cite{google_java_format, google_java_style_guide}. Testing
-is simply done via the Maven command:
+\lettrine{T}{he} Packet Courier repository uses GitHub actions\cite{github_actions} to implement a continuous
+integration pipeline\cite{aws_ci} where code is linted and tested, both of which are done using Maven. Linting is
+enforced using \texttt{fmt-maven-plugin}\cite{fmt_maven_plugin}, which provides users with an automated way to check
+for and fix Java code that does not adhere to the Google Java Style Guide\cite{google_java_format,
+    google_java_style_guide}. Testing is simply done via the Maven command:
 \begin{quote}
     \texttt{mvn '-Dtest=**.*Test' test --no-transfer-progress}.
 \end{quote}
@@ -222,7 +222,7 @@ is simply done via the Maven command:
 
 \subsection{Statistical Distribution API}\label{subsection:statistical_distribution_api}
 
-Packet Courier supports the following statistical distributions:
+\lettrine{P}{acket} Courier supports the following statistical distributions:
 \begin{itemize}
     \item Bernoulli
     \item Exponential
@@ -677,14 +677,14 @@ public class WorkerTaskExample {
 
 \subsection{Node API}\label{subsection:node_api}
 
-When compared to the worker API, the node API is somewhat straightforward. In fact, the \texttt{network.simulation
-.node} package only contains an interface and four classes which in turn are mostly data-oriented. For example,
-Code-Snippet~\ref{code:node_class} details the majority of functionality implemented by the \texttt{Node<NodeInfo>}
-class. It is however missing the methods \texttt{doWork}, \texttt{hashCode} and \texttt{equals}, but these are fairly
-trivial implementations. As one might expect, \texttt{doWork} is used to initiate the root worker. Whilst in
-principle the API has the capacity to have multiple root workers do work, it is limited to one for simplicity.
-\begin{lstlisting}[language=Java,caption={A cut-down version of the \texttt{Node<NodeInfo>} class.},
-    label={code:node_class},captionpos=b]
+\lettrine{W}{hen} compared to the worker API, the node API is somewhat straightforward. In fact, the
+\texttt{network.simulation.node} package only contains an interface and four classes which in turn are mostly
+data-oriented. For example, Code-Snippet~\ref{code:node_class} details the majority of functionality implemented by
+the \texttt{Node<NodeInfo>} class. It is however missing the methods \texttt{doWork}, \texttt{hashCode} and
+\texttt{equals}, but these are fairly trivial implementations. As one might expect, \texttt{doWork} is used to
+initiate the root worker. Whilst in principle the API has the capacity to have multiple root workers do work, it is
+limited to one for simplicity. \begin{lstlisting}[language=Java,caption={A cut-down version of the
+\texttt{Node<NodeInfo>} class.},label={code:node_class},captionpos=b]
 public class Node<NodeInfo> {
   private final NodeAddress address;
   private final WorkerAddressGenerator workerAddressGenerator;
@@ -724,9 +724,9 @@ simulation time.
 
 \subsection{Mail API}\label{subsection:mail_api}
 
-As with the node API, the mail API is fairly data focused. For example, the \texttt{Mail} class is composed of a
-\texttt{Packet} and a destination \texttt{WorkerAddress}. It is Packet Courier's chosen mode of transport of packets
-and thus inherits from \texttt{PacketWrapper<Mail>} so that it can travel along instances of
+\lettrine{A}{s} with the node API, the mail API is fairly data focused. For example, the \texttt{Mail} class is
+composed of a \texttt{Packet} and a destination \texttt{WorkerAddress}. It is Packet Courier's chosen mode of
+transport of packets and thus inherits from \texttt{PacketWrapper<Mail>} so that it can travel along instances of
 \texttt{PacketPipeline<Mail>}.
 
 The \texttt{Mailbox} class is a wrapper for Java's \texttt{LinkedBlockingQueue}\cite{java_LinkedBlockingQueue}: a
@@ -761,13 +761,13 @@ public interface PostalService {
 
 \subsection{Simulation API}\label{subsection:simulation_api}
 
-The \texttt{PacketCourierSimulation<NodeInfo>} class brings all the elements discussed thus far together to build a
-fully functioning simulation. An API user would configure their simulation using the \texttt{Configuration<NodeInfo>}
-inner class which leverages a builder pattern\cite{builder_pattern}. This allows the user to add nodes, connections,
-network conditions and other peripheral elements such as logging mechanisms to their simulation in a way that is easy
-and human readable. Once they have built their simulation, they can then run it using the \texttt{start} method which
-runs asynchronously and can be joint back to the current thread using \texttt{waitFor}, mirroring the semantics of
-Java's \texttt{Process} class\cite{java_Process}.
+\lettrine{T}{he} \texttt{PacketCourierSimulation<NodeInfo>} class brings all the elements discussed thus far together
+to build a fully functioning simulation. An API user would configure their simulation using the
+\texttt{Configuration<NodeInfo>} inner class which leverages a builder pattern\cite{builder_pattern}. This allows the
+user to add nodes, connections, network conditions and other peripheral elements such as logging mechanisms to their
+simulation in a way that is easy and human readable. Once they have built their simulation, they can then run it
+using the \texttt{start} method which runs asynchronously and can be joint back to the current thread using
+\texttt{waitFor}, mirroring the semantics of Java's \texttt{Process} class\cite{java_Process}.
 
 The main responsibility of the \texttt{PacketCourierSimulation<NodeInfo>} is to correctly manage the various
 components that make up a simulation, rather than provide any novel functionality. A bare-bones Packet Courier
@@ -906,10 +906,10 @@ virtual or simulated sense.
 
 \section{Standalone Emulator}\label{section:standalone_emulator}
 
-Packet Courier achieves language agnosticism by offering UDP interoperability. As a consequence, any binary that
-uses UDP (directly or indirectly) to send and receive packets can enjoy what the Packet Courier API has to offer.
-This is achieved by giving each node a pair of public and private ip-addresses and opening a UDP socket for each
-public ip-address, as per the emulation semantics outlined in Section~\ref{subsection:emulation_semantics}.
+\lettrine{P}{acket} Courier achieves language agnosticism by offering UDP interoperability. As a consequence, any
+binary that uses UDP (directly or indirectly) to send and receive packets can enjoy what the Packet Courier API has
+to offer. This is achieved by giving each node a pair of public and private ip-addresses and opening a UDP socket for
+each public ip-address, as per the emulation semantics outlined in Section~\ref{subsection:emulation_semantics}.
 
 Packet Courier users can in principle mix and match the API with the UDP adaptive solution, i.e.: have workers that
 use custom Java code and nodes that are communicating with a binary over UDP \emph{in the same simulation/emulation}.
@@ -1036,12 +1036,12 @@ maps.
 
 \subsection{Protocol Buffer Integration}\label{subsection:protocol_buffer_integration}
 
-Packet Courier uses Google's Protocol Buffer library\cite{google_protobuf} to define configuration syntax for files
-that in turn outline the parameters for an emulation, as per Section~\ref{subsubsection:google_protocol_buffer}. The
-full syntax and semantics of Packet Courier's \texttt{.courierconfig} file can be found in the \texttt{README.md} of
-the GitHub repository\cite{packet_courier}. At a technical level, the Protocol Buffer library is used to convert the
-file into a parse-tree which is then traversed by the
-\texttt{PacketCourierSimulationConfigurationProtoParser<NodeInfo>} class to then build a
+\lettrine{P}{acket} Courier uses Google's Protocol Buffer library\cite{google_protobuf} to define configuration syntax
+for files that in turn outline the parameters for an emulation, as per
+Section~\ref{subsubsection:google_protocol_buffer}. The full syntax and semantics of Packet Courier's \texttt{
+    .courierconfig} file can be found in the \texttt{README.md} of the GitHub repository\cite{packet_courier}. At a
+technical level, the Protocol Buffer library is used to convert the file into a parse-tree which is then traversed by
+the \texttt{PacketCourierSimulationConfigurationProtoParser<NodeInfo>} class to then build a
 \texttt{PacketCourierSimulation.Configuration<NodeInfo>} from scratch. This combined with the
 \texttt{PacketCourierMain} class enables users to run an emulation from the command line without having to write a
 single line of Java code via the following process:
@@ -1054,30 +1054,33 @@ single line of Java code via the following process:
 
 \section{Debugging Features}\label{section:debugging_features}
 
-Packet Courier implements a suite of debugging features to help developers understand what is happening within Packet
-Courier itself without needing to consult a lower level code debugging tool such as \texttt{jdb}\cite{jdb}.
+\lettrine{P}{acket} Courier implements a suite of debugging features to help developers understand what is happening
+within Packet Courier itself without needing to consult a lower level code debugging tool such as
+\texttt{jdb}\cite{jdb}.
 
 \subsection{Meta Logging}\label{subsection:meta_logging}
 
-The \texttt{Logger} interface has not been discussed thus far in the report and that has been because the API that
-surrounds it is elementary. Packet Courier loggers simply provide users with a clean and easy mechanism to track
-output from workers. \emph{Meta logging}, however, does not involve workers at all and instead enables the Packet
-Courier internals to log meaningful information. For example, Packet Courier is instrumented to measure the average
-time it takes to execute a simulation tick; the result is periodically \emph{meta logged}. Other more procedural
-information is meta logged as well, such as which nodes have been set to work and when, when the simulation has
-finished and when the loggers are being flushed and closed. If Packet Courier happened to crash for whatever reason,
-then meta logging may help to identify when the crash occurred and what might have caused it.
+\lettrine{T}{he} \texttt{Logger} interface has not been discussed thus far in the report and that has been because the
+API that surrounds it is elementary. Packet Courier loggers simply provide users with a clean and easy mechanism to
+track output from workers. \emph{Meta logging}, however, does not involve workers at all and instead enables the
+Packet Courier internals to log meaningful information. For example, Packet Courier is instrumented to measure the
+average time it takes to execute a simulation tick; the result is periodically \emph{meta logged}. Other more
+procedural information is meta logged as well, such as which nodes have been set to work and when, when the
+simulation has finished and when the loggers are being flushed and closed. If Packet Courier happened to crash for
+whatever reason, then meta logging may help to identify when the crash occurred and what might have caused it.
+
+\newpage
 
 \subsection{Process Monitor}\label{subsection:process_monitor}
 
-The \texttt{WorkerProcessMonitor} class goes a step further than the meta logging feature and starts a thread which
-periodically checks the status of each running child \texttt{Process}\cite{java_Process}. Users can specify how often
-the process monitor should perform its checks, which involve meta logging which processes are still alive and which
-have finished since its last check. This can be very useful for users who might want to find out why their simulation
-is hanging, i.e.: which processes aren't finishing of their accord.
+\lettrine{T}{he} \texttt{WorkerProcessMonitor} class goes a step further than the meta logging feature and starts a
+thread which periodically checks the status of each running child \texttt{Process}\cite{java_Process}. Users can
+specify how often the process monitor should perform its checks, which involve meta logging which processes are still
+alive and which have finished since its last check. This can be very useful for users who might want to find out why
+their simulation is hanging, i.e.: which processes aren't finishing of their accord.
 
 \subsection{Crash Dumps}\label{subsection:crash_dumps}
 
-Users can specify a crash dump path for instances when processes end unceremoniously. By default, such errors will be
-logged via the traditional chancels, but adding a crash dump path will siphon them away to a separate, discreet file
-and thereby keeping the man logs clean.
+\lettrine{U}{sers} can specify a crash dump path for instances when processes end unceremoniously. By default, such
+errors will be logged via the traditional chancels, but adding a crash dump path will siphon them away to a separate,
+discreet file and thereby keeping the man logs clean.

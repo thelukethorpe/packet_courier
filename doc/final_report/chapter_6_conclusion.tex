@@ -1,9 +1,9 @@
-In the early stages of Packet Courier's development, the mission statement was \emph{``to provide those with a
-curiosity for distributed computer systems with the means to tinker around with network technologies as though they
-were running in the real world''}. In fact, it was this very motto that inspired the more formal objectives defined
-in Section~\ref{section:objectives}. Hopefully this report has done its due diligence to demonstrate beyond all doubt
-that Packet Courier is a tool that truly embodies this sentiment. It provides developers, network engineers and
-students alike to fine tune a network exactly to their liking and let their algorithms loose in a way that is
+\lettrine{I}{n} the early stages of Packet Courier's development, the mission statement was \emph{``to provide those
+with a curiosity for distributed computer systems with the means to tinker around with network technologies as though
+they were running in the real world''}. In fact, it was this very motto that inspired the more formal objectives
+defined in Section~\ref{section:objectives}. Hopefully this report has done its due diligence to demonstrate beyond
+all doubt that Packet Courier is a tool that truly embodies this sentiment. It provides developers, network engineers
+and students alike to fine tune a network exactly to their liking and let their algorithms loose in a way that is
 self-contained, realistic and resource inexpensive. Packet Courier has also proven to be a high-calibre piece of
 software, insofar as it can emulate 100 nodes exchanging 5,000 packets per second in real time without so much as
 adding 1ms of overhead latency to each packet (on the right hardware, of course). Many would consider a framework
@@ -19,8 +19,8 @@ especially given that it will be released as an open source project on the 21\te
 
 \subsection{Fix Bandwidth Throttling Algorithm}\label{subsection:fix_bandwidth_throttling_algorithm}
 
-As discussed in Section~\ref{subsubsection:throttle_analysis}, the bandwidth throttler seems to be the only core
-component of Packet Courier's network condition semantics that is not performing as advertised in
+\lettrine{A}{s} discussed in Section~\ref{subsubsection:throttle_analysis}, the bandwidth throttler seems to be the
+only core component of Packet Courier's network condition semantics that is not performing as advertised in
 Section~\ref{subsection:network_condition_semantics}. As part of the analysis conducted in
 Section~\ref{subsubsection:throttle_analysis}, Packet Courier's throttling algorithm appears to face a bin-packing
 issue where packets are imbued with a delay (and thus throttled) indiscriminately, even if traffic is relatively
@@ -32,7 +32,7 @@ latencies when the packet flow is approaching the maximum bandwidth, i.e.: maxim
 
 \subsection{Add Support for YAML Configuration Files}\label{subsection:support_for_yaml_configuration_files}
 
-50\% of survey participants made this precise suggestion as per the results detailed in
+\lettrine{E}{xactly} 50\% of survey participants made this precise suggestion as per the results detailed in
 Section~\ref{subsection:survey_results}. Others who participated in user feedback were indirectly in favour of this
 feature, claiming that the \texttt{.courierconfig} file format could be cleaner. Although the Google Protocol Buffer
 API only seems to support JSON parsing\cite{com_google_protobuf_util}, there are plenty of ways to convert YAML into
@@ -40,7 +40,7 @@ JSON\cite{yaml_to_json}. As such, this would be a reasonably simple feature to a
 
 \subsection{Improve Configuration File Sanitization}\label{subsection:improve_configuration_file_sanitization}
 
-Another common criticism seen in Section~\ref{section:user_feedback} is that the errors produced by the
+\lettrine{A}{nother} common criticism seen in Section~\ref{section:user_feedback} is that the errors produced by the
 \texttt{.courierconfig} parser are not always very helpful. One way to mitigate this is to add more custom semantic
 checks into \texttt{PacketCourierSimulationConfigurationProtoParser<NodeInfo>} to ensure that more abstract errors
 such as specifying a negative number of clients for a star topology isn't possible. Most of the problems encountered
@@ -55,9 +55,11 @@ by users came from the Google Protocol Buffer JSON parser itself. There are thre
     conversion process. This smells as though it would be fairly fragile, however.
 \end{itemize}
 
+\newpage
+
 \subsection{Add Platform-Specific Testing to CI}\label{subsection:add_platform_specific_testing_to_ci}
 
-One of the areas were Packet Courier didn't quite live up to its expectations was in
+\lettrine{O}{ne} of the areas were Packet Courier didn't quite live up to its expectations was in
 Section~\ref{subsection:survey_results} when it was discovered that there were platform-specific issues on Windows
 and MacOS. As Packet Courier evolves, it cannot rely on user trials to uncover these kinds of problems. The best way
 to avoid them in the future would be to integrate platform testing into the CI. As per
@@ -68,24 +70,24 @@ this way, ensuring platform agnosticism becomes part of the workflow rather than
 
 \subsection{Integrate System Testing into CI}\label{subsection:integrate_system_testing_into_ci}
 
-A huge amount of tooling is currently sat in the Packet Courier repository without any form of automation to take
-advantage of it. It would only seem sensible to have some sort of runner or virtual machine run a selection of system
-tests once or twice a day to ensure that Packet Courier is always performing well end-to-end. Note that any virtual
-machine would likely need to be more powerful than the one used for the system testing in
+\lettrine{A} huge amount of tooling is currently sat in the Packet Courier repository without any form of automation
+to take advantage of it. It would only seem sensible to have some sort of runner or virtual machine run a selection
+of system tests once or twice a day to ensure that Packet Courier is always performing well end-to-end. Note that any
+virtual machine would likely need to be more powerful than the one used for the system testing in
 Section~\ref{section:system_testing}, because if the control data is anything to go by, the system tests would
 constantly be failing due to hardware constraints.
 
 \subsection{Implement a GUI}\label{subsection:implement_gui}
 
-The suggestion of a graphical user interface popped up a few times in Section~\ref{section:user_feedback}. This
-probably falls fairly low down on the list of priorities due to its more superficial nature, it is still a very valid
-potential feature, and one that would add value for more casual users of the tool or perhaps even in education. A
-framework such as JavaFX\cite{java_fx} would work nicely, or possibly even some kind of web-based UI.
+\lettrine{T}{he} suggestion of a graphical user interface popped up a few times in Section~\ref{section:user_feedback}.
+This probably falls fairly low down on the list of priorities due to its more superficial nature, it is still a very
+valid potential feature, and one that would add value for more casual users of the tool or perhaps even in education.
+A framework such as JavaFX\cite{java_fx} would work nicely, or possibly even some kind of web-based UI.
 
 \subsection{Add Integration Testing using Mockito}\label{subsection:add_integration_testing_using_mockito}
 
-Currently Packet Courier only does unit and system testing. Integration testing would be useful to test isolated
-parts of the APIs such as the packet filters and packet pipelines. One way this could be achieved is by using
+\lettrine{C}{urrently} Packet Courier only does unit and system testing. Integration testing would be useful to test
+isolated parts of the APIs such as the packet filters and packet pipelines. One way this could be achieved is by using
 Mockito\cite{mockito} to ``mock'' the components adjacent to pipelines and filters, whereby ``fake'' packets are used
 to verify the correctness of behaviour.
 
