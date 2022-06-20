@@ -1,8 +1,8 @@
 \section{Unit Testing}\label{section:unit_testing}
 
-Whilst unit testing is often seen to be a menial aspect of ensuring robustness in software engineering projects,
-unit tests in Packet Courier are used to verify the correctness of the statistical distribution implementations,
-which is somewhat non-trivial. Each distribution is subjected to two different tests:
+\lettrine{W}{hilst} unit testing is often seen to be a menial aspect of ensuring robustness in software engineering
+projects, unit tests in Packet Courier are used to verify the correctness of the statistical distribution
+implementations, which is somewhat non-trivial. Each distribution is subjected to two different tests:
 \begin{itemize}
     \item $n$ samples are taken of the distribution variable $X$ and their mean $\bar{X}$ must lie within an $\alpha
     = 0.01$ confidence interval. $n$ is set to $10,000$ for this test. This is exactly why the \texttt{mean} and
@@ -27,8 +27,8 @@ some distributions and CDF-tables to conduct tests on.
 
 \section{System Testing}\label{section:system_testing}
 
-Packet Courier takes advantage of system testing to ensure that the aggregate properties of packets sent over an
-emulated network accurately reflect those specified in the \texttt{.courierconfig} file. A selection of
+\lettrine{P}{acket} Courier takes advantage of system testing to ensure that the aggregate properties of packets sent
+over an emulated network accurately reflect those specified in the \texttt{.courierconfig} file. A selection of
 configurations have been specified in \texttt{src/test/resources/thorpe/luke/network/simulation/analysis} to cover
 the six fundamental offerings: corruption, drop, duplication, latency, limit and throttle. These can be run from the
 root of the directory using \texttt{run\_basic\_analysis\_suite.sh}. Each configuration consists of a star topology
@@ -42,9 +42,9 @@ data makes it through the timeline within a particular time frame.
 
 \subsection{Analysis Methodology}\label{subsection:analysis_methodology}
 
-Each client process runs the \texttt{analysis\_client.py} script which has been designed to send packets that
-encapsulate all the information required to assess any transformations they may have undergone during transit. This
-information includes:
+\lettrine{E}{ach} client process runs the \texttt{analysis\_client.py} script which has been designed to send packets
+that encapsulate all the information required to assess any transformations they may have undergone during transit.
+This information includes:
 \begin{itemize}
     \item A special prefix, \texttt{!} so that it is clear from the logs that this is a client send.
     \item The name of the client.
@@ -101,8 +101,8 @@ These key metrics can be used to verify the correctness and robustness of each c
 
 \subsection{Hardware}\label{subsection:hardware}
 
-Three sets of system testing data have been collected, each using different hardware. All three machines were running
-a Ubuntu 20.04 LTS\cite{ubuntu_20_04}. Their specifications as per \texttt{sudo lshw -short} are listed in
+\lettrine{T}{hree} sets of system testing data have been collected, each using different hardware. All three machines
+were running a Ubuntu 20.04 LTS\cite{ubuntu_20_04}. Their specifications as per \texttt{sudo lshw -short} are listed in
 Table~\ref{table:hardware}:
 
 \begin{table}[h!]
@@ -1912,16 +1912,16 @@ Tetris and minimise the time gaps between packets as to not overly throttle them
 
 \section{User Feedback}\label{section:user_feedback}
 
-Six participants were generous enough to spend some of their time to road test Packet Courier and provide feedback.
-Four of the participants took part in the user testing phase remotely and expressed their feedback via Microsoft
-Forms\cite{microsoft_forms}; the other two provided their feedback in person, which enables notes to be taken as they
-were observed interacting with the tool in addition to writing down their comments.
+\lettrine{S}{ix} participants were generous enough to spend some of their time to road test Packet Courier and provide
+feedback. Four of the participants took part in the user testing phase remotely and expressed their feedback via
+Microsoft Forms\cite{microsoft_forms}; the other two provided their feedback in person, which enables notes to be
+taken as they were observed interacting with the tool in addition to writing down their comments.
 
 \subsection{Survey Results}\label{subsection:survey_results}
 
-Participants were asked to download a \texttt{.zip} file of the repository before compiling Packet Courier and
-completing a selection of tasks. Each of the questions was carefully worded as not to invoke any biases and gave only
-the bare minimum context for solving the particular problem. The rationale behind this is that Packet Courier's
+\lettrine{P}{articipants} were asked to download a \texttt{.zip} file of the repository before compiling Packet Courier
+and completing a selection of tasks. Each of the questions was carefully worded as not to invoke any biases and gave
+only the bare minimum context for solving the particular problem. The rationale behind this is that Packet Courier's
 \texttt{README.md} should provide users with all the necessary context and troubleshooting information they might
 need. Thus, if any of the participants were finding certain tasks unintuitive in a way that the \texttt{README.md}
 was failing to address, then this is hugely useful feedback. Conversely, if the survey held their hand during the
@@ -2068,12 +2068,12 @@ Courier should be developed going forward in Section~\ref{section:future_work}.
 
 \subsection{Observation Results}\label{subsection:observation_results}
 
-Two user observation sessions were conducted to monitor how users \emph{behaved} while interacting with Packet Courier
-before interviewing them to get an understanding for their thought processes\cite{user_observation}. The first
-interview was done with ``John'' in a more informal manner in attempt to assess what users might expect from the tool
-when reading the documentation and example configurations for the first time. The second interview was done more
-formally with ``Harry'' to see how a user might debug a network protocol using Packet Courier\footnote{``John'' and
-``Harry'' are aliases being used to preserve anonymity.}.
+\lettrine{T}{wo} user observation sessions were conducted to monitor how users \emph{behaved} while interacting with
+Packet Courier before interviewing them to get an understanding for their thought processes\cite{user_observation}.
+The first interview was done with ``John'' in a more informal manner in attempt to assess what users might expect
+from the tool when reading the documentation and example configurations for the first time. The second interview was
+done more formally with ``Harry'' to see how a user might debug a network protocol using Packet
+Courier\footnote{``John'' and ``Harry'' are aliases being used to preserve anonymity.}.
 
 \subsubsection{John}\label{subsubsection:john}
 
@@ -2211,9 +2211,9 @@ bursts of around 100, despite not being from a software engineering discipline. 
 
 \section{Analysis of Objectives}\label{section:analysis_of_objectives}
 
-In light of all the quantitative evidence gathered during unit and system testing, and the qualitative evidence
-presented using user testing iterations, Packet Courier can now be judged on how well it has completed the objectives
-laid out in Section~\ref{section:objectives}.
+\lettrine{I}{n} light of all the quantitative evidence gathered during unit and system testing, and the qualitative
+evidence presented using user testing iterations, Packet Courier can now be judged on how well it has completed the
+objectives laid out in Section~\ref{section:objectives}.
 
 \subsection{Network Topology Design Interface}\label{subsection:network_topology_design_interface}
 
