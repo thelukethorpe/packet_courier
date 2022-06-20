@@ -46,11 +46,11 @@ checks into \texttt{PacketCourierSimulationConfigurationProtoParser<NodeInfo>} t
 such as specifying a negative number of clients for a star topology isn't possible. Most of the problems encountered
 by users came from the Google Protocol Buffer JSON parser itself. There are three possible ways to tackle this issue:
 \begin{itemize}
-    \item Write a custom parser. This would also make the Google Protocol Buffer dependancy redundant. It would be
+    \item Write a custom parser. This would also make the Google Protocol Buffer dependency redundant. It would be
     quite a considerable amount of work, however.
     \item Many parsers integrate some kind of ``error listener'' or ``observer pattern''\cite{observer_pattern} which
     invokes a method when a parser error is encountered. This could help Packet Courier wrap Google Protocol Buffer
-    errors and make them more context specific and palettable to the user.
+    errors and make them more context specific and palatable to the user.
     \item Make a full switch over to a YAML format and squeeze some kind of error checker into the YAML to JSON
     conversion process. This smells as though it would be fairly fragile, however.
 \end{itemize}
@@ -92,7 +92,7 @@ to verify the correctness of behaviour.
 \subsection{Miscellaneous Features}\label{subsection:miscellaneous_features}
 
 \begin{itemize}
-    \item Enable users to specify a ``custom'' virtual wall-clock interval, i.e.: 3.65ms.
+    \item Enable users to specify a ``custom'' virtual-clock interval, i.e.: 3.65ms.
     \item Implement a Pareto distribution.
     \item Implement a lat/long heuristic where nodes are given coordinates and their network conditions are estimated
     based on that, i.e.: if two locations are closer together based on the Haversine formula\cite{haversine_formula},

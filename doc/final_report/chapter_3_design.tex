@@ -107,7 +107,7 @@ subtle tweaks, namely:
         high-throughput connection is being heavily throttled over a long period of time. As such, packet throttling
         should mainly be used to smooth out connections that are prone to burst behaviours, rather than as a cheap
         and dirty bitrate control mechanism. This is unlikely to satisfy users on its own, however, and as such, the
-        packet throttling semantics include a drop-threshold parameter which acts as a failsafe: if the number of
+        packet throttling semantics include a drop-threshold parameter which acts as a fail-safe: if the number of
         bytes currently held in the packet throttler's buffer exceeds the threshold, then incoming packets will be
         dropped until the contents of the buffer fall below this threshold again.}
     \item \textbf{Packet limiting} \\
@@ -158,7 +158,7 @@ loss\cite{tc_netem_8_man}:
     This can be thought of more simply as a network boasting two attributes: \emph{reception} and \emph{activity}.
     Reception can either be \emph{good} or \emph{lossy}: if it is good, then packets are not dropped; if it is lossy,
     then packets are dropped. Activity can be either \emph{gap} or \emph{burst} which have no bearing on packet drop
-    in isolation. Naturally these two attributes yeild a 4-state Markov model as illustrated in
+    in isolation. Naturally these two attributes yield a 4-state Markov model as illustrated in
     Figure~\ref{fig:chapter_3_design-tc_netem_4_state_markov_diagram}. \\ \\
     \begin{figure}[!h]
         \includegraphics[width=0.35\textwidth]{images/chapter_3_design/tc_netem_4_state_markov_diagram}
@@ -192,7 +192,7 @@ following limitations:
         speed_test_russian_4G_LTE_internet_provider_Beeline}.
     Figure~\ref{fig:chapter_3_design-delay_plotted_against_time_from_study} shows one such example of this principle
     in action, whereby the latency observed appears to behave approximately according to a 3 state model: ``good'',
-    where delay seems to mostly hover in the 25-30ms region; ``bad'', where delay will occassionally spike to as high
+    where delay seems to mostly hover in the 25-30ms region; ``bad'', where delay will occasionally spike to as high
     as 50ms; ``ugly'', where delay very rarely spikes to even higher than 50ms. To illustrate this hypothesis
     further, we can see similar patterns when examining other metrics such as traffic load, as demonstrated in
     Figure~\ref{fig:chapter_3_design-traffic_load_plotted_against_time_from_study}. \\ \\
@@ -235,7 +235,7 @@ following limitations:
     \item \textbf{What if 4-state Markov and Gilbert-Elliot models don't fit the bill?} \\
     Unless a particular network admits of exactly one state, a ``good`` and a ``bad'' state, or four states
     characterised by ``good''/``lossy'' and ``gap''/``burst'', then it'll be a hard task to accurately model it
-    using \texttt{tc-netem}. Packet loss on mobile connections has been shown to differ signicantly based on locality
+    using \texttt{tc-netem}. Packet loss on mobile connections has been shown to differ significantly based on locality
     and speed of travel\cite{mobile_broadband_networks_under_mobility}, and with the gaming industry trending towards
     mobile ventures\cite{statista_mobile_gaming, rise_of_mobile_gaming}, there is a strong chance that game development
     firms will want to optimize their net-code by emulating the kind of network conditions experienced when on a
@@ -246,19 +246,19 @@ following limitations:
 \newpage
 
 These limitations can be overcome by generalising the 4-state Markov and Gilbert-Elliot models into a discrete
-event-based model\cite{discrete_event_simulation}. Packet Courier achieves this by incorperating an \emph{event
+event-based model\cite{discrete_event_simulation}. Packet Courier achieves this by incorporating an \emph{event
 pipeline} into the core network condition semantics alongside bandwidth throttling, packet delay etc.
 
 An event pipeline consists of a ``default'' set of network conditions and a list of possible network events.
 Naturally, the default network conditions are what the pipeline will revert to when no network events are currently
 underway. Network events are characterised by their mean interval and duration, as well as what network conditions
 they will impose on the simulation. In instances where multiple events have been triggered at the same time, the
-conditions with highest precedence will take priority. Event start and finish times are randomly generated according
+conditions with the highest precedence will take priority. Event start and finish times are randomly generated according
 to the exponential distributions $Exp(1/\mu_{interval})$ and $Exp(1/\mu_{duration})$ respectively. The
 exponential distribution is not an arbitrary choice, since it is the only continuous distribution that boasts a
 \emph{memoryless} property\cite{memoryless_random_variables}. Indeed, discrete event simulations are built upon
 principles of memorylessness, namely because it ensures that sampled intervals and durations do not crudely depend on
-the time that has already elapsed. This is crucial since events are often best modelled as being independent from one
+the time that has already elapsed. This is crucial since events are often best modelled as being independent of one
 another, insofar as an event would be scheduled in a way that is ignorant of previous events in the simulation. In a
 real-world context, one can imagine a dip in 4G service being caused by a bus going underneath a bridge: would the
 event of ``going under a bridge'' be described as an \emph{independent} occurrence? The answer is almost certainly
@@ -310,7 +310,7 @@ following homogenous system:
 The purpose of this exercise is to illustrate the relationship between state transitional models and Packet Courier's
 event-based semantics. In fact, one could generalise the above process into a set of formulaic linear equations and
 hence write an algorithm to convert state transition probabilities into their respective mean durations and
-intervals. This observation serves less as a proposition for a potential feature, and more a rigorous demonstration
+intervals. This observation serves less as a proposition for a potential feature, and a more rigorous demonstration
 that the semantics laid out in this section subsume the models available within the \texttt{tc-netem} framework,
 converting them into a format that is more easily read and understood by humans.
 
@@ -353,7 +353,7 @@ The Poisson cumulative distribution function for $X \sim Poi(\lambda)$ as define
 
 \begin{figure}[!h]
     \includegraphics[width=0.9\textwidth]{images/chapter_3_design/poisson_percent_point_function}
-    \centering~\caption{The inverse CDF (or PPF: percent point function) of the Poission distribution for various
+    \centering~\caption{The inverse CDF (or PPF: percent point function) of the Poisson distribution for various
         $\lambda$ parameters\cite{engineering_statistics_handbook_poisson_distribution}.}
     \label{fig:chapter_3_design-poisson_percent_point_function}
 \end{figure}
@@ -389,7 +389,7 @@ $U \sim [0, 1)$.
     $\quad$ # $lower$ is the table entry where $lower.percentile$ is the
     $\quad$ # largest percentile that is smaller than the lookup parameter.
     $\quad$ # $upper$ is the converse of $lower$.
-    $\quad$ # Taking $lower.x$ mimicks the flooring behaviour of $F_X(x)$.
+    $\quad$ # Taking $lower.x$ mimics the flooring behaviour of $F_X(x)$.
     $\quad$ return $lower.x$
     end
 \end{algorithm}
@@ -411,7 +411,7 @@ At the bare minimum, a Packet Courier simulation needs to be provided with the f
     \item The simulated network conditions for each node-to-node connection.
 \end{itemize}
 
-The most simple way of enabling the user to define these aspects of the simulation would be to provide them with an
+The simplest way of enabling the user to define these aspects of the simulation would be to provide them with an
 API capable of the following:
 \begin{itemize}
     \item Create a blank simulation configuration.
@@ -428,7 +428,7 @@ the details of the simulation ahead of time. Alas, a worker needs to be given th
 send packets to other workers, extract packets from its own mailbox, spawn its own child workers, etc. How can a user
 take advantage of these features using a pre-programmed ``script'' that write when configuring their simulation?
 
-Packet Courier overcomes this obstacle by modeling a \emph{Worker-Script} as a lambda that takes a
+Packet Courier overcomes this obstacle by modelling a \emph{Worker-Script} as a lambda that takes a
 \emph{Worker-Manager} as a parameter. A worker-manager can be thought of as a collection of lambdas that together
 capture the capabilities of a worker. The fact that a worker-script is a lambda allows a user to write code whilst
 manipulating an arbitrary parameter which in turn provides the requisite context.
@@ -447,7 +447,7 @@ Algorithm~\ref{alg:worker_script_example} illustrates this principle in action. 
 \end{algorithm}
 
 Notice that the worker-script in Algorithm~\ref{alg:worker_script_example} takes advantage of a function called
-\texttt{get\_neighbour}. This then raises the question of what information should workers be provided with? Of course
+\texttt{get\_neighbour}. This then raises the question of what information should workers be provided with? Of course,
 they should still be provided with the basic functionality of knowing their own address, sending and receiving mail,
 spawning child workers and logging messages, but what \emph{information} should they be given regarding the wider
 simulation? Should they know the addresses of their neighbours? Or should they be given a blueprint of the entire
@@ -506,7 +506,7 @@ evolve the tool once more from a \emph{simulator} to an \emph{emulator}.
 
 Imagine a game developer, Todd, who wants to test his custom networking protocol, SkyNet, for client-server
 connections. Todd has built his protocol on top of UDP, since speed is more important than quality of service in the
-context of hus game. Naturally, there is no real point in conducting vanilla tests on his machine, because the UDP
+context of his game. Naturally, there is no real point in conducting vanilla tests on his machine, because the UDP
 packets will just be internally routed by the kernel, giving Todd no understanding of how his protocol would perform
 in the wild. Todd could use Packet Courier to \emph{emulate} such a scenario, but how?
 

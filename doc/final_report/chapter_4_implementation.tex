@@ -95,7 +95,7 @@ primitives\cite{python_gil} are the main reasons why it wasn't used more promine
 
 \subsection{Build and Dependency Management}\label{subsection:build_and_dependency_management}
 
-Packet Courier uses Apache Maven 3.6.3\cite{maven} to manage its build phases and dependencies. Maven is convienent,
+Packet Courier uses Apache Maven 3.6.3\cite{maven} to manage its build phases and dependencies. Maven is convenient,
 lightweight, widely supported, boasts a huge repository of libraries\cite{maven_repository} and with a single
 command can compile the project into a portable \texttt{.jar} file that can be used as an executable binary or a Java
 library.
@@ -189,7 +189,7 @@ an \texttt{AddressBook}. A data file that followed this syntactic structure coul
 
 \subsubsection{Protocol Buffers Protobuf Maven Plugin}\label{subsubsection:protocol_buffers_protobuf_maven_plugin}
 
-An unusual quirk of the Google Protocol Buffer Java library is that it doesn't compile all of the requisite Java
+An unusual quirk of the Google Protocol Buffer Java library is that it doesn't compile all the requisite Java
 classes into the final \texttt{.jar}; instead it assumes that they will be loaded into the project as part of a
 separate library. The \texttt{protoc-jar-maven-plugin}\cite{protoc_jar_maven_plugin} helps to work around this issue
 by adding an extra compilation step at compile time to plug this gap.
@@ -262,7 +262,7 @@ engine\cite{c++_random_number_generation_philosophy}:
     Suppose a developer wanted to conduct two simulations for the same value of $\lambda$: one with pure randomness
     and the other with a correlation bias. Decoupling means that the same distribution can be used to conduct both
     experiments in parallel, whereas two of the same distribution would need to be created if the generator were
-    embedded in the distribution. Indeed, this is especially suboptiomal in the case of a Poisson distribution,
+    embedded in the distribution. Indeed, this is especially suboptimal in the case of a Poisson distribution,
     since the Packet Courier implementation generates a table for each distribution.
     \item Depending on how deeply embedded the random number generation engine is in the distribution, it could
     result in correlated results. For example, if two different normal distributions used a common seed for two
@@ -453,7 +453,7 @@ Note that \texttt{PacketPipeline<Wrapper>} could in principle inherit from \text
 implements the required methods. However, just because one could does not necessarily mean one \emph{should}. In
 these circumstances, the purpose of the \texttt{PacketFilter<Wrapper>} interface is to provide developers with an API
 to create and use steps in a \texttt{PacketPipeline<Wrapper>}. How would making \texttt{PacketPipeline<Wrapper>}
-implement \texttt{PacketFilter<Wrapper>} be commencerate with this notion? It would enable programmers to make a
+implement \texttt{PacketFilter<Wrapper>} be commensurate with this notion? It would enable programmers to make a
 packet pipeline a step in a packet pipeline. Naturally this is a redundant and confusing API behaviour that would
 only create potential for bad code.
 
@@ -462,7 +462,7 @@ only create potential for bad code.
 The \texttt{NetworkCondition} interface acts as a \texttt{PacketFilter<Wrapper>} factory. It is important that API
 users are not given the autonomy to create packet pipelines manually from packet filters or else they risk
 experiencing crippling side effects. For example, a developer might decide to ``reuse'' a packet filter for two
-different pipelines because the parameters are the same. This would be absolutely disasterous since packets from two
+different pipelines because the parameters are the same. This would be absolutely disastrous since packets from two
 different pipelines would be routed through the \emph{same} filter, coupling them by accident and resulting in packets
 going to the wrong workers. To guard against this, the only public \texttt{PacketPipeline<Wrapper>} constructor takes
 an instance of the \texttt{PacketPipeline.Parameters} inner class, which is in turn a wrapper for a list of
@@ -604,7 +604,7 @@ crucial that a \texttt{WorkerAddress} contains the \texttt{NodeAddress} of the h
 service knows where to route \texttt{Mail} to.
 
 Note that every instance of \texttt{WorkerAddress} has access to its parent address as well. Whilst this isn't
-necessary to make the address unique, it is a useful addition. Indeed it makes sense that nodes might want to hide
+necessary to make the address unique, it is a useful addition. Indeed, it makes sense that nodes might want to hide
 information from one another, or perhaps even different workers on the same node, yet there is little justification
 for a parent worker hiding its address from its child. To follow through with the real-world analogy laid out in the
 design where a node represents a router and a worker represents a machine, then this would be the equivalent of a
@@ -899,14 +899,14 @@ to consider when using Packet Courier for simulation.
 
 \emph{Emulation}, on the other hand, is an entirely different beast and uses a \texttt{WallClock} instead. As one
 might imagine, the \texttt{tick} method in \texttt{WallClock} does nothing since the \texttt{now} method just
-retrieves the current wall-time. This seemingly small change results in wholesale different behaviour, i.e.: Alice's
+retrieves the current wall time. This seemingly small change results in wholesale different behaviour, i.e.: Alice's
 42-millisecond delay when sending packets to Bob will actually be 42 milliseconds, as opposed to 42 milliseconds in a
 virtual or simulated sense.
 
 
 \section{Standalone Emulator}\label{section:standalone_emulator}
 
-Packet Courier achieves language agnosticism by offering UDP interoperability. As a consequeunce, any binary that
+Packet Courier achieves language agnosticism by offering UDP interoperability. As a consequence, any binary that
 uses UDP (directly or indirectly) to send and receive packets can enjoy what the Packet Courier API has to offer.
 This is achieved by giving each node a pair of public and private ip-addresses and opening a UDP socket for each
 public ip-address, as per the emulation semantics outlined in Section~\ref{subsection:emulation_semantics}.
@@ -1002,7 +1002,7 @@ and thus can be run by a worker straight out of the box, whereby its key respons
     \item To forward any Packet Courier \texttt{Mail} to the private ip-address of the process.
 \end{itemize}
 
-The second task is surprisingly non-trivial. The crucial difficulty is that the receipient needs to be provided with
+The second task is surprisingly non-trivial. The crucial difficulty is that the recipient needs to be provided with
 the illusion that the packet was sent from the sender's public ip-address, but a key aspect of the Packet Courier's
 semantics are that the workers don't know the \texttt{WorkerAddress} of the sender by default. This issue is solved
 by smuggling the private ip-address of the sender through the packet pipeline by appending into onto the last four
