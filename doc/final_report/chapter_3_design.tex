@@ -6,8 +6,8 @@ network, processing and rerouting them according to their listed destination and
 mail courier would do analogously for letters and parcels. The metaphor also aligns itself well with the overall
 motivations of the project, whereby postal services are largely seen as reliable infrastructure that operate silently
 in the background, enabling people to send goods across seemingly vast distances without needing to worry about how
-this is achieved. Indeed, these are the ideals that Packet Courier strives to embody, especially in light of
-objectives 4) and 5).
+this is achieved. These are the ideals that Packet Courier strives to embody, especially in light of objectives 4)
+and 5).
 
 Packet Courier has been designed and developed by leveraging philosophies from the \emph{lean development} school of
 thought\cite{william_feld_lean_book, steve_blank_lean_blog}. This involved making Packet Courier a functional and
@@ -138,7 +138,7 @@ subtle tweaks, namely:
     Samples a Poisson distribution to decide how many duplicates the given packet should have and enqueues that
     number of copies alongside the packet itself. \\ \\
     \emph{Duplication semantics remain the same as \texttt{tc-netem} with the exception that the Bernoulli distribution
-    has been generalised to a Poisson distribution. Indeed, if a packet is dropped on the success of a Bernoulli
+    has been generalised to a Poisson distribution. If a packet is dropped on the success of a Bernoulli
     sample with parameter $p = 0.42$, then there will be 0.42 duplicate packets on average, as would be the case with
     a Poisson distribution parameterised by $\lambda = 0.42$.}
 \end{itemize}
@@ -496,14 +496,14 @@ something akin to Algorithm~\ref{alg:simulation_configuration_example}; the logg
 
 \subsection{Emulation Semantics}\label{subsection:emulation_semantics}
 
-\lettrine{A}{lthough} Packet Courier would be able provide value to users via APIs, it would likely alienate many
+\lettrine{A}{lthough} Packet Courier would be able to provide value to users via APIs, it would likely alienate many
 developers who were not already using the same programming language as the Packet Courier framework. Forcing
 prospective users to write their simulation code in a particular language is diametrically opposed to objectives 4.b)
 and 5.a).
 
 Packet Courier solves this issue by taking advantage of its own APIs to build an adaptive interface that generalises
-the simulation semantics further to integrate with any arbitrary packet. Indeed, another step has been taken to
-evolve the tool once more from a \emph{simulator} to an \emph{emulator}.
+the simulation semantics further to integrate with any arbitrary packet, taking another step to evolve the tool once
+more from a \emph{simulator} to an \emph{emulator}.
 
 Imagine a game developer, Todd, who wants to test his custom networking protocol, SkyNet, for client-server
 connections. Todd has built his protocol on top of UDP, since speed is more important than quality of service in the
