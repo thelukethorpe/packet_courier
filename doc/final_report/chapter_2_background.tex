@@ -46,7 +46,7 @@ Now consider a complex and innovative game being developed by a
 studio with over one thousand employees. The scope of the game is so vast that it requires computation to be split over
 multiple machines forming an intricate topology, which in turn will serve hundreds of client requests every second.
 Although \texttt{tc-netem} could in principle deliver the testbed demands of such a system, it almost certainly
-could not be done by hand, so to speak. Instead, it would necessitate some kind of managment software that would wrap
+could not be done by hand, so to speak. Instead, it would necessitate some kind of management software that would wrap
 the \texttt{tc-netem} functionality and present programmers with a palatable interface. Unfortunately, this \emph{still}
 falls foul of platform dependency concerns; a non-trivial set of concerns for an innately multi-platform exercise such
 has video game development.
@@ -54,9 +54,9 @@ has video game development.
 It should be made explicitly clear that this scenario is not illusory. There is much activity within this
 space, as demonstrated by companies such as Microsoft, Heroic Labs and Improbable developing tools and services that
 enable the deployment of highly distributive and pervasive video games\cite{microsoft_playfab, heroic_labs_nakama,
-    improbable_spatialos, improbable_spatialos_unreal_gdk_github}. As of Janurary 2022, Improbable's child company,
+    improbable_spatialos, improbable_spatialos_unreal_gdk_github}. As of January 2022, Improbable's child company,
 Midwinter Entertainment, is on the verge of releasing \emph{Scavengers}\cite{improbable_spatialos_scavengers}, a
-battle-royal style shooter built using the \texttt{SpatialOS} framework\cite{improbable_spatialos,
+battle-royale-style shooter built using the \texttt{SpatialOS} framework\cite{improbable_spatialos,
     improbable_spatialos_unreal_gdk_github}.
 
 \subsection{ns-3}\label{subsection:ns_3}
@@ -78,7 +78,7 @@ well-established entry-point\cite{ns_3_man_pdf}. In tow, five essential concepts
     A C++ class that encodes for the behaviour of a user-level program, which can in turn be executed on a Node.
     \item \textbf{Channel} \\
     A network medium over which data flows. This can be configured to represent any arbitrary connection, such as a
-    simple wire, an Ethernet switch, WiFi or a 4G link.
+    simple wire, an Ethernet switch, Wi-Fi or a 4G link.
     \item \textbf{Net Device} \\
     An intermediate abstraction that modulates the communication between a node and its adjacent channels. This
     represents both the physical network interface card and the accompanying firmware that are required of any device
@@ -123,7 +123,7 @@ the user. For example, the next few lines of code in \texttt{first.cc} are:
 \end{lstlisting}
 
 Free-floating strings are used throughout the \texttt{ns-3} API in the manner observed above, namely as a mechanism to
-retrieve and inject information into the global simulation state. Design choices of this nature needlessly burdern the
+retrieve and inject information into the global simulation state. Design choices of this nature needlessly burden the
 developer with the responsibility of ensuring the syntax and semantics of their configuration are correct; something
 that can (and probably should) be woven into the root language where possible.
 
@@ -160,7 +160,7 @@ environment they might expect to see in a simulation library.
 One of the crucial building blocks of Elixir is the \emph{process}, a lightweight abstraction that can be likened to
 a thread (in programmatic terms) or a node (in networking terms)\cite{elixir_processes}. Processes can pass messages
 to one another using the \texttt{send} function, which takes the process-id of the recipient and the message content as
-an Elixir object. Delivery of messages is guarunteed, as the Erlang VM leverages TCP in its underlying
+an Elixir object. Delivery of messages is guaranteed, as the Erlang VM leverages TCP in its underlying
 protocol\cite{erlang_protocol}.
 
 Each Elixir process also has a \emph{mailbox}, which is a handy abstraction for where messages are posted upon
@@ -177,7 +177,7 @@ delivered to the mailbox.
     ``world''
 \end{lstlisting}
 
-Elixir processes can spawn child processes, much in a similar way to how a thread can create and run further threads.
+Elixir processes can spawn child processes, similarly to how a thread can create and run further threads.
 The \texttt{spawn} function returns the process-id of the associated child process, so the parent can always identify
 its child. The reverse does not apply; a child process could go its entire life without knowing its parent. A parent
 process could choose to inform its child of its process-id as a matter of procedure, but ultimately this is at the

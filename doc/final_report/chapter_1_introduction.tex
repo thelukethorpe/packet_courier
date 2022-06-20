@@ -25,20 +25,20 @@ they can sometimes go airborne during this process, having been shot out of a wi
 back into the terror-laden realm that we so innocently call ``the internet''.
 
 It is in this way that good simulation software should be capable of accurately mimicking the these behaviours
-according to any arbitrary configuration. In fact, the potential for accute granularity that a simulator offers makes
+according to any arbitrary configuration. In fact, the potential for acute granularity that a simulator offers makes
 it far superior to any ``real'' test scenario, insofar as it can be moulded to investigate specific nuances within a
 particular algorithm or protocol. For example, most low-level distributed technologies must find ways to overcome
-both packet loss and corruption. Although these are independant issues, they tend to co-exist in practice and are
+both packet loss and corruption. Although these are independent issues, they tend to co-exist in practice and are
 often correlated phenomena, which makes isolated testing difficult. This problem is absent in a simulated context
 however, since virtual environments can be tuned to boast whatever characteristics are deemed necessary for
-the given exercise. In resolution of the aforementioned example, two simulations can be run at the descretion of the
+the given exercise. In resolution of the aforementioned example, two simulations can be run at the discretion of the
 developers, one where corruption is the only danger present, along with a similar configuration that drops packets
 instead.
 
 Another clear advantage of simulated methods is their scalability; an advantage that becomes especially lucrative for
 any accounting department. A simulation's scope is typically bounded by the capacity and processing capabilities of
 the machine on which it runs. Even if a machine was only able to emulate two nodes effectively, then this still
-delivers the possibility of a two-fold cost saving. Nonetheless, most high-end commericial computer systems should be
+delivers the possibility of a two-fold cost saving. Nonetheless, most high-end commercial computer systems should be
 capable of simulating topologies containing hundreds if not \emph{thousands} of nodes, given a sufficiently
 intelligent framework. It could well be the case that much of the virtual space simulation occupies is untouchable by
 any real-world network; that is to say that simulated techniques could explore strictly hypothetical territory,
@@ -50,13 +50,13 @@ furnishing insights into distributed algorithms that reality never could.
 \lettrine{I}{f} the ultimate goal of this project were to be expressed as a succinct yet all-encompassing sound-bite,
 it would probably be \emph{to provide those with a curiosity for distributed computer systems with the means to tinker
 around with network technologies as though they were running in the real world.} Indeed, whilst this may capture the
-spirit of what is being worked towards, it is very abstract and unspecific; in order to distill this
+spirit of what is being worked towards, it is very abstract and unspecific; in order to distil this
 mission statement into a set of more tangible objectives, it is probably best framed with respect to what users can
 expect from the end product, i.e.:
 
 \begin{enumerate}
     \item An interface to design an arbitrary network topology.
-    \item A configuration suite to define how packets are manipulated during message-passing.
+    \item A configuration suite to define how packets are manipulated during message passing.
     \item A mechanism to run a distributed algorithm across a virtual network topology which reflects the properties
     described by the user as per objectives 1) and 2).
     \item Platform agnosticism:
@@ -97,7 +97,7 @@ Section~\ref{section:analysis_of_objectives} and can be summarised as follows:
     \item Packet Courier provides users with multiple ways to design an arbitrary network topology, fulfilling
     \textbf{objective 1)}.
     \item Packet Courier provides users with a configuration suite to define how packets are manipulated during
-    message-passing, fulfilling \textbf{objective 2)}.
+    message passing, fulfilling \textbf{objective 2)}.
     \item Packet Courier provides users with a mechanism to run a distributed algorithm across a virtual network
     topology which reflects the properties described by the user as per objectives 1) and 2), whether that be by
     \emph{simulation} or \emph{emulation}, fulfilling \textbf{objective 3)}.

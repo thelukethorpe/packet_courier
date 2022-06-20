@@ -38,7 +38,7 @@ them. The logs are then dumped to a file and analysed in post. Each client runs 
 server runs for 6 minutes; the additional 2 minutes allows the server to receive any packets that might be trailing
 inside the Packet Courier instance due to latency or a performance bottleneck. The server only runs for 4 minutes in
 the cases of packet limiting and bandwidth throttling, however, since the purpose of the test is to analyse how much
-data makes it through the timeline within a particular timeframe.
+data makes it through the timeline within a particular time frame.
 
 \subsection{Analysis Methodology}\label{subsection:analysis_methodology}
 
@@ -1623,9 +1623,9 @@ the duration is modulated back down to 4 minutes, then the mean packet rate per 
 $\frac{235158}{240 \times 1000} = 9.80 \; packets/s$.
 
 There are many explanations for this time keeping issue. The first is that each client might be starting at a
-different time. Suppose it takes the VM 60 milliseconds to spin-up a Java process\cite{java_Process}. Whilst this
+different time. Suppose it takes the VM 60 milliseconds to spin up a Java process\cite{java_Process}. Whilst this
 might seem reasonable for a fairly heavyweight user-level operation, if done in serial, then the last process will be
-launched $60ms \times 100 = 60,000ms = 6s$ after the first. In reality it will almost certainly be more complex than
+launched $60ms \times 100 = 60,000ms = 6s$ after the first. In reality, it will almost certainly be more complex than
 that, insofar as there is probably some parallelism and context switching going on, but it illustrates the potential
 issue of staggered start times.
 
@@ -1957,7 +1957,7 @@ as a tool.
     Participants left a variety of comments in this section, ranging from \emph{``no''} to \emph{``could be a little
     more direct/plain (and therefore shorter)''}. One participant claimed that \emph{``the introduction is clear,
         with enough technical detail that users can understand what is happening but not so much detail that it would
-        exclude those with lesser knowledge''}, with another saying that \emph{``uniqueness is not self evident''}
+        exclude those with lesser knowledge''}, with another saying that \emph{``uniqueness is not self-evident''}
     but that \emph{``a section of the \texttt{README} explaining its benefits over other tools is unnecessary and
     self-indulgent''}. Whilst there is no clear consensus on this particular point (with some of it being down to
     taste), it might be worth investigating ways to trim down the \texttt{README} introduction so that users can get
@@ -1971,19 +1971,18 @@ as a tool.
     \item \textbf{Please explain any difficulties you had compiling Packet Courier.} \\
     Only one participant opted to leave a common here and suggested that the \texttt{README} mentions Maven's quiet
     mode to reduce console noise.
-    \item \textbf{Please read \texttt{cmd\_example1.courierconfig}. On first glance, does this file read intuitively
+    \item \textbf{Please read \texttt{cmd\_example1.courierconfig}. At first glance, does this file read intuitively
     for a network emulation configuration? Suppose you were shown this file for the first time and were only told
     that it was used to configure an emulated network scenario; how well would you understand what the attributes and
     their values were referring to? If you can't find it, then the \texttt{README} should prove helpful.} \\
     Participants responded with scores of 8, 9, 9 and 10, indicating that the \texttt{.courierconfig} file format is
-    very user friendly, even to people who are totally new to Packet Courier.
+    very user-friendly, even to people who are totally new to Packet Courier.
     \item \textbf{If you had to consult the \texttt{README} to get a better understanding of
     \texttt{cmd\_example1 .courierconfig}, then please rate how helpful it was in clarifying any initial confusion.} \\
     Three participants opted to respond to this prompt, all giving a 10 rating.
     \item \textbf{Please write down any comments or criticisms regarding the structure or the contents of
     \texttt{cmd\_example1.courierconfig}. Did the \texttt{README} do a good job at explaining any components that
-    weren't self
-    evident in their function?} \\
+    weren't self-evident in their function?} \\
     Two participants suggested that a YAML\cite{yaml} file would make for a cleaner, more human-readable format,
     which seems like a very sensible suggestion. Another participant noted that they had to read up on what
     \emph{``wall-clock''} meant, although the \texttt{README} did help them on that front.
@@ -1994,7 +1993,7 @@ as a tool.
     received as a very easy to use and highly intuitive tool.
     \item \textbf{Please explain any difficulties you had running a Packet Courier emulation.} \\
     The participants had a lot to say in response to this prompt. \\ \\
-    Windows users experienced issues at the level of the operating system whereby double-quotes were stripped from
+    Windows users experienced issues at the level of the operating system whereby double quotes were stripped from
     Java \texttt{ProcessBuilder} commands\cite{java_ProcessBuilder_double_quote_windows,
         microsoft_docs_main_function}, which in turn prevented the Python scripts from properly parsing the
     arguments. Even after hot-fixing that problem, the Windows kernel seemed to block the packets as a security
@@ -2037,7 +2036,7 @@ as a tool.
     certainly not impossible. As mentioned I haven't seen alternatives but this most certainly does the job it claims
     with great flexibility.''} \\
     Whilst a GUI would certainly address this problem, it would require a significant amount of time and resources to
-    develop for a set of fairly niche edge cases. It makes for a compelling suggestion, althougn some research into
+    develop for a set of fairly niche edge cases. It makes for a compelling suggestion, although some research into
     the demand for that kind of functionality might be useful.
     \item \textbf{Please write down any comments or criticisms regarding your experience of Packet Courier as a
     whole.} \\
@@ -2142,16 +2141,16 @@ intrigued by the introductory sections of the \texttt{README} than anything else
 
 Harry had never used Maven before and asked if \emph{``Maven was to Java what pip\cite{pip} is to Python''}. He also
 added that it wasn't immediately obvious to him what the \texttt{-DskipTests} option recommended in the
-\texttt{README} had to do with compiling the project. Comments like this are highlight that most developers take this
-kind of information for granted and perhaps the \texttt{README} could be subtly tweaked to be friendlier to those who
-are newer to the paradigm. Harry also mentioned that the initial build process spammed the console with lots of
-\emph{``very intimidating''} text. This links back to some of the survey feedback from
+\texttt{README} had to do with compiling the project. Comments like this highlight the fact that most developers take
+this kind of information for granted and perhaps the \texttt{README} could be subtly tweaked to be friendlier to
+those who are newer to the paradigm. Harry also mentioned that the initial build process spammed the console with
+lots of \emph{``very intimidating''} text. This links back to some of the survey feedback from
 Section~\ref{subsection:survey_results} that suggested using Maven's quiet mode when compiling.
 
 When Harry was asked to run an example configuration, he had a look through the \texttt{README} and initially
 attempted to use the Google Protocol Buffer grammar, i.e.:
 \texttt{src/main/proto/packet\_courier\_simulation\_configuration.proto} in place of a configuration file. It seems as
-though the \texttt{README} makes it too easy for all of the various paths to be confused for one another and the
+though the \texttt{README} makes it too easy for all the various paths to be confused for one another and the
 brevity of this section results in potential ambiguity, particularly for first time users. Just as with John, Harry
 expressed how he felt as though the path to example configurations was unreasonably long. Indeed, he did need several
 attempts to get the command right as a consequence of this, but each time Packet Courier gave him an error message to
@@ -2206,7 +2205,7 @@ bursts of around 100, despite not being from a software engineering discipline. 
     hardware behaved, I'd probably want to run some tests that gave me a load of aggregated statistics at the end of
     it. In this case I'd guess it'd be stuff like delay or drop rate. However seeing the packets printed individually
     like this has allowed me to spot patterns in how they arrive, especially since you can just tweak the network
-    conditions really easily. Although, the structure of the config file itself could be friendlier.''}
+    conditions really easily. Although the structure of the config file itself could be friendlier.''}
 \end{quote}
 
 
@@ -2240,13 +2239,13 @@ quality of its delivery to users.
 
 \subsection{Network Conditions Configuration Suite}\label{subsection:network_conditions_configuration_suite }
 
-\textbf{Objective 2:} \emph{A configuration suite to define how packets are manipulated during message-passing.} \\
+\textbf{Objective 2:} \emph{A configuration suite to define how packets are manipulated during message passing.} \\
 
 Packet Courier has demonstrably completed this objective. Users can (and have been shown to during user trials)
 specify their own custom network conditions. In fact, user feedback suggests that this is one of Packet Courier's
 strengths, in that the parameters encoding for the details of a network condition are very clear and intuitive.
 Packet Courier provides parity with the existing tool \texttt{tc-netem}\cite{tc_netem_wiki, tc_netem_8_man} as per
-Section~\ref{subsection:network_condition_semantics}, but has also gone further to incorperate event-based semantics,
+Section~\ref{subsection:network_condition_semantics}, but has also gone further to incorporate event-based semantics,
 as detailed in Sections~\ref{subsection:event_based_semantics} and~\ref{subsubsection:simulated_event_pipeline}.
 
 In conclusion, Packet Courier \textbf{does} achieve this objective.
