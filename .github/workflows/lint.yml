@@ -1,7 +1,7 @@
-name: Testing
+name: Lint
 on: [pull_request]
 jobs:
-  test:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -9,4 +9,4 @@ jobs:
         with:
           java-version: '8'
           distribution: 'adopt'
-      - run: ./ci/test.sh
+      - run: ./ci/lint/check.sh
