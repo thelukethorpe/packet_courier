@@ -9,4 +9,4 @@ jobs:
         with:
           java-version: '8'
           distribution: 'adopt'
-      - run: ./.github/workflows/pipeline_scripts/test.sh
+      - run: ./ci/test.sh
