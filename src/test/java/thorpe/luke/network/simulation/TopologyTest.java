@@ -2,77 +2,83 @@ package thorpe.luke.network.simulation;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.stream.Collectors;
 import org.junit.Test;
 import thorpe.luke.network.simulation.node.NodeAddress;
 
 public class TopologyTest {
-  public static final Topology EMPTY_TOPOLOGY = Topology.of(Collections.emptyMap());
+  public static final Topology EMPTY_TOPOLOGY = Topology.builder().build();
 
-  public static final Topology SINGLETON_TOPOLOGY =
-      Topology.of(
-          new HashMap<String, Collection<String>>() {
-            {
-              put("a", Collections.emptySet());
-            }
-          });
+  public static final Topology SINGLETON_TOPOLOGY = Topology.builder().addNode("a").build();
 
   public static final Topology TRIANGLE_TOPOLOGY =
-      Topology.of(
-          new HashMap<String, Collection<String>>() {
-            {
-              put("a", Collections.singleton("b"));
-              put("b", Collections.singleton("c"));
-              put("c", Collections.singleton("a"));
-            }
-          });
+      Topology.builder()
+          .addNode("a")
+          .addNode("b")
+          .addNode("c")
+          .addConnection("a", "b")
+          .addConnection("b", "c")
+          .addConnection("c", "a")
+          .build();
 
   public static final Topology BI_DIRECTIONAL_TRIANGLE_TOPOLOGY =
-      Topology.of(
-          new HashMap<String, Collection<String>>() {
-            {
-              put("a", Arrays.asList("b", "c"));
-              put("b", Arrays.asList("a", "c"));
-              put("c", Arrays.asList("a", "b"));
-            }
-          });
+      Topology.builder()
+          .addNode("a")
+          .addNode("b")
+          .addNode("c")
+          .addConnection("a", "b")
+          .addConnection("a", "c")
+          .addConnection("b", "a")
+          .addConnection("b", "c")
+          .addConnection("c", "a")
+          .addConnection("c", "b")
+          .build();
 
   public static final Topology TWO_ISLAND_TRIANGLE_TOPOLOGY =
-      Topology.of(
-          new HashMap<String, Collection<String>>() {
-            {
-              put("a", Collections.singleton("b"));
-              put("b", Collections.singleton("c"));
-              put("c", Collections.singleton("a"));
-              put("x", Collections.singleton("y"));
-              put("y", Collections.singleton("z"));
-              put("z", Collections.singleton("x"));
-            }
-          });
+      Topology.builder()
+          .addNode("a")
+          .addNode("b")
+          .addNode("c")
+          .addConnection("a", "b")
+          .addConnection("b", "c")
+          .addConnection("c", "a")
+          .addNode("x")
+          .addNode("y")
+          .addNode("z")
+          .addConnection("x", "y")
+          .addConnection("y", "z")
+          .addConnection("z", "x")
+          .build();
 
   public static final Topology STAR_TOPOLOGY =
-      Topology.of(
-          new HashMap<String, Collection<String>>() {
-            {
-              put("source", Arrays.asList("a", "b", "c", "d", "e"));
-            }
-          });
+      Topology.builder()
+          .addNode("x")
+          .addNode("a")
+          .addNode("b")
+          .addNode("c")
+          .addNode("d")
+          .addNode("e")
+          .addConnection("x", "a")
+          .addConnection("x", "b")
+          .addConnection("x", "c")
+          .addConnection("x", "d")
+          .addConnection("x", "e")
+          .build();
 
   public static final Topology RING_TOPOLOGY =
-      Topology.of(
-          new HashMap<String, Collection<String>>() {
-            {
-              put("a", Collections.singleton("b"));
-              put("b", Collections.singleton("c"));
-              put("c", Collections.singleton("d"));
-              put("d", Collections.singleton("e"));
-              put("e", Collections.singleton("a"));
-            }
-          });
+      Topology.builder()
+          .addNode("a")
+          .addNode("b")
+          .addNode("c")
+          .addNode("d")
+          .addNode("e")
+          .addConnection("a", "b")
+          .addConnection("b", "c")
+          .addConnection("c", "d")
+          .addConnection("d", "e")
+          .addConnection("e", "a")
+          .build();
 
   public Collection<String> namesOf(Collection<NodeAddress> nodeAddresses) {
     return nodeAddresses.stream().map(NodeAddress::getName).collect(Collectors.toList());
@@ -89,7 +95,7 @@ public class TopologyTest {
     assertThat(namesOf(TWO_ISLAND_TRIANGLE_TOPOLOGY.getNodesAddresses()))
         .containsExactlyInAnyOrder("a", "b", "c", "x", "y", "z");
     assertThat(namesOf(STAR_TOPOLOGY.getNodesAddresses()))
-        .containsExactlyInAnyOrder("source", "a", "b", "c", "d", "e");
+        .containsExactlyInAnyOrder("x", "a", "b", "c", "d", "e");
     assertThat(namesOf(RING_TOPOLOGY.getNodesAddresses()))
         .containsExactlyInAnyOrder("a", "b", "c", "d", "e");
   }
@@ -138,7 +144,7 @@ public class TopologyTest {
     assertThat(namesOf(TWO_ISLAND_TRIANGLE_TOPOLOGY.getNeighboursOf("z")))
         .containsExactlyInAnyOrder("x");
 
-    assertThat(namesOf(STAR_TOPOLOGY.getNeighboursOf("source")))
+    assertThat(namesOf(STAR_TOPOLOGY.getNeighboursOf("x")))
         .containsExactlyInAnyOrder("a", "b", "c", "d", "e");
     assertThat(STAR_TOPOLOGY.getNeighboursOf("a")).isEmpty();
     assertThat(STAR_TOPOLOGY.getNeighboursOf("b")).isEmpty();
@@ -189,12 +195,11 @@ public class TopologyTest {
     assertThat(namesOf(TWO_ISLAND_TRIANGLE_TOPOLOGY.performRadialSearch("x", 3)))
         .containsExactlyInAnyOrder("x", "y", "z");
 
-    assertThat(namesOf(STAR_TOPOLOGY.performRadialSearch("source", 0)))
-        .containsExactlyInAnyOrder("source");
-    assertThat(namesOf(STAR_TOPOLOGY.performRadialSearch("source", 1)))
-        .containsExactlyInAnyOrder("source", "a", "b", "c", "d", "e");
-    assertThat(namesOf(STAR_TOPOLOGY.performRadialSearch("source", 2)))
-        .containsExactlyInAnyOrder("source", "a", "b", "c", "d", "e");
+    assertThat(namesOf(STAR_TOPOLOGY.performRadialSearch("x", 0))).containsExactlyInAnyOrder("x");
+    assertThat(namesOf(STAR_TOPOLOGY.performRadialSearch("x", 1)))
+        .containsExactlyInAnyOrder("x", "a", "b", "c", "d", "e");
+    assertThat(namesOf(STAR_TOPOLOGY.performRadialSearch("x", 2)))
+        .containsExactlyInAnyOrder("x", "a", "b", "c", "d", "e");
 
     assertThat(namesOf(RING_TOPOLOGY.performRadialSearch("a", 0))).containsExactlyInAnyOrder("a");
     assertThat(namesOf(RING_TOPOLOGY.performRadialSearch("a", 1)))
@@ -238,8 +243,8 @@ public class TopologyTest {
     assertThat(namesOf(TWO_ISLAND_TRIANGLE_TOPOLOGY.performFloodSearch("z")))
         .containsExactlyInAnyOrder("x", "y", "z");
 
-    assertThat(namesOf(STAR_TOPOLOGY.performFloodSearch("source")))
-        .containsExactlyInAnyOrder("source", "a", "b", "c", "d", "e");
+    assertThat(namesOf(STAR_TOPOLOGY.performFloodSearch("x")))
+        .containsExactlyInAnyOrder("x", "a", "b", "c", "d", "e");
     assertThat(namesOf(STAR_TOPOLOGY.performFloodSearch("a"))).containsExactlyInAnyOrder("a");
     assertThat(namesOf(STAR_TOPOLOGY.performFloodSearch("b"))).containsExactlyInAnyOrder("b");
     assertThat(namesOf(STAR_TOPOLOGY.performFloodSearch("c"))).containsExactlyInAnyOrder("c");

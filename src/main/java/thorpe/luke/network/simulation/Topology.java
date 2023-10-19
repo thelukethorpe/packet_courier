@@ -5,40 +5,31 @@ import java.util.stream.Collectors;
 import thorpe.luke.network.simulation.node.NodeAddress;
 
 public class Topology {
-  private final Map<NodeAddress, Collection<NodeAddress>> nodeToNeighboursMap;
+  private final Map<String, NodeAddress> nodeNameToAddressMap;
+  private final Map<NodeAddress, Collection<NodeAddress>> nodeAddressToNeighboursMap;
 
-  private Topology(Map<NodeAddress, Collection<NodeAddress>> nodeToNeighboursMap) {
-    this.nodeToNeighboursMap = nodeToNeighboursMap;
+  private Topology(
+      Map<String, NodeAddress> nodeNameToAddressMap,
+      Map<NodeAddress, Collection<NodeAddress>> nodeAddressToNeighboursMap) {
+    this.nodeNameToAddressMap = Collections.unmodifiableMap(nodeNameToAddressMap);
+    this.nodeAddressToNeighboursMap = Collections.unmodifiableMap(nodeAddressToNeighboursMap);
   }
 
-  public static Topology of(Map<String, Collection<String>> nodeToNeighboursMap) {
-    Map<NodeAddress, Collection<NodeAddress>> immutableNodeToNeighboursMap = new HashMap<>();
-    for (Map.Entry<String, Collection<String>> nodeToNeighboursEntry :
-        nodeToNeighboursMap.entrySet()) {
-      NodeAddress sourceAddress = new NodeAddress(nodeToNeighboursEntry.getKey());
-      Collection<NodeAddress> neighbours =
-          nodeToNeighboursEntry
-              .getValue()
-              .stream()
-              .map(NodeAddress::new)
-              .collect(Collectors.toList());
-      neighbours
-          .stream()
-          .filter(node -> !nodeToNeighboursMap.containsKey(node.getName()))
-          .forEach(node -> immutableNodeToNeighboursMap.put(node, Collections.emptySet()));
-      immutableNodeToNeighboursMap.put(
-          sourceAddress, Collections.unmodifiableCollection(neighbours));
-    }
-    return new Topology(Collections.unmodifiableMap(immutableNodeToNeighboursMap));
+  public static Builder builder() {
+    return new Builder();
   }
 
   public Collection<NodeAddress> getNodesAddresses() {
-    return new HashSet<>(nodeToNeighboursMap.keySet());
+    return new HashSet<>(nodeNameToAddressMap.values());
+  }
+
+  public NodeAddress getNodeAddress(String nodeName) {
+    return nodeNameToAddressMap.get(nodeName);
   }
 
   public Collection<NodeAddress> getNeighboursOf(String nodeName) {
     return new HashSet<>(
-        nodeToNeighboursMap.getOrDefault(new NodeAddress(nodeName), Collections.emptySet()));
+        nodeAddressToNeighboursMap.getOrDefault(new NodeAddress(nodeName), Collections.emptySet()));
   }
 
   public Collection<NodeAddress> performRadialSearch(String sourceName, int distance) {
@@ -57,6 +48,31 @@ public class Topology {
   }
 
   public Collection<NodeAddress> performFloodSearch(String sourceName) {
-    return performRadialSearch(sourceName, nodeToNeighboursMap.size());
+    return performRadialSearch(sourceName, nodeAddressToNeighboursMap.size());
+  }
+
+  public static class Builder {
+    final Map<String, NodeAddress> nodeNameToAddressMap = new HashMap<>();
+    final Map<NodeAddress, Collection<NodeAddress>> nodeAddressToNeighboursMap = new HashMap<>();
+
+    public Topology build() {
+      return new Topology(nodeNameToAddressMap, nodeAddressToNeighboursMap);
+    }
+
+    public Builder addNode(String nodeName) {
+      nodeNameToAddressMap.computeIfAbsent(nodeName, NodeAddress::new);
+      return this;
+    }
+
+    public Builder addConnection(String sourceName, String destinationName) {
+      NodeAddress sourceAddress = nodeNameToAddressMap.get(sourceName);
+      NodeAddress destinationAddress = nodeNameToAddressMap.get(destinationName);
+      assert sourceAddress != null;
+      assert destinationAddress != null;
+      Collection<NodeAddress> sourceNeighbours =
+          nodeAddressToNeighboursMap.computeIfAbsent(sourceAddress, nodeAddress -> new HashSet<>());
+      sourceNeighbours.add(destinationAddress);
+      return this;
+    }
   }
 }
