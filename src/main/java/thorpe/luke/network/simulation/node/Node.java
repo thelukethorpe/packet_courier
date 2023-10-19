@@ -2,15 +2,17 @@ package thorpe.luke.network.simulation.node;
 
 import java.nio.file.Path;
 import thorpe.luke.log.Logger;
+import thorpe.luke.network.simulation.Topology;
 import thorpe.luke.network.simulation.mail.Mail;
 import thorpe.luke.network.simulation.mail.PostalService;
 import thorpe.luke.network.simulation.worker.*;
+import thorpe.luke.time.Clock;
 import thorpe.luke.util.ExceptionListener;
 
-public class Node<NodeInfo> {
+public class Node {
   private final NodeAddress address;
   private final WorkerAddressGenerator workerAddressGenerator;
-  private final WorkerAddressBook<NodeInfo> workerAddressBook;
+  private final WorkerAddressBook workerAddressBook;
 
   public Node(String name) {
     this(new NodeAddress(name));
@@ -19,28 +21,30 @@ public class Node<NodeInfo> {
   private Node(NodeAddress address) {
     this.address = address;
     this.workerAddressGenerator = new WorkerAddressGenerator();
-    this.workerAddressBook = new WorkerAddressBook<>();
+    this.workerAddressBook = new WorkerAddressBook();
   }
 
   public void doWork(
-      WorkerScript<NodeInfo> workerScript,
-      NodeInfo nodeInfo,
-      PostalService postalService,
-      Logger logger,
+      WorkerScript workerScript,
+      Clock clock,
+      Topology topology,
       ExceptionListener exceptionListener,
-      Path crashDumpLocation) {
+      Path crashDumpLocation,
+      PostalService postalService,
+      Logger logger) {
     WorkerAddress workerAddress = address.asRootWorkerAddress();
-    Worker<NodeInfo> worker =
+    Worker worker =
         workerAddressBook.registerWorker(
             workerScript,
             workerAddress,
-            nodeInfo,
-            postalService,
-            logger,
+            clock,
+            topology,
             exceptionListener,
             crashDumpLocation,
             workerAddressGenerator,
-            workerAddressBook);
+            workerAddressBook,
+            postalService,
+            logger);
     worker.run();
   }
 

@@ -8,7 +8,6 @@ import java.util.concurrent.TimeUnit;
 import thorpe.luke.log.ConsoleLogger;
 import thorpe.luke.network.packet.Packet;
 import thorpe.luke.network.simulation.PacketCourierSimulation;
-import thorpe.luke.network.simulation.node.NodeAddress;
 import thorpe.luke.network.simulation.proto.PacketCourierSimulationConfigurationProtoParser;
 import thorpe.luke.network.simulation.worker.WorkerManager;
 import thorpe.luke.network.simulation.worker.WorkerScript;
@@ -20,11 +19,12 @@ public class ProtoExample1 {
   public static final String NODE_A_NAME = "Alice";
   public static final String NODE_B_NAME = "Bob";
 
-  public static void runNodeA(WorkerManager<ProtoExample1NodeInfo> workerManager) {
+  public static void runNodeA(WorkerManager workerManager) {
     // Node A sends the numbers 1 to 15,000 to node B.
     for (int i = 1; i <= 15_000; i++) {
       workerManager.sendMail(
-          workerManager.getInfo().getNodeBAddress().asRootWorkerAddress(), Packet.of(i));
+          workerManager.getTopology().getNodeAddress(NODE_B_NAME).asRootWorkerAddress(),
+          Packet.of(i));
       try {
         Thread.sleep(1);
       } catch (InterruptedException e) {
@@ -33,7 +33,7 @@ public class ProtoExample1 {
     }
   }
 
-  public static void runNodeB(WorkerManager<ProtoExample1NodeInfo> workerManager) {
+  public static void runNodeB(WorkerManager workerManager) {
     // Node B waits for messages from node A and automatically shuts down after 15 seconds.
     WorkerTask.configure()
         .withTimeout(15, TimeUnit.SECONDS)
@@ -61,20 +61,13 @@ public class ProtoExample1 {
             });
   }
 
-  public static class ProtoExample1NodeInfo {
-    public NodeAddress getNodeBAddress() {
-      return new NodeAddress(NODE_B_NAME);
-    }
-  }
-
   public static void main(String[] args) throws URISyntaxException {
     File configurationProtobufFile =
         Paths.get(ProtoExample1.class.getResource("example1.courierconfig").toURI()).toFile();
-    PacketCourierSimulation<ProtoExample1NodeInfo> packetCourierSimulation =
+    PacketCourierSimulation simulation =
         PacketCourierSimulationConfigurationProtoParser.parse(
                 configurationProtobufFile,
-                (address, topology, clock) -> new ProtoExample1NodeInfo(),
-                new HashMap<String, WorkerScript<ProtoExample1NodeInfo>>() {
+                new HashMap<String, WorkerScript>() {
                   {
                     put(NODE_A_NAME, ProtoExample1::runNodeA);
                     put(NODE_B_NAME, ProtoExample1::runNodeB);
@@ -82,9 +75,9 @@ public class ProtoExample1 {
                 })
             .addLogger(ConsoleLogger.out())
             .configure();
-    packetCourierSimulation.start();
+    simulation.start();
     try {
-      packetCourierSimulation.waitFor();
+      simulation.waitFor();
     } catch (InterruptedException e) {
       e.printStackTrace();
       System.exit(1);

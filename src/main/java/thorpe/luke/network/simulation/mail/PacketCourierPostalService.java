@@ -15,14 +15,14 @@ import thorpe.luke.network.simulation.node.NodeAddress;
 import thorpe.luke.network.simulation.node.NodeConnection;
 import thorpe.luke.network.simulation.worker.WorkerAddress;
 
-public class PacketCourierPostalService<NodeInfo> implements PostalService {
-  private final Map<NodeAddress, Node<NodeInfo>> nodeToAddressMap;
-  private final ConcurrentMap<NodeConnection<NodeInfo>, PacketPipeline<Mail>>
+public class PacketCourierPostalService implements PostalService {
+  private final Map<NodeAddress, Node> nodeToAddressMap;
+  private final ConcurrentMap<NodeConnection, PacketPipeline<Mail>>
       nodeConnectionToPacketPipelineMap;
 
   public PacketCourierPostalService(
-      Collection<Node<NodeInfo>> nodes,
-      Map<NodeConnection<NodeInfo>, PacketPipeline<Mail>> nodeConnectionToPacketPipelineMap) {
+      Collection<Node> nodes,
+      Map<NodeConnection, PacketPipeline<Mail>> nodeConnectionToPacketPipelineMap) {
     this.nodeToAddressMap =
         nodes.stream().collect(Collectors.toMap(Node::getAddress, Function.identity()));
     this.nodeConnectionToPacketPipelineMap =
@@ -30,9 +30,9 @@ public class PacketCourierPostalService<NodeInfo> implements PostalService {
   }
 
   public void tick(LocalDateTime now) {
-    for (Entry<NodeConnection<NodeInfo>, PacketPipeline<Mail>> networkConditionEntry :
+    for (Entry<NodeConnection, PacketPipeline<Mail>> networkConditionEntry :
         nodeConnectionToPacketPipelineMap.entrySet()) {
-      NodeConnection<NodeInfo> nodeConnection = networkConditionEntry.getKey();
+      NodeConnection nodeConnection = networkConditionEntry.getKey();
       PacketPipeline<Mail> packetPipeline = networkConditionEntry.getValue();
       packetPipeline.tick(now);
       packetPipeline.tryDequeue().ifPresent(mail -> nodeConnection.getDestination().deliver(mail));
@@ -42,13 +42,13 @@ public class PacketCourierPostalService<NodeInfo> implements PostalService {
   @Override
   public boolean mail(
       WorkerAddress sourceAddress, WorkerAddress destinationAddress, Packet packet) {
-    Node<NodeInfo> source = nodeToAddressMap.get(sourceAddress.getHostingNodeAddress());
-    Node<NodeInfo> destination = nodeToAddressMap.get(destinationAddress.getHostingNodeAddress());
+    Node source = nodeToAddressMap.get(sourceAddress.getHostingNodeAddress());
+    Node destination = nodeToAddressMap.get(destinationAddress.getHostingNodeAddress());
     if (source == null || destination == null) {
       return false;
     }
     PacketPipeline<Mail> packetPipeline =
-        nodeConnectionToPacketPipelineMap.get(new NodeConnection<>(source, destination));
+        nodeConnectionToPacketPipelineMap.get(new NodeConnection(source, destination));
     if (packetPipeline == null) {
       return false;
     }

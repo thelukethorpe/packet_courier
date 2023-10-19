@@ -10,37 +10,42 @@ import thorpe.luke.log.BufferedFileLogger;
 import thorpe.luke.log.Logger;
 import thorpe.luke.network.packet.Packet;
 import thorpe.luke.network.simulation.PacketCourierSimulation;
+import thorpe.luke.network.simulation.Topology;
 import thorpe.luke.network.simulation.mail.Mailbox;
 import thorpe.luke.network.simulation.mail.PostalService;
+import thorpe.luke.time.Clock;
 import thorpe.luke.util.ExceptionListener;
 
-public class WorkerManager<NodeInfo> {
+public class WorkerManager {
 
   private static final DateTimeFormatter CRASH_DUMP_DATE_FORMAT =
       DateTimeFormatter.ofPattern("yyyy_MM_dd_hh_mm_ss");
 
   private final WorkerAddress address;
-  private final NodeInfo nodeInfo;
+  private final Clock clock;
+  private final Topology topology;
   private final Mailbox mailbox;
   private final PostalService postalService;
   private final Logger logger;
   private final ExceptionListener exceptionListener;
   private final Path crashDumpLocation;
   private final WorkerAddressGenerator workerAddressGenerator;
-  private final WorkerAddressBook<NodeInfo> workerAddressBook;
+  private final WorkerAddressBook workerAddressBook;
 
   public WorkerManager(
       WorkerAddress address,
-      NodeInfo nodeInfo,
+      Clock clock,
+      Topology topology,
       Mailbox mailbox,
       PostalService postalService,
       Logger logger,
       ExceptionListener exceptionListener,
       Path crashDumpLocation,
       WorkerAddressGenerator workerAddressGenerator,
-      WorkerAddressBook<NodeInfo> workerAddressBook) {
+      WorkerAddressBook workerAddressBook) {
     this.address = address;
-    this.nodeInfo = nodeInfo;
+    this.clock = clock;
+    this.topology = topology;
     this.mailbox = mailbox;
     this.postalService = postalService;
     this.logger = logger;
@@ -54,8 +59,12 @@ public class WorkerManager<NodeInfo> {
     return address;
   }
 
-  public NodeInfo getInfo() {
-    return nodeInfo;
+  public LocalDateTime getCurrentTime() {
+    return clock.now();
+  }
+
+  public Topology getTopology() {
+    return topology;
   }
 
   public void sendMail(WorkerAddress destinationAddress, Packet packet) {
@@ -70,19 +79,20 @@ public class WorkerManager<NodeInfo> {
     }
   }
 
-  public Worker<NodeInfo> spawnChildWorker(WorkerScript<NodeInfo> workerScript) {
+  public Worker spawnChildWorker(WorkerScript workerScript) {
     WorkerAddress childWorkerAddress =
         workerAddressGenerator.generateUniqueChildWorkerAddress(address);
     return workerAddressBook.registerWorker(
         workerScript,
         childWorkerAddress,
-        nodeInfo,
-        postalService,
-        logger,
+        clock,
+        topology,
         exceptionListener,
         crashDumpLocation,
         workerAddressGenerator,
-        workerAddressBook);
+        workerAddressBook,
+        postalService,
+        logger);
   }
 
   public void log(String message) {

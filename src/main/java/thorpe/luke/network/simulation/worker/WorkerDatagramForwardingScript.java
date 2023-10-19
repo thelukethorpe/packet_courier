@@ -12,7 +12,7 @@ import thorpe.luke.log.SimpleLogger;
 import thorpe.luke.network.packet.Packet;
 import thorpe.luke.util.ThreadNameGenerator;
 
-public class WorkerDatagramForwardingScript<NodeInfo> implements WorkerScript<NodeInfo> {
+public class WorkerDatagramForwardingScript implements WorkerScript {
 
   private final WorkerProcess.Factory workerProcessFactory;
   private final int port;
@@ -43,15 +43,14 @@ public class WorkerDatagramForwardingScript<NodeInfo> implements WorkerScript<No
     return new Builder();
   }
 
-  private void tryGenerateCrashDump(
-      WorkerManager<NodeInfo> workerManager, List<String> crashDumpContents) {
+  private void tryGenerateCrashDump(WorkerManager workerManager, List<String> crashDumpContents) {
     boolean wasCrashDumpSuccessful = workerManager.generateCrashDump(crashDumpContents);
     if (!wasCrashDumpSuccessful && processLoggingEnabled) {
       crashDumpContents.forEach(workerManager::log);
     }
   }
 
-  private void waitForAndForwardPackets(WorkerManager<NodeInfo> workerManager) {
+  private void waitForAndForwardPackets(WorkerManager workerManager) {
     byte[] buffer = new byte[datagramBufferSize];
     do {
       Packet packet;
@@ -88,7 +87,7 @@ public class WorkerDatagramForwardingScript<NodeInfo> implements WorkerScript<No
   }
 
   @Override
-  public void run(WorkerManager<NodeInfo> workerManager) {
+  public void run(WorkerManager workerManager) {
     Thread forwardingThread =
         new Thread(
             () -> waitForAndForwardPackets(workerManager),
@@ -162,8 +161,8 @@ public class WorkerDatagramForwardingScript<NodeInfo> implements WorkerScript<No
       return this;
     }
 
-    public <NodeInfo> WorkerDatagramForwardingScript<NodeInfo> build() {
-      return new WorkerDatagramForwardingScript<>(
+    public WorkerDatagramForwardingScript build() {
+      return new WorkerDatagramForwardingScript(
           workerProcessFactory,
           port,
           privateIpAddress,

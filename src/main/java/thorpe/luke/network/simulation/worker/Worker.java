@@ -3,12 +3,14 @@ package thorpe.luke.network.simulation.worker;
 import java.nio.file.Path;
 import thorpe.luke.log.Logger;
 import thorpe.luke.network.packet.Packet;
+import thorpe.luke.network.simulation.Topology;
 import thorpe.luke.network.simulation.mail.Mailbox;
 import thorpe.luke.network.simulation.mail.PostalService;
+import thorpe.luke.time.Clock;
 import thorpe.luke.util.ExceptionListener;
 import thorpe.luke.util.ThreadNameGenerator;
 
-public class Worker<NodeInfo> {
+public class Worker {
 
   private final Thread workerThread;
   private final WorkerAddress address;
@@ -16,23 +18,25 @@ public class Worker<NodeInfo> {
   private State state;
 
   public Worker(
-      WorkerScript<NodeInfo> workerScript,
+      WorkerScript workerScript,
       WorkerAddress address,
-      NodeInfo nodeInfo,
-      Mailbox mailbox,
-      PostalService postalService,
+      Clock clock,
+      Topology topology,
       Logger logger,
       ExceptionListener exceptionListener,
       Path crashDumpLocation,
       WorkerAddressGenerator workerAddressGenerator,
-      WorkerAddressBook<NodeInfo> workerAddressBook) {
+      WorkerAddressBook workerAddressBook,
+      Mailbox mailbox,
+      PostalService postalService) {
     this.workerThread =
         new Thread(
             () ->
                 workerScript.run(
-                    new WorkerManager<>(
+                    new WorkerManager(
                         address,
-                        nodeInfo,
+                        clock,
+                        topology,
                         mailbox,
                         postalService,
                         logger,
