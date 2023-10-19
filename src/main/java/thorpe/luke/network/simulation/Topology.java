@@ -19,7 +19,7 @@ public class Topology {
     return new Builder();
   }
 
-  public Collection<NodeAddress> getNodesAddresses() {
+  public Collection<NodeAddress> getNodeAddresses() {
     return new HashSet<>(nodeNameToAddressMap.values());
   }
 
@@ -32,10 +32,10 @@ public class Topology {
         nodeAddressToNeighboursMap.getOrDefault(new NodeAddress(nodeName), Collections.emptySet()));
   }
 
-  public Collection<NodeAddress> performRadialSearch(String sourceName, int distance) {
-    Collection<NodeAddress> visited = new HashSet<>();
+  public Collection<NodeAddress> queryByBreadthFirstSearch(String sourceName, int depth) {
+    Collection<NodeAddress> visited = new LinkedHashSet<>();
     visited.add(new NodeAddress(sourceName));
-    for (int i = 0; i < distance; i++) {
+    for (int i = 0; i < depth; i++) {
       if (!visited.addAll(
           visited
               .stream()
@@ -47,8 +47,8 @@ public class Topology {
     return visited;
   }
 
-  public Collection<NodeAddress> performFloodSearch(String sourceName) {
-    return performRadialSearch(sourceName, nodeAddressToNeighboursMap.size());
+  public Collection<NodeAddress> queryByFloodingFrom(String sourceName) {
+    return queryByBreadthFirstSearch(sourceName, nodeAddressToNeighboursMap.size());
   }
 
   public static class Builder {
