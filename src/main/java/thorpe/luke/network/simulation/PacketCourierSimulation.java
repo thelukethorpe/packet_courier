@@ -568,17 +568,17 @@ public class PacketCourierSimulation<NodeInfo> {
 
     public PacketCourierSimulation<NodeInfo> configure() {
       // Configure topology logic.
-      Map<String, Collection<String>> nodeToNeighboursMap = new HashMap<>();
-      nameToNodeMap.keySet().forEach(name -> nodeToNeighboursMap.put(name, new HashSet<>()));
+      Topology.Builder topologyBuilder = Topology.builder();
+      nameToNodeMap.keySet().forEach(topologyBuilder::addNode);
       for (NodeConnection<NodeInfo> nodeConnection :
           nodeConnectionToPacketPipelineFactoryMap.keySet()) {
         String sourceName = nodeConnection.getSource().getAddress().getName();
         String destinationName = nodeConnection.getDestination().getAddress().getName();
         if (!sourceName.equals(destinationName)) {
-          nodeToNeighboursMap.get(sourceName).add(destinationName);
+          topologyBuilder.addConnection(sourceName, destinationName);
         }
       }
-      Topology topology = Topology.of(nodeToNeighboursMap);
+      Topology topology = topologyBuilder.build();
 
       // Configure datagram socket logic.
       Map<Node<NodeInfo>, DatagramSocket> nodeToPublicSocketMap = new HashMap<>();

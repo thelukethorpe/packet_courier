@@ -91,7 +91,7 @@ public class WorkerProcessConfiguration {
               workerAddressToPublicIpMap,
               datagramBufferSize) -> {
             Collection<NodeAddress> floodNodes =
-                topology.performRadialSearch(address.getName(), distance);
+                topology.queryByBreadthFirstSearch(address.getName(), distance);
             return nodesToJsonString(floodNodes, workerAddressToPublicIpMap);
           };
 
@@ -99,7 +99,7 @@ public class WorkerProcessConfiguration {
       dslVariableRegexMatcher("TOPOLOGY_IPS");
   private static final WordGenerator TOPOLOGY_IPS_WORD_GENERATOR =
       (address, topology, port, privateIpAddress, workerAddressToPublicIpMap, datagramBufferSize) ->
-          nodesToJsonString(topology.getNodesAddresses(), workerAddressToPublicIpMap);
+          nodesToJsonString(topology.getNodeAddresses(), workerAddressToPublicIpMap);
 
   private final List<String> commandWords;
   private final Map<Integer, WordGenerator> indexToWordGeneratorMap;
