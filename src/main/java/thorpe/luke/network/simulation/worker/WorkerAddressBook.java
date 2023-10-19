@@ -5,17 +5,19 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import thorpe.luke.log.Logger;
+import thorpe.luke.network.simulation.Topology;
 import thorpe.luke.network.simulation.mail.Mailbox;
 import thorpe.luke.network.simulation.mail.PostalService;
+import thorpe.luke.time.Clock;
 import thorpe.luke.util.ExceptionListener;
 import thorpe.luke.util.GarbageCollector;
 import thorpe.luke.util.Prunable;
 
-public class WorkerAddressBook<NodeInfo> implements Prunable {
+public class WorkerAddressBook implements Prunable {
 
   private static final int PRUNE_PERIOD = 10;
 
-  private final ConcurrentMap<WorkerAddress, Worker<NodeInfo>> addressToWorkerMap;
+  private final ConcurrentMap<WorkerAddress, Worker> addressToWorkerMap;
   private final GarbageCollector garbageCollector;
 
   public WorkerAddressBook() {
@@ -23,33 +25,35 @@ public class WorkerAddressBook<NodeInfo> implements Prunable {
     this.garbageCollector = new GarbageCollector(this, PRUNE_PERIOD);
   }
 
-  public Optional<Worker<NodeInfo>> lookup(WorkerAddress address) {
+  public Optional<Worker> lookup(WorkerAddress address) {
     garbageCollector.tick();
     return Optional.ofNullable(addressToWorkerMap.get(address));
   }
 
-  public Worker<NodeInfo> registerWorker(
-      WorkerScript<NodeInfo> workerScript,
+  public Worker registerWorker(
+      WorkerScript workerScript,
       WorkerAddress workerAddress,
-      NodeInfo nodeInfo,
-      PostalService postalService,
-      Logger logger,
+      Clock clock,
+      Topology topology,
       ExceptionListener exceptionListener,
       Path crashDumpLocation,
       WorkerAddressGenerator workerAddressGenerator,
-      WorkerAddressBook<NodeInfo> workerAddressBook) {
-    Worker<NodeInfo> worker =
-        new Worker<>(
+      WorkerAddressBook workerAddressBook,
+      PostalService postalService,
+      Logger logger) {
+    Worker worker =
+        new Worker(
             workerScript,
             workerAddress,
-            nodeInfo,
-            new Mailbox(),
-            postalService,
+            clock,
+            topology,
             logger,
             exceptionListener,
             crashDumpLocation,
             workerAddressGenerator,
-            workerAddressBook);
+            workerAddressBook,
+            new Mailbox(),
+            postalService);
     addressToWorkerMap.put(workerAddress, worker);
     return worker;
   }

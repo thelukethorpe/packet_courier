@@ -2,20 +2,20 @@ package thorpe.luke.network.simulation.node;
 
 import java.util.Objects;
 
-public class NodeConnection<NodeInfo> {
-  private final Node<NodeInfo> source;
-  private final Node<NodeInfo> destination;
+public class NodeConnection {
+  private final Node source;
+  private final Node destination;
 
-  public NodeConnection(Node<NodeInfo> source, Node<NodeInfo> destination) {
+  public NodeConnection(Node source, Node destination) {
     this.source = source;
     this.destination = destination;
   }
 
-  public Node<NodeInfo> getSource() {
+  public Node getSource() {
     return source;
   }
 
-  public Node<NodeInfo> getDestination() {
+  public Node getDestination() {
     return destination;
   }
 

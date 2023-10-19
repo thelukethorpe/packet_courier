@@ -19,8 +19,6 @@ public class DatagramExample1 {
   public static final int DATAGRAM_BUFFER_SIZE = 32;
   public static final int NUMBER_OF_MESSAGES_SENT = 250;
 
-  public static class DatagramExample1NodeInfo {}
-
   public static void main(String[] args) throws URISyntaxException {
     File simpleClientScript =
         Paths.get(ProtoExample1.class.getResource("simple_client.py").toURI()).toFile();
@@ -28,9 +26,8 @@ public class DatagramExample1 {
         Paths.get(ProtoExample1.class.getResource("simple_server.py").toURI()).toFile();
     // Packet pipeline drops half of the packets that travel through it.
     Random random = new Random();
-    PacketCourierSimulation<DatagramExample1NodeInfo> packetCourierSimulation =
-        PacketCourierSimulation.configuration(
-                (address, topology, clock) -> new DatagramExample1NodeInfo())
+    PacketCourierSimulation packetCourierSimulation =
+        PacketCourierSimulation.configuration()
             .addNode(
                 NODE_A_NAME,
                 WorkerProcessConfiguration.fromCommand(

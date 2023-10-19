@@ -52,7 +52,7 @@ public class WorkerTask {
       workerTask.execute();
     }
 
-    public <NodeInfo> WorkerScript<NodeInfo> asWorkerScript(WorkerScript<NodeInfo> workerScript) {
+    public WorkerScript asWorkerScript(WorkerScript workerScript) {
       return workerManager -> this.execute(() -> workerScript.run(workerManager));
     }
   }

@@ -29,7 +29,7 @@ import thorpe.luke.util.ExceptionListener;
 import thorpe.luke.util.ThreadNameGenerator;
 import thorpe.luke.util.UniqueLoopbackIpv4AddressGenerator;
 
-public class PacketCourierSimulation<NodeInfo> {
+public class PacketCourierSimulation {
 
   public static final String LOG_FILE_EXTENSION = ".courierlog";
   public static final String CONFIGURATION_FILE_EXTENSION = ".courierconfig";
@@ -44,9 +44,9 @@ public class PacketCourierSimulation<NodeInfo> {
 
   private PacketCourierSimulation(
       String simulationName,
-      Map<String, RunnableNode<NodeInfo>> nodes,
+      Map<String, RunnableNode> nodes,
       Topology topology,
-      PacketCourierPostalService<NodeInfo> postalService,
+      PacketCourierPostalService postalService,
       Clock clock,
       Logger logger,
       Logger metaLogger,
@@ -56,7 +56,7 @@ public class PacketCourierSimulation<NodeInfo> {
       int datagramBufferSize,
       int tickDurationSampleSize,
       Map<InetAddress, WorkerAddress> privateIpAddressToWorkerAddressMap,
-      Map<Node<NodeInfo>, DatagramSocket> nodeToPublicSocketMap) {
+      Map<Node, DatagramSocket> nodeToPublicSocketMap) {
     this.simulationName = simulationName;
     this.metaLogger =
         new TemplateLogger(
@@ -85,13 +85,8 @@ public class PacketCourierSimulation<NodeInfo> {
             ThreadNameGenerator.generateThreadName(simulationName));
   }
 
-  public static <NodeInfo> Configuration<NodeInfo> configuration(
-      NodeInfoGenerator<NodeInfo> nodeInfoGenerator) {
-    return new Configuration<>(nodeInfoGenerator);
-  }
-
-  public static Configuration<DefaultNodeInfo> configuration() {
-    return new Configuration<>(DefaultNodeInfo.generator());
+  public static Configuration configuration() {
+    return new Configuration();
   }
 
   public String getName() {
@@ -116,9 +111,9 @@ public class PacketCourierSimulation<NodeInfo> {
   }
 
   private void run(
-      Map<String, RunnableNode<NodeInfo>> nodes,
+      Map<String, RunnableNode> nodes,
       Topology topology,
-      PacketCourierPostalService<NodeInfo> postalService,
+      PacketCourierPostalService postalService,
       Clock clock,
       Logger logger,
       Optional<WorkerProcessMonitor> optionalProcessMonitor,
@@ -127,11 +122,11 @@ public class PacketCourierSimulation<NodeInfo> {
       int datagramBufferSize,
       int tickDurationSampleSize,
       Map<InetAddress, WorkerAddress> privateIpAddressToWorkerAddressMap,
-      Map<Node<NodeInfo>, DatagramSocket> nodeToPublicSocketMap) {
+      Map<Node, DatagramSocket> nodeToPublicSocketMap) {
     // Configure simulation logic.
     metaLogger.log("Preprocessing simulation");
     AtomicBoolean simulationComplete = new AtomicBoolean(false);
-    Map<Node<NodeInfo>, Thread> nodeThreads =
+    Map<Node, Thread> nodeThreads =
         nodes
             .values()
             .stream()
@@ -217,8 +212,8 @@ public class PacketCourierSimulation<NodeInfo> {
       metaLogger.log("Now listening on port " + port);
     }
 
-    for (Map.Entry<Node<NodeInfo>, Thread> nodeThreadEntry : nodeThreads.entrySet()) {
-      Node<NodeInfo> node = nodeThreadEntry.getKey();
+    for (Map.Entry<Node, Thread> nodeThreadEntry : nodeThreads.entrySet()) {
+      Node node = nodeThreadEntry.getKey();
       Thread nodeThread = nodeThreadEntry.getValue();
       nodeThread.start();
       metaLogger.log("Node \"" + node.getAddress().getName() + "\" has been set to work");
@@ -307,18 +302,13 @@ public class PacketCourierSimulation<NodeInfo> {
     simulationThread.join();
   }
 
-  private static class RunnableNode<NodeInfo> {
-    private final Node<NodeInfo> node;
-    private final WorkerScript<NodeInfo> workerScript;
-    private final NodeInfoGenerator<NodeInfo> nodeInfoGenerator;
+  private static class RunnableNode {
+    private final Node node;
+    private final WorkerScript workerScript;
 
-    private RunnableNode(
-        Node<NodeInfo> node,
-        WorkerScript<NodeInfo> workerScript,
-        NodeInfoGenerator<NodeInfo> nodeInfoGenerator) {
+    private RunnableNode(Node node, WorkerScript workerScript) {
       this.node = node;
       this.workerScript = workerScript;
-      this.nodeInfoGenerator = nodeInfoGenerator;
     }
 
     public void run(
@@ -330,22 +320,23 @@ public class PacketCourierSimulation<NodeInfo> {
         Path crashDumpLocation) {
       node.doWork(
           workerScript,
-          nodeInfoGenerator.generateInfo(node.getAddress(), topology, clock),
-          postalService,
-          logger,
+          clock,
+          topology,
           exceptionListener,
-          crashDumpLocation);
+          crashDumpLocation,
+          postalService,
+          logger);
     }
 
-    public Node<NodeInfo> getNode() {
+    public Node getNode() {
       return node;
     }
   }
 
   @FunctionalInterface
-  private interface WorkerScriptFactory<NodeInfo> {
+  private interface WorkerScriptFactory {
 
-    WorkerScript<NodeInfo> getWorkerScript(
+    WorkerScript getWorkerScript(
         NodeAddress address,
         Topology topology,
         int port,
@@ -362,17 +353,15 @@ public class PacketCourierSimulation<NodeInfo> {
     PacketPipeline<Mail> getPacketPipeline(LocalDateTime startTime);
   }
 
-  public static class Configuration<NodeInfo> {
+  public static class Configuration {
     private final UniqueIpAddressGeneratorAdaptor uniqueIpAddressGenerator =
         new UniqueIpAddressGeneratorAdaptor();
-    private final Map<String, Node<NodeInfo>> nameToNodeMap = new HashMap<>();
-    private final Map<Node<NodeInfo>, WorkerScriptFactory<NodeInfo>> nodeToWorkerScriptFactoryMap =
-        new HashMap<>();
-    private final Map<NodeConnection<NodeInfo>, PacketPipelineFactory>
+    private final Map<String, Node> nameToNodeMap = new HashMap<>();
+    private final Map<Node, WorkerScriptFactory> nodeToWorkerScriptFactoryMap = new HashMap<>();
+    private final Map<NodeConnection, PacketPipelineFactory>
         nodeConnectionToPacketPipelineFactoryMap = new HashMap<>();
     private final Collection<Logger> loggers = new LinkedList<>();
     private final Collection<Logger> metaLoggers = new LinkedList<>();
-    private final NodeInfoGenerator<NodeInfo> nodeInfoGenerator;
     private String simulationName = "Packet Courier Simulation";
     private Clock clock = new VirtualClock(ChronoUnit.MILLIS);
     private boolean hasDatagramRoutingLayer = false;
@@ -384,9 +373,7 @@ public class PacketCourierSimulation<NodeInfo> {
     private Duration processMonitorCheckupInterval = Duration.of(10, ChronoUnit.SECONDS);
     private int tickDurationSampleSize = 1_000_000;
 
-    public Configuration(NodeInfoGenerator<NodeInfo> nodeInfoGenerator) {
-      this.nodeInfoGenerator = nodeInfoGenerator;
-    }
+    public Configuration() {}
 
     public String getSimulationName() {
       return simulationName;
@@ -396,7 +383,7 @@ public class PacketCourierSimulation<NodeInfo> {
       return string.trim().isEmpty();
     }
 
-    private void addNode(String name, WorkerScriptFactory<NodeInfo> workerScriptFactory) {
+    private void addNode(String name, WorkerScriptFactory workerScriptFactory) {
       if (name == null) {
         throw new PacketCourierSimulationConfigurationException("Node name cannot be null.");
       } else if (isBlank(name)) {
@@ -406,16 +393,16 @@ public class PacketCourierSimulation<NodeInfo> {
             "Node with name \"" + name + "\" has already been added.");
       }
 
-      Node<NodeInfo> node = new Node<>(name);
+      Node node = new Node(name);
       nameToNodeMap.put(name, node);
       nodeToWorkerScriptFactoryMap.put(node, workerScriptFactory);
-      NodeConnection<NodeInfo> nodeConnection = new NodeConnection<>(node, node);
+      NodeConnection nodeConnection = new NodeConnection(node, node);
       nodeConnectionToPacketPipelineFactoryMap.put(
           nodeConnection,
           startTime -> new PacketPipeline<>(PacketPipeline.perfectParameters(), startTime));
     }
 
-    public Configuration<NodeInfo> addNode(String name, WorkerScript<NodeInfo> workerScript) {
+    public Configuration addNode(String name, WorkerScript workerScript) {
       if (workerScript == null) {
         throw new PacketCourierSimulationConfigurationException("Node script cannot be null.");
       }
@@ -433,7 +420,7 @@ public class PacketCourierSimulation<NodeInfo> {
       return this;
     }
 
-    public Configuration<NodeInfo> addNode(
+    public Configuration addNode(
         String name, WorkerProcessConfiguration workerProcessConfiguration) {
       hasDatagramRoutingLayer = true;
       if (workerProcessConfiguration == null) {
@@ -472,7 +459,7 @@ public class PacketCourierSimulation<NodeInfo> {
       return this;
     }
 
-    public Configuration<NodeInfo> addConnection(
+    public Configuration addConnection(
         String sourceName, String destinationName, Parameters packetPipelineParameters) {
       if (sourceName == null) {
         throw new PacketCourierSimulationConfigurationException("Source node name cannot be null.");
@@ -496,9 +483,9 @@ public class PacketCourierSimulation<NodeInfo> {
             "A node cannot be connected to itself.");
       }
 
-      Node<NodeInfo> sourceNode = nameToNodeMap.get(sourceName);
-      Node<NodeInfo> destinationNode = nameToNodeMap.get(destinationName);
-      NodeConnection<NodeInfo> nodeConnection = new NodeConnection<>(sourceNode, destinationNode);
+      Node sourceNode = nameToNodeMap.get(sourceName);
+      Node destinationNode = nameToNodeMap.get(destinationName);
+      NodeConnection nodeConnection = new NodeConnection(sourceNode, destinationNode);
 
       if (nodeConnectionToPacketPipelineFactoryMap.containsKey(nodeConnection)) {
         throw new PacketCourierSimulationConfigurationException(
@@ -510,68 +497,66 @@ public class PacketCourierSimulation<NodeInfo> {
       return this;
     }
 
-    public Configuration<NodeInfo> withSimulationName(String simulationName) {
+    public Configuration withSimulationName(String simulationName) {
       this.simulationName = simulationName;
       return this;
     }
 
-    public Configuration<NodeInfo> addLogger(Logger logger) {
+    public Configuration addLogger(Logger logger) {
       loggers.add(logger);
       return this;
     }
 
-    public Configuration<NodeInfo> addMetaLogger(Logger metaLogger) {
+    public Configuration addMetaLogger(Logger metaLogger) {
       metaLoggers.add(metaLogger);
       return this;
     }
 
-    public Configuration<NodeInfo> usingWallClock() {
+    public Configuration usingWallClock() {
       clock = new WallClock();
       return this;
     }
 
-    public Configuration<NodeInfo> withCrashDumpLocation(Path crashDumpLocation) {
+    public Configuration withCrashDumpLocation(Path crashDumpLocation) {
       this.crashDumpLocation = crashDumpLocation;
       return this;
     }
 
-    public Configuration<NodeInfo> withPort(int port) {
+    public Configuration withPort(int port) {
       this.port = port;
       return this;
     }
 
-    public Configuration<NodeInfo> withDatagramBufferSize(int datagramBufferSize) {
+    public Configuration withDatagramBufferSize(int datagramBufferSize) {
       this.datagramBufferSize = datagramBufferSize;
       return this;
     }
 
-    public Configuration<NodeInfo> withProcessLoggingEnabled() {
+    public Configuration withProcessLoggingEnabled() {
       this.processLoggingEnabled = true;
       return this;
     }
 
-    public Configuration<NodeInfo> withProcessMonitorEnabled() {
+    public Configuration withProcessMonitorEnabled() {
       this.processMonitorEnabled = true;
       return this;
     }
 
-    public Configuration<NodeInfo> withProcessMonitorCheckupInterval(
-        Duration processMonitorCheckupInterval) {
+    public Configuration withProcessMonitorCheckupInterval(Duration processMonitorCheckupInterval) {
       this.processMonitorCheckupInterval = processMonitorCheckupInterval;
       return this;
     }
 
-    public Configuration<NodeInfo> withTickDurationSampleSize(int tickDurationSampleSize) {
+    public Configuration withTickDurationSampleSize(int tickDurationSampleSize) {
       this.tickDurationSampleSize = tickDurationSampleSize;
       return this;
     }
 
-    public PacketCourierSimulation<NodeInfo> configure() {
+    public PacketCourierSimulation configure() {
       // Configure topology logic.
       Topology.Builder topologyBuilder = Topology.builder();
       nameToNodeMap.keySet().forEach(topologyBuilder::addNode);
-      for (NodeConnection<NodeInfo> nodeConnection :
-          nodeConnectionToPacketPipelineFactoryMap.keySet()) {
+      for (NodeConnection nodeConnection : nodeConnectionToPacketPipelineFactoryMap.keySet()) {
         String sourceName = nodeConnection.getSource().getAddress().getName();
         String destinationName = nodeConnection.getDestination().getAddress().getName();
         if (!sourceName.equals(destinationName)) {
@@ -581,9 +566,9 @@ public class PacketCourierSimulation<NodeInfo> {
       Topology topology = topologyBuilder.build();
 
       // Configure datagram socket logic.
-      Map<Node<NodeInfo>, DatagramSocket> nodeToPublicSocketMap = new HashMap<>();
+      Map<Node, DatagramSocket> nodeToPublicSocketMap = new HashMap<>();
       if (this.hasDatagramRoutingLayer) {
-        for (Node<NodeInfo> node : nameToNodeMap.values()) {
+        for (Node node : nameToNodeMap.values()) {
           try {
             nodeToPublicSocketMap.put(
                 node,
@@ -610,7 +595,7 @@ public class PacketCourierSimulation<NodeInfo> {
               processMonitorCheckupInterval, simulationName + " Process Monitor");
       Map<InetAddress, DatagramSocket> privateIpAddressToPublicSocketMap = new HashMap<>();
       Map<InetAddress, WorkerAddress> privateIpAddressToWorkerAddressMap = new HashMap<>();
-      Map<String, RunnableNode<NodeInfo>> nameToRunnableNodeMap =
+      Map<String, RunnableNode> nameToRunnableNodeMap =
           nameToNodeMap
               .entrySet()
               .stream()
@@ -618,16 +603,16 @@ public class PacketCourierSimulation<NodeInfo> {
                   Collectors.toMap(
                       Map.Entry::getKey,
                       nameToNodeEntry -> {
-                        Node<NodeInfo> node = nameToNodeEntry.getValue();
+                        Node node = nameToNodeEntry.getValue();
                         InetAddress privateIpAddress =
                             uniqueIpAddressGenerator.generateUniqueIpv4Address();
                         DatagramSocket publicSocket = nodeToPublicSocketMap.get(node);
                         privateIpAddressToPublicSocketMap.put(privateIpAddress, publicSocket);
                         privateIpAddressToWorkerAddressMap.put(
                             privateIpAddress, node.getAddress().asRootWorkerAddress());
-                        WorkerScriptFactory<NodeInfo> workerScriptFactory =
+                        WorkerScriptFactory workerScriptFactory =
                             nodeToWorkerScriptFactoryMap.get(node);
-                        WorkerScript<NodeInfo> workerScript =
+                        WorkerScript workerScript =
                             workerScriptFactory.getWorkerScript(
                                 node.getAddress(),
                                 topology,
@@ -638,12 +623,12 @@ public class PacketCourierSimulation<NodeInfo> {
                                 privateIpAddressToPublicSocketMap,
                                 processLoggingEnabled,
                                 workerProcessMonitor);
-                        return new RunnableNode<>(node, workerScript, nodeInfoGenerator);
+                        return new RunnableNode(node, workerScript);
                       }));
 
       // Configure packet pipeline logic.
       LocalDateTime startTime = clock.now();
-      Map<NodeConnection<NodeInfo>, PacketPipeline<Mail>> nodeConnectionToPacketPipelineMap =
+      Map<NodeConnection, PacketPipeline<Mail>> nodeConnectionToPacketPipelineMap =
           nodeConnectionToPacketPipelineFactoryMap
               .entrySet()
               .stream()
@@ -656,11 +641,10 @@ public class PacketCourierSimulation<NodeInfo> {
                               .getPacketPipeline(startTime)));
 
       // Configure simulation logic.
-      PacketCourierPostalService<NodeInfo> postalService =
-          new PacketCourierPostalService<>(
-              nameToNodeMap.values(), nodeConnectionToPacketPipelineMap);
+      PacketCourierPostalService postalService =
+          new PacketCourierPostalService(nameToNodeMap.values(), nodeConnectionToPacketPipelineMap);
 
-      return new PacketCourierSimulation<>(
+      return new PacketCourierSimulation(
           simulationName,
           nameToRunnableNodeMap,
           topology,

@@ -7,7 +7,6 @@ import thorpe.luke.log.ConsoleLogger;
 import thorpe.luke.network.packet.Packet;
 import thorpe.luke.network.packet.PacketPipeline;
 import thorpe.luke.network.simulation.PacketCourierSimulation;
-import thorpe.luke.network.simulation.node.DefaultNodeInfo;
 import thorpe.luke.network.simulation.node.NodeAddress;
 import thorpe.luke.network.simulation.worker.Worker;
 import thorpe.luke.network.simulation.worker.WorkerAddress;
@@ -20,17 +19,24 @@ public class SimpleExample3 {
   // Number of workers on Node A.
   public static final int N = 5;
 
-  public static void runNodeA(WorkerManager<DefaultNodeInfo> workerManager) {
+  public static void runNodeA(WorkerManager workerManager) {
     // Spawn child workers and flood their addresses to neighbours.
-    Collection<Worker<DefaultNodeInfo>> workers =
+    Collection<Worker> workers =
         IntStream.range(0, N)
             .mapToObj(
                 i ->
                     workerManager.spawnChildWorker(
                         childWorkerManager -> {
+                          Collection<NodeAddress> neighbourAddresses =
+                              workerManager
+                                  .getTopology()
+                                  .getNeighboursOf(
+                                      childWorkerManager
+                                          .getAddress()
+                                          .getHostingNodeAddress()
+                                          .getName());
                           Packet workerAddressPacket = Packet.of(childWorkerManager.getAddress());
-                          for (NodeAddress neighbourAddress :
-                              childWorkerManager.getInfo().getNeighbours()) {
+                          for (NodeAddress neighbourAddress : neighbourAddresses) {
                             childWorkerManager.sendMail(
                                 neighbourAddress.asRootWorkerAddress(), workerAddressPacket);
                             Packet responsePacket = childWorkerManager.waitForMail();
@@ -49,7 +55,7 @@ public class SimpleExample3 {
     workers.forEach(Worker::join);
   }
 
-  public static void runNodeB(WorkerManager<DefaultNodeInfo> workerManager) {
+  public static void runNodeB(WorkerManager workerManager) {
     // Node B waits for messages from node A and sends a simple response.
     for (int i = 1; i <= N; i++) {
       Packet packet = workerManager.waitForMail();
@@ -66,7 +72,7 @@ public class SimpleExample3 {
   }
 
   public static void main(String[] args) {
-    PacketCourierSimulation<DefaultNodeInfo> packetCourierSimulation =
+    PacketCourierSimulation simulation =
         PacketCourierSimulation.configuration()
             .addNode(NODE_A_NAME, SimpleExample3::runNodeA)
             .addNode(NODE_B_NAME, SimpleExample3::runNodeB)
@@ -74,9 +80,9 @@ public class SimpleExample3 {
             .addConnection(NODE_B_NAME, NODE_A_NAME, PacketPipeline.perfectParameters())
             .addLogger(ConsoleLogger.out())
             .configure();
-    packetCourierSimulation.start();
+    simulation.start();
     try {
-      packetCourierSimulation.waitFor();
+      simulation.waitFor();
     } catch (InterruptedException e) {
       e.printStackTrace();
       System.exit(1);

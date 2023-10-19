@@ -1,7 +1,6 @@
 package thorpe.luke.network.simulation;
 
 import java.io.File;
-import thorpe.luke.network.simulation.node.DefaultNodeInfo;
 import thorpe.luke.network.simulation.proto.PacketCourierSimulationConfigurationProtoParser;
 import thorpe.luke.network.simulation.proto.PacketCourierSimulationConfigurationProtoParserException;
 
@@ -41,7 +40,7 @@ public class PacketCourierMain {
 
     // Parse simulation configuration from file.
     print("Info: Processing Packet Courier configuration file...");
-    PacketCourierSimulation.Configuration<DefaultNodeInfo> packetCourierSimulationConfiguration;
+    PacketCourierSimulation.Configuration packetCourierSimulationConfiguration;
     try {
       packetCourierSimulationConfiguration =
           PacketCourierSimulationConfigurationProtoParser.parse(
@@ -53,7 +52,7 @@ public class PacketCourierMain {
     }
 
     // Configure the simulation.
-    PacketCourierSimulation<DefaultNodeInfo> packetCourierSimulation;
+    PacketCourierSimulation packetCourierSimulation;
     try {
       packetCourierSimulation = packetCourierSimulationConfiguration.configure();
     } catch (PacketCourierSimulationConfigurationException e) {

@@ -9,7 +9,6 @@ import thorpe.luke.network.packet.NetworkEvent;
 import thorpe.luke.network.packet.Packet;
 import thorpe.luke.network.packet.PacketPipeline;
 import thorpe.luke.network.simulation.PacketCourierSimulation;
-import thorpe.luke.network.simulation.node.NodeAddress;
 import thorpe.luke.network.simulation.worker.WorkerManager;
 import thorpe.luke.network.simulation.worker.WorkerTask;
 import thorpe.luke.util.Mutable;
@@ -19,11 +18,12 @@ public class SimpleExample5 {
   public static final String NODE_A_NAME = "Alice";
   public static final String NODE_B_NAME = "Bob";
 
-  public static void runNodeA(WorkerManager<SimpleExample5NodeInfo> workerManager) {
+  public static void runNodeA(WorkerManager workerManager) {
     // Node A sends the numbers 1 to 15,000 to node B.
     for (int i = 1; i <= 15_000; i++) {
       workerManager.sendMail(
-          workerManager.getInfo().getNodeBAddress().asRootWorkerAddress(), Packet.of(i));
+          workerManager.getTopology().getNodeAddress(NODE_B_NAME).asRootWorkerAddress(),
+          Packet.of(i));
       try {
         Thread.sleep(1);
       } catch (InterruptedException e) {
@@ -32,7 +32,7 @@ public class SimpleExample5 {
     }
   }
 
-  public static void runNodeB(WorkerManager<SimpleExample5NodeInfo> workerManager) {
+  public static void runNodeB(WorkerManager workerManager) {
     // Node B waits for messages from node A and automatically shuts down after 15 seconds.
     WorkerTask.configure()
         .withTimeout(15, TimeUnit.SECONDS)
@@ -60,18 +60,11 @@ public class SimpleExample5 {
             });
   }
 
-  public static class SimpleExample5NodeInfo {
-    public NodeAddress getNodeBAddress() {
-      return new NodeAddress(NODE_B_NAME);
-    }
-  }
-
   public static void main(String[] args) {
     // Packet pipeline goes through phases of either dropping all packets or adding a uniformly distributed delay.
     Random random = new Random();
-    PacketCourierSimulation<SimpleExample5NodeInfo> packetCourierSimulation =
-        PacketCourierSimulation.configuration(
-                (address, topology, clock) -> new SimpleExample5NodeInfo())
+    PacketCourierSimulation packetCourierSimulation =
+        PacketCourierSimulation.configuration()
             .addNode(NODE_A_NAME, SimpleExample5::runNodeA)
             .addNode(NODE_B_NAME, SimpleExample5::runNodeB)
             .addConnection(

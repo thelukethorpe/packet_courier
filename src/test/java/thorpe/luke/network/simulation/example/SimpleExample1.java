@@ -8,7 +8,6 @@ import thorpe.luke.network.packet.NetworkCondition;
 import thorpe.luke.network.packet.Packet;
 import thorpe.luke.network.packet.PacketPipeline;
 import thorpe.luke.network.simulation.PacketCourierSimulation;
-import thorpe.luke.network.simulation.node.NodeAddress;
 import thorpe.luke.network.simulation.worker.WorkerManager;
 import thorpe.luke.network.simulation.worker.WorkerTask;
 
@@ -17,22 +16,23 @@ public class SimpleExample1 {
   public static final String NODE_A_NAME = "Alice";
   public static final String NODE_B_NAME = "Bob";
 
-  public static void runNodeA(WorkerManager<SimpleExample1NodeInfo> workerManager) {
+  public static void runNodeA(WorkerManager workerManager) {
     // Node A sends the numbers 1 to 10 to node B.
     for (int i = 1; i <= 10; i++) {
       String message =
           "Hello "
-              + workerManager.getInfo().getNodeBAddress()
+              + workerManager.getTopology().getNodeAddress(NODE_B_NAME)
               + ", please print this message containing the number "
               + i
               + ".";
       Packet messageAsPacket = Packet.of(message);
       workerManager.sendMail(
-          workerManager.getInfo().getNodeBAddress().asRootWorkerAddress(), messageAsPacket);
+          workerManager.getTopology().getNodeAddress(NODE_B_NAME).asRootWorkerAddress(),
+          messageAsPacket);
     }
   }
 
-  public static void runNodeB(WorkerManager<SimpleExample1NodeInfo> workerManager) {
+  public static void runNodeB(WorkerManager workerManager) {
     // Node B waits for messages from node A and automatically shuts down after 5 seconds.
     WorkerTask.configure()
         .withTimeout(5, TimeUnit.SECONDS)
@@ -45,25 +45,21 @@ public class SimpleExample1 {
                     .ifPresent(
                         message ->
                             workerManager.log(
-                                workerManager.getInfo().getNodeBAddress()
+                                workerManager
+                                        .getTopology()
+                                        .getNodeAddress(NODE_B_NAME)
+                                        .asRootWorkerAddress()
                                     + " has received the following message: "
                                     + message));
               } while (true);
             });
   }
 
-  public static class SimpleExample1NodeInfo {
-    public NodeAddress getNodeBAddress() {
-      return new NodeAddress(NODE_B_NAME);
-    }
-  }
-
   public static void main(String[] args) {
     // Packet pipeline drops half of the packets that travel through it.
     Random random = new Random();
-    PacketCourierSimulation<SimpleExample1NodeInfo> packetCourierSimulation =
-        PacketCourierSimulation.configuration(
-                (address, topology, clock) -> new SimpleExample1NodeInfo())
+    PacketCourierSimulation simulation =
+        PacketCourierSimulation.configuration()
             .addNode(NODE_A_NAME, SimpleExample1::runNodeA)
             .addNode(NODE_B_NAME, SimpleExample1::runNodeB)
             .addConnection(
@@ -76,9 +72,9 @@ public class SimpleExample1 {
             .addLogger(ConsoleLogger.out())
             .usingWallClock()
             .configure();
-    packetCourierSimulation.start();
+    simulation.start();
     try {
-      packetCourierSimulation.waitFor();
+      simulation.waitFor();
     } catch (InterruptedException e) {
       e.printStackTrace();
       System.exit(1);

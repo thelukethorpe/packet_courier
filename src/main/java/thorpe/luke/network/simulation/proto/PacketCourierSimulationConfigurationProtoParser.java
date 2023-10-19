@@ -19,51 +19,46 @@ import thorpe.luke.network.packet.NetworkCondition;
 import thorpe.luke.network.packet.NetworkEvent;
 import thorpe.luke.network.packet.PacketPipeline;
 import thorpe.luke.network.simulation.*;
-import thorpe.luke.network.simulation.node.DefaultNodeInfo;
-import thorpe.luke.network.simulation.node.NodeInfoGenerator;
 import thorpe.luke.network.simulation.worker.WorkerProcessConfiguration;
 import thorpe.luke.network.simulation.worker.WorkerScript;
 import thorpe.luke.util.UniqueStringGenerator;
 
-public class PacketCourierSimulationConfigurationProtoParser<NodeInfo> {
+public class PacketCourierSimulationConfigurationProtoParser {
 
   private static final DateTimeFormatter LOG_FILE_DATE_FORMAT =
       DateTimeFormatter.ofPattern("yyyy_MM_dd_hh_mm_ss");
 
-  private final PacketCourierSimulation.Configuration<NodeInfo> configuration;
-  private final Map<String, WorkerScript<NodeInfo>> nodeNameToWorkerScriptWorkList;
+  private final PacketCourierSimulation.Configuration configuration;
+  private final Map<String, WorkerScript> nodeNameToWorkerScriptWorkList;
   private final Random random;
   private final UniqueStringGenerator uniqueStringGenerator = new UniqueStringGenerator();
 
   private PacketCourierSimulationConfigurationProtoParser(
-      PacketCourierSimulation.Configuration<NodeInfo> configuration,
-      Map<String, WorkerScript<NodeInfo>> nodeNameToWorkerScriptWorkList,
+      PacketCourierSimulation.Configuration configuration,
+      Map<String, WorkerScript> nodeNameToWorkerScriptWorkList,
       Random random) {
     this.configuration = configuration;
     this.nodeNameToWorkerScriptWorkList = nodeNameToWorkerScriptWorkList;
     this.random = random;
   }
 
-  public static PacketCourierSimulation.Configuration<DefaultNodeInfo> parse(File protobufFile) {
-    return parse(protobufFile, DefaultNodeInfo.generator(), new HashMap<>());
+  public static PacketCourierSimulation.Configuration parse(File protobufFile) {
+    return parse(protobufFile, new HashMap<>());
   }
 
-  public static <NodeInfo> PacketCourierSimulation.Configuration<NodeInfo> parse(
-      File protobufFile,
-      NodeInfoGenerator<NodeInfo> nodeInfoGenerator,
-      Map<String, WorkerScript<NodeInfo>> nodeNameToWorkerScriptMap) {
+  public static PacketCourierSimulation.Configuration parse(
+      File protobufFile, Map<String, WorkerScript> nodeNameToWorkerScriptMap) {
     PacketCourierSimulationConfigurationProto configurationProto;
     try {
       configurationProto = readProtobufFile(protobufFile);
     } catch (IOException e) {
       throw new PacketCourierSimulationConfigurationProtoParserException(e);
     }
-    PacketCourierSimulation.Configuration<NodeInfo> configuration =
-        PacketCourierSimulation.configuration(nodeInfoGenerator);
+    PacketCourierSimulation.Configuration configuration = PacketCourierSimulation.configuration();
     Random random =
         configurationProto.hasSeed() ? new Random(configurationProto.getSeed()) : new Random();
-    PacketCourierSimulationConfigurationProtoParser<NodeInfo> parser =
-        new PacketCourierSimulationConfigurationProtoParser<>(
+    PacketCourierSimulationConfigurationProtoParser parser =
+        new PacketCourierSimulationConfigurationProtoParser(
             configuration, new HashMap<>(nodeNameToWorkerScriptMap), random);
     return parser.parseConfiguration(configurationProto);
   }
@@ -82,7 +77,7 @@ public class PacketCourierSimulationConfigurationProtoParser<NodeInfo> {
     return protoBuilder.build();
   }
 
-  private PacketCourierSimulation.Configuration<NodeInfo> parseConfiguration(
+  private PacketCourierSimulation.Configuration parseConfiguration(
       PacketCourierSimulationConfigurationProto configurationProto) {
     if (configurationProto.getWallClockEnabled()) {
       configuration.usingWallClock();
@@ -165,14 +160,13 @@ public class PacketCourierSimulationConfigurationProtoParser<NodeInfo> {
 
     for (ConnectionProto connectionProto : customTopologyProto.getConnectionsList()) {
       String sourceNodeName = connectionProto.getSourceNodeName();
-      WorkerScript<NodeInfo> sourceNodeWorkerScript =
-          nodeNameToWorkerScriptWorkList.get(sourceNodeName);
+      WorkerScript sourceNodeWorkerScript = nodeNameToWorkerScriptWorkList.get(sourceNodeName);
       if (sourceNodeWorkerScript != null) {
         configuration.addNode(sourceNodeName, sourceNodeWorkerScript);
         nodeNameToWorkerScriptWorkList.remove(sourceNodeName);
       }
       String destinationNodeName = connectionProto.getDestinationNodeName();
-      WorkerScript<NodeInfo> destinationNodeWorkerScript =
+      WorkerScript destinationNodeWorkerScript =
           nodeNameToWorkerScriptWorkList.get(destinationNodeName);
       if (destinationNodeWorkerScript != null) {
         configuration.addNode(destinationNodeName, destinationNodeWorkerScript);
