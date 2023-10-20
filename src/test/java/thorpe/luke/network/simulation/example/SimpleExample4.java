@@ -61,14 +61,7 @@ public class SimpleExample4 {
                 PacketPipeline.parameters(NetworkCondition.uniformPacketCorruption(0.75, random)))
             .addLogger(ConsoleLogger.out())
             .configure();
-    packetCourierSimulation.start();
-    try {
-      packetCourierSimulation.waitFor();
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-      System.exit(1);
-      return;
-    }
+    packetCourierSimulation.run();
     System.out.println("Simulation complete. Exiting elegantly...");
   }
 }

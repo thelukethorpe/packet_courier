@@ -80,14 +80,7 @@ public class SimpleExample3 {
             .addConnection(NODE_B_NAME, NODE_A_NAME, PacketPipeline.perfectParameters())
             .addLogger(ConsoleLogger.out())
             .configure();
-    simulation.start();
-    try {
-      simulation.waitFor();
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-      System.exit(1);
-      return;
-    }
+    simulation.run();
     System.out.println("Simulation complete. Exiting elegantly...");
   }
 }
