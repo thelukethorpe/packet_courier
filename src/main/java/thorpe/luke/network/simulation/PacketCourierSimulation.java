@@ -25,9 +25,9 @@ import thorpe.luke.network.simulation.worker.WorkerProcessMonitor;
 import thorpe.luke.time.Clock;
 import thorpe.luke.time.VirtualClock;
 import thorpe.luke.time.WallClock;
-import thorpe.luke.util.ExceptionListener;
 import thorpe.luke.util.ThreadNameGenerator;
 import thorpe.luke.util.UniqueLoopbackIpv4AddressGenerator;
+import thorpe.luke.util.error.ExceptionListener;
 
 public class PacketCourierSimulation {
 

@@ -1,4 +1,4 @@
-package thorpe.luke.util;
+package thorpe.luke.util.error;
 
 @FunctionalInterface
 public interface ExceptionListener {
