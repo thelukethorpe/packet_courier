@@ -7,7 +7,7 @@ import thorpe.luke.network.simulation.mail.Mail;
 import thorpe.luke.network.simulation.mail.PostalService;
 import thorpe.luke.network.simulation.worker.*;
 import thorpe.luke.time.Clock;
-import thorpe.luke.util.ExceptionListener;
+import thorpe.luke.util.error.ExceptionListener;
 
 public class Node {
   private final NodeAddress address;

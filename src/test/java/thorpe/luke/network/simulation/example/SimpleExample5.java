@@ -63,7 +63,7 @@ public class SimpleExample5 {
   public static void main(String[] args) {
     // Packet pipeline goes through phases of either dropping all packets or adding a uniformly distributed delay.
     Random random = new Random();
-    PacketCourierSimulation packetCourierSimulation =
+    PacketCourierSimulation simulation =
         PacketCourierSimulation.configuration()
             .addNode(NODE_A_NAME, SimpleExample5::runNodeA)
             .addNode(NODE_B_NAME, SimpleExample5::runNodeB)
@@ -89,14 +89,7 @@ public class SimpleExample5 {
             .addLogger(ConsoleLogger.out())
             .usingWallClock()
             .configure();
-    packetCourierSimulation.start();
-    try {
-      packetCourierSimulation.waitFor();
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-      System.exit(1);
-      return;
-    }
+    simulation.run();
     System.out.println("Simulation complete. Exiting elegantly...");
   }
 }

@@ -9,9 +9,9 @@ import thorpe.luke.network.simulation.Topology;
 import thorpe.luke.network.simulation.mail.Mailbox;
 import thorpe.luke.network.simulation.mail.PostalService;
 import thorpe.luke.time.Clock;
-import thorpe.luke.util.ExceptionListener;
 import thorpe.luke.util.GarbageCollector;
 import thorpe.luke.util.Prunable;
+import thorpe.luke.util.error.ExceptionListener;
 
 public class WorkerAddressBook implements Prunable {
 

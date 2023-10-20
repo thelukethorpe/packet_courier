@@ -75,14 +75,7 @@ public class ProtoExample1 {
                 })
             .addLogger(ConsoleLogger.out())
             .configure();
-    simulation.start();
-    try {
-      simulation.waitFor();
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-      System.exit(1);
-      return;
-    }
+    simulation.run();
     System.out.println("Simulation complete. Exiting elegantly...");
   }
 }

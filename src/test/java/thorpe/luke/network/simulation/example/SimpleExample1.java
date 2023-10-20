@@ -72,14 +72,7 @@ public class SimpleExample1 {
             .addLogger(ConsoleLogger.out())
             .usingWallClock()
             .configure();
-    simulation.start();
-    try {
-      simulation.waitFor();
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-      System.exit(1);
-      return;
-    }
+    simulation.run();
     System.out.println("Simulation complete. Exiting elegantly...");
   }
 }

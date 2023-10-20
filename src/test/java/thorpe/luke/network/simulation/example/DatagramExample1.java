@@ -26,7 +26,7 @@ public class DatagramExample1 {
         Paths.get(ProtoExample1.class.getResource("simple_server.py").toURI()).toFile();
     // Packet pipeline drops half of the packets that travel through it.
     Random random = new Random();
-    PacketCourierSimulation packetCourierSimulation =
+    PacketCourierSimulation simulation =
         PacketCourierSimulation.configuration()
             .addNode(
                 NODE_A_NAME,
@@ -54,14 +54,7 @@ public class DatagramExample1 {
             .withCrashDumpLocation(Paths.get("."))
             .withProcessLoggingEnabled()
             .configure();
-    packetCourierSimulation.start();
-    try {
-      packetCourierSimulation.waitFor();
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-      System.exit(1);
-      return;
-    }
+    simulation.run();
     System.out.println("Simulation complete. Exiting elegantly...");
   }
 }
