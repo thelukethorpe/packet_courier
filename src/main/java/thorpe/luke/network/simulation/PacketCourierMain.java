@@ -93,16 +93,8 @@ public class PacketCourierMain {
     // Start the simulation.
     print("Info: Starting Packet Courier simulation...");
     print("#################### START ####################");
-    simulation.start();
 
-    // Wait for the simulation to complete.
-    try {
-      simulation.waitFor();
-    } catch (InterruptedException e) {
-      exit(
-          EXIT_CODE_FATAL_ERROR_SIGNAL_FAILURE,
-          "Fatal: Packet Courier simulation was interrupted.");
-    }
+    simulation.run();
 
     // Simulation complete.
     print("#################### FINISH ####################");
