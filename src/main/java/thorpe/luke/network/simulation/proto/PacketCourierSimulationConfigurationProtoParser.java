@@ -116,17 +116,9 @@ public class PacketCourierSimulationConfigurationProtoParser {
       configuration.withProcessMonitorCheckupInterval(
           parseDuration(debugProto.getProcessMonitorCheckupInterval()));
     }
-    if (debugProto.hasTickDurationSampleSize()) {
-      configuration.withTickDurationSampleSize(debugProto.getTickDurationSampleSize());
-    }
     if (debugProto.hasCrashDumpLocation()) {
       configuration.withCrashDumpLocation(Paths.get(debugProto.getCrashDumpLocation()));
     }
-
-    debugProto
-        .getMetaLoggersList()
-        .forEach(
-            loggerProto -> configuration.addMetaLogger(parseLogger(loggerProto, "meta-logger")));
   }
 
   private Optional<String> parseTopology(TopologyProto topologyProto) {

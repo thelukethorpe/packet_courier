@@ -21,9 +21,7 @@ message PacketCourierSimulationConfigurationProto {
 message DebugProto {
   bool processMonitorEnabled = 1;
   optional DurationProto processMonitorCheckupInterval = 2;
-  optional int32 tickDurationSampleSize = 3;
-  optional string crashDumpLocation = 4;
-  repeated LoggerProto metaLoggers = 5;
+  optional string crashDumpLocation = 3;
 }
 
 message DurationProto {
