@@ -10,9 +10,9 @@ import thorpe.luke.log.BufferedFileLogger;
 import thorpe.luke.log.Logger;
 import thorpe.luke.network.packet.Packet;
 import thorpe.luke.network.simulation.PacketCourierSimulation;
-import thorpe.luke.network.simulation.Topology;
 import thorpe.luke.network.simulation.mail.Mailbox;
 import thorpe.luke.network.simulation.mail.PostalService;
+import thorpe.luke.network.simulation.node.NodeTopology;
 import thorpe.luke.time.Clock;
 import thorpe.luke.util.error.ExceptionListener;
 
@@ -23,7 +23,7 @@ public class WorkerManager {
 
   private final WorkerAddress address;
   private final Clock clock;
-  private final Topology topology;
+  private final NodeTopology nodeTopology;
   private final Mailbox mailbox;
   private final PostalService postalService;
   private final Logger logger;
@@ -35,7 +35,7 @@ public class WorkerManager {
   public WorkerManager(
       WorkerAddress address,
       Clock clock,
-      Topology topology,
+      NodeTopology nodeTopology,
       Mailbox mailbox,
       PostalService postalService,
       Logger logger,
@@ -45,7 +45,7 @@ public class WorkerManager {
       WorkerAddressBook workerAddressBook) {
     this.address = address;
     this.clock = clock;
-    this.topology = topology;
+    this.nodeTopology = nodeTopology;
     this.mailbox = mailbox;
     this.postalService = postalService;
     this.logger = logger;
@@ -63,8 +63,8 @@ public class WorkerManager {
     return clock.now();
   }
 
-  public Topology getTopology() {
-    return topology;
+  public NodeTopology getTopology() {
+    return nodeTopology;
   }
 
   public void sendMail(WorkerAddress destinationAddress, Packet packet) {
@@ -86,7 +86,7 @@ public class WorkerManager {
         workerScript,
         childWorkerAddress,
         clock,
-        topology,
+        nodeTopology,
         exceptionListener,
         crashDumpLocation,
         workerAddressGenerator,

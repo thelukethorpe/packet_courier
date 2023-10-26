@@ -2,7 +2,6 @@ package thorpe.luke.network.simulation.node;
 
 import java.nio.file.Path;
 import thorpe.luke.log.Logger;
-import thorpe.luke.network.simulation.Topology;
 import thorpe.luke.network.simulation.mail.Mail;
 import thorpe.luke.network.simulation.mail.PostalService;
 import thorpe.luke.network.simulation.worker.*;
@@ -27,7 +26,7 @@ public class Node {
   public void doWork(
       WorkerScript workerScript,
       Clock clock,
-      Topology topology,
+      NodeTopology nodeTopology,
       ExceptionListener exceptionListener,
       Path crashDumpLocation,
       PostalService postalService,
@@ -38,7 +37,7 @@ public class Node {
             workerScript,
             workerAddress,
             clock,
-            topology,
+            nodeTopology,
             exceptionListener,
             crashDumpLocation,
             workerAddressGenerator,
