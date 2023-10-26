@@ -3,7 +3,7 @@ package thorpe.luke.network.simulation.worker;
 import java.nio.file.Path;
 import thorpe.luke.log.Logger;
 import thorpe.luke.network.packet.Packet;
-import thorpe.luke.network.simulation.Topology;
+import thorpe.luke.network.simulation.NodeTopology;
 import thorpe.luke.network.simulation.mail.Mailbox;
 import thorpe.luke.network.simulation.mail.PostalService;
 import thorpe.luke.time.Clock;
@@ -21,7 +21,7 @@ public class Worker {
       WorkerScript workerScript,
       WorkerAddress address,
       Clock clock,
-      Topology topology,
+      NodeTopology nodeTopology,
       Logger logger,
       ExceptionListener exceptionListener,
       Path crashDumpLocation,
@@ -36,7 +36,7 @@ public class Worker {
                     new WorkerManager(
                         address,
                         clock,
-                        topology,
+                        nodeTopology,
                         mailbox,
                         postalService,
                         logger,

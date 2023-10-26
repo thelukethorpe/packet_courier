@@ -4,11 +4,11 @@ import java.util.*;
 import java.util.stream.Collectors;
 import thorpe.luke.network.simulation.node.NodeAddress;
 
-public class Topology {
+public class NodeTopology {
   private final Map<String, NodeAddress> nodeNameToAddressMap;
   private final Map<NodeAddress, Collection<NodeAddress>> nodeAddressToNeighboursMap;
 
-  private Topology(
+  private NodeTopology(
       Map<String, NodeAddress> nodeNameToAddressMap,
       Map<NodeAddress, Collection<NodeAddress>> nodeAddressToNeighboursMap) {
     this.nodeNameToAddressMap = Collections.unmodifiableMap(nodeNameToAddressMap);
@@ -55,8 +55,8 @@ public class Topology {
     final Map<String, NodeAddress> nodeNameToAddressMap = new HashMap<>();
     final Map<NodeAddress, Collection<NodeAddress>> nodeAddressToNeighboursMap = new HashMap<>();
 
-    public Topology build() {
-      return new Topology(nodeNameToAddressMap, nodeAddressToNeighboursMap);
+    public NodeTopology build() {
+      return new NodeTopology(nodeNameToAddressMap, nodeAddressToNeighboursMap);
     }
 
     public Builder addNode(String nodeName) {

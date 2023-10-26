@@ -8,7 +8,7 @@ import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import thorpe.luke.network.simulation.Topology;
+import thorpe.luke.network.simulation.NodeTopology;
 import thorpe.luke.network.simulation.node.NodeAddress;
 
 public class WorkerProcessConfiguration {
@@ -158,7 +158,7 @@ public class WorkerProcessConfiguration {
 
   public WorkerProcess.Factory buildFactory(
       NodeAddress address,
-      Topology topology,
+      NodeTopology nodeTopology,
       int port,
       InetAddress privateIpAddress,
       Map<WorkerAddress, InetAddress> workerAddressToPublicIpMap,
@@ -170,7 +170,7 @@ public class WorkerProcessConfiguration {
         command[i] =
             wordGenerator.generateWord(
                 address,
-                topology,
+                nodeTopology,
                 port,
                 privateIpAddress,
                 workerAddressToPublicIpMap,
@@ -187,7 +187,7 @@ public class WorkerProcessConfiguration {
   private interface WordGenerator {
     String generateWord(
         NodeAddress address,
-        Topology topology,
+        NodeTopology nodeTopology,
         int port,
         InetAddress privateIpAddress,
         Map<WorkerAddress, InetAddress> workerAddressToPublicIpMap,

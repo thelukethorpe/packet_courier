@@ -50,7 +50,7 @@ public class PacketCourierSimulation {
   private PacketCourierSimulation(
       String simulationName,
       Map<String, RunnableNode> nodes,
-      Topology topology,
+      NodeTopology nodeTopology,
       PacketCourierPostalService postalService,
       Clock clock,
       Logger logger,
@@ -87,7 +87,7 @@ public class PacketCourierSimulation {
                         new Thread(
                             () ->
                                 runnableNode.run(
-                                    topology,
+                                    nodeTopology,
                                     postalService,
                                     clock,
                                     logger,
@@ -251,7 +251,7 @@ public class PacketCourierSimulation {
     }
 
     public void run(
-        Topology topology,
+        NodeTopology nodeTopology,
         PostalService postalService,
         Clock clock,
         Logger logger,
@@ -260,7 +260,7 @@ public class PacketCourierSimulation {
       node.doWork(
           workerScript,
           clock,
-          topology,
+          nodeTopology,
           exceptionListener,
           crashDumpLocation,
           postalService,
@@ -277,7 +277,7 @@ public class PacketCourierSimulation {
 
     WorkerScript getWorkerScript(
         NodeAddress address,
-        Topology topology,
+        NodeTopology nodeTopology,
         int port,
         InetAddress privateIpAddress,
         Map<WorkerAddress, InetAddress> workerAddressToPublicIpMap,
@@ -493,16 +493,16 @@ public class PacketCourierSimulation {
 
     public PacketCourierSimulation configure() {
       // Configure topology logic.
-      Topology.Builder topologyBuilder = Topology.builder();
-      nameToNodeMap.keySet().forEach(topologyBuilder::addNode);
+      NodeTopology.Builder nodeTopologyBuilder = NodeTopology.builder();
+      nameToNodeMap.keySet().forEach(nodeTopologyBuilder::addNode);
       for (NodeConnection nodeConnection : nodeConnectionToPacketPipelineFactoryMap.keySet()) {
         String sourceName = nodeConnection.getSource().getAddress().getName();
         String destinationName = nodeConnection.getDestination().getAddress().getName();
         if (!sourceName.equals(destinationName)) {
-          topologyBuilder.addConnection(sourceName, destinationName);
+          nodeTopologyBuilder.addConnection(sourceName, destinationName);
         }
       }
-      Topology topology = topologyBuilder.build();
+      NodeTopology nodeTopology = nodeTopologyBuilder.build();
 
       // Configure datagram socket logic.
       Map<Node, DatagramSocket> nodeToPublicSocketMap = new HashMap<>();
@@ -554,7 +554,7 @@ public class PacketCourierSimulation {
                         WorkerScript workerScript =
                             workerScriptFactory.getWorkerScript(
                                 node.getAddress(),
-                                topology,
+                                nodeTopology,
                                 port,
                                 privateIpAddress,
                                 workerAddressToPublicIpMap,
@@ -586,7 +586,7 @@ public class PacketCourierSimulation {
       return new PacketCourierSimulation(
           simulationName,
           nameToRunnableNodeMap,
-          topology,
+          nodeTopology,
           postalService,
           clock,
           new MultiLogger(loggers),
