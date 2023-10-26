@@ -21,6 +21,7 @@ import thorpe.luke.network.simulation.mail.PostalService;
 import thorpe.luke.network.simulation.node.Node;
 import thorpe.luke.network.simulation.node.NodeAddress;
 import thorpe.luke.network.simulation.node.NodeConnection;
+import thorpe.luke.network.simulation.node.NodeTopology;
 import thorpe.luke.network.simulation.worker.*;
 import thorpe.luke.time.Clock;
 import thorpe.luke.time.VirtualClock;

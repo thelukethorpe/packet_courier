@@ -8,8 +8,8 @@ import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import thorpe.luke.network.simulation.NodeTopology;
 import thorpe.luke.network.simulation.node.NodeAddress;
+import thorpe.luke.network.simulation.node.NodeTopology;
 
 public class WorkerProcessConfiguration {
 

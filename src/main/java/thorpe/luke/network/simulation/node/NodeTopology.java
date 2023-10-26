@@ -1,8 +1,7 @@
-package thorpe.luke.network.simulation;
+package thorpe.luke.network.simulation.node;
 
 import java.util.*;
 import java.util.stream.Collectors;
-import thorpe.luke.network.simulation.node.NodeAddress;
 
 public class NodeTopology {
   private final Map<String, NodeAddress> nodeNameToAddressMap;

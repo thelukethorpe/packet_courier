@@ -9,10 +9,10 @@ import java.util.List;
 import thorpe.luke.log.BufferedFileLogger;
 import thorpe.luke.log.Logger;
 import thorpe.luke.network.packet.Packet;
-import thorpe.luke.network.simulation.NodeTopology;
 import thorpe.luke.network.simulation.PacketCourierSimulation;
 import thorpe.luke.network.simulation.mail.Mailbox;
 import thorpe.luke.network.simulation.mail.PostalService;
+import thorpe.luke.network.simulation.node.NodeTopology;
 import thorpe.luke.time.Clock;
 import thorpe.luke.util.error.ExceptionListener;
 

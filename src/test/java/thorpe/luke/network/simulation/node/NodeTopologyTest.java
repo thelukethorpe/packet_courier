@@ -1,11 +1,10 @@
-package thorpe.luke.network.simulation;
+package thorpe.luke.network.simulation.node;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Collection;
 import java.util.stream.Collectors;
 import org.junit.Test;
-import thorpe.luke.network.simulation.node.NodeAddress;
 
 public class NodeTopologyTest {
   public static final NodeTopology EMPTY_NODE_TOPOLOGY = NodeTopology.builder().build();

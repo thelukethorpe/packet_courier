@@ -2,7 +2,6 @@ package thorpe.luke.network.simulation.node;
 
 import java.nio.file.Path;
 import thorpe.luke.log.Logger;
-import thorpe.luke.network.simulation.NodeTopology;
 import thorpe.luke.network.simulation.mail.Mail;
 import thorpe.luke.network.simulation.mail.PostalService;
 import thorpe.luke.network.simulation.worker.*;
