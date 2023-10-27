@@ -44,10 +44,11 @@ public class SimpleExample3 {
                                 .tryParse(String.class)
                                 .ifPresent(
                                     message ->
-                                        childWorkerManager.log(
-                                            childWorkerManager.getAddress()
-                                                + " has received the following message: "
-                                                + message));
+                                        ConsoleLogger.out()
+                                            .log(
+                                                childWorkerManager.getAddress()
+                                                    + " has received the following message: "
+                                                    + message));
                           }
                         }))
             .collect(Collectors.toList());
@@ -79,6 +80,7 @@ public class SimpleExample3 {
             .addConnection(NODE_A_NAME, NODE_B_NAME, PacketPipeline.perfectParameters())
             .addConnection(NODE_B_NAME, NODE_A_NAME, PacketPipeline.perfectParameters())
             .addLogger(ConsoleLogger.out())
+            .usingWallClock()
             .configure();
     simulation.run();
     System.out.println("Simulation complete. Exiting elegantly...");

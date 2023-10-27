@@ -1,5 +1,6 @@
 package thorpe.luke.network.simulation;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.*;
 import java.nio.file.Path;
@@ -9,6 +10,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
+import thorpe.luke.log.BufferedFileLogger;
 import thorpe.luke.log.Logger;
 import thorpe.luke.log.MultiLogger;
 import thorpe.luke.log.TemplateLogger;
@@ -36,13 +38,16 @@ public class PacketCourierSimulation {
   public static final String CONFIGURATION_FILE_EXTENSION = ".courierconfig";
   public static final String CRASH_DUMP_FILE_EXTENSION = ".couriercrashdump";
 
-  private static final DateTimeFormatter META_LOG_DATE_FORMAT =
+  private static final DateTimeFormatter LOG_DATE_FORMAT =
       DateTimeFormatter.ofPattern("dd/MM/yyyy-hh:mm:ss");
+
+  private static final DateTimeFormatter CRASH_DUMP_DATE_FORMAT =
+      DateTimeFormatter.ofPattern("yyyy_MM_dd_hh_mm_ss");
 
   private final String simulationName;
   private final PacketCourierPostalService postalService;
+  private final Clock clock;
   private final Logger logger;
-  private final Logger metaLogger;
   private final WorkerProcessMonitor workerProcessMonitor;
   private final int port;
   private final Map<Node, Thread> nodeThreads;
@@ -55,28 +60,26 @@ public class PacketCourierSimulation {
       PacketCourierPostalService postalService,
       Clock clock,
       Logger logger,
-      Logger metaLogger,
       WorkerProcessMonitor workerProcessMonitor,
       Path crashDumpLocation,
       int port,
       int datagramBufferSize,
-      int tickDurationSampleSize,
       Map<InetAddress, WorkerAddress> privateIpAddressToWorkerAddressMap,
       Map<Node, DatagramSocket> nodeToPublicSocketMap) {
     this.simulationName = simulationName;
     this.postalService = postalService;
-    this.logger = logger;
-    this.metaLogger =
+    this.clock = clock;
+    this.logger =
         new TemplateLogger(
             message -> {
               LocalDateTime now = LocalDateTime.now();
               return String.format(
-                  "%s-%s: %s.", META_LOG_DATE_FORMAT.format(now), simulationName, message);
+                  "%s-%s: %s.", LOG_DATE_FORMAT.format(now), simulationName, message);
             },
-            metaLogger);
+            logger);
     this.workerProcessMonitor = workerProcessMonitor;
     this.port = port;
-    this.metaLogger.log("Preprocessing simulation");
+    this.logger.log("Preprocessing simulation");
     this.nodeThreads =
         nodes
             .values()
@@ -88,12 +91,7 @@ public class PacketCourierSimulation {
                         new Thread(
                             () ->
                                 runnableNode.run(
-                                    nodeTopology,
-                                    postalService,
-                                    clock,
-                                    logger,
-                                    this::metaExceptionHandler,
-                                    crashDumpLocation),
+                                    nodeTopology, postalService, clock, crashDumpLocation),
                             ThreadNameGenerator.generateThreadName(
                                 runnableNode.getNode().getAddress().getName()))));
     // Configure datagram routing layer logic.
@@ -133,12 +131,14 @@ public class PacketCourierSimulation {
     return simulationName;
   }
 
-  private void metaExceptionHandler(Exception exception) {
-    String exceptionStackTrace =
+  private static void handleException(String name, Logger logger, Exception exception) {
+    String stackTrace =
         Arrays.stream(exception.getStackTrace())
             .map(StackTraceElement::toString)
             .collect(Collectors.joining("\n"));
-    metaLogger.log("Internal simulation exception; stack trace:" + exceptionStackTrace);
+    logger.log(
+        String.format(
+            "%s encountered an exception: %s\n%s", name, exception.getMessage(), stackTrace));
   }
 
   private void joinAll(Collection<Thread> threads) {
@@ -146,7 +146,7 @@ public class PacketCourierSimulation {
       try {
         thread.join();
       } catch (InterruptedException e) {
-        metaExceptionHandler(e);
+        handleException(simulationName, logger, e);
       }
     }
   }
@@ -188,42 +188,40 @@ public class PacketCourierSimulation {
 
   public void startWorkers() {
     if (workerProcessMonitor != null) {
-      workerProcessMonitor.addLogger(metaLogger);
+      workerProcessMonitor.addLogger(logger);
       workerProcessMonitor.start();
     }
     if (!datagramRoutingThreads.isEmpty()) {
       datagramRoutingThreads.forEach(Thread::start);
-      metaLogger.log("Now listening on port " + port);
+      logger.log("Now listening on port " + port);
     }
 
     for (Map.Entry<Node, Thread> nodeThreadEntry : nodeThreads.entrySet()) {
       Node node = nodeThreadEntry.getKey();
       Thread nodeThread = nodeThreadEntry.getValue();
       nodeThread.start();
-      metaLogger.log("Node \"" + node.getAddress().getName() + "\" has been set to work");
+      logger.log("Node \"" + node.getAddress().getName() + "\" has been set to work");
     }
 
-    metaLogger.log("Simulation is now fully operational");
+    logger.log("Simulation is now fully operational");
   }
 
   private void waitForWorkers() {
-    metaLogger.log("All nodes have completed their work; simulation is now cleaning up resources");
+    logger.log("All nodes have completed their work; simulation is now cleaning up resources");
     joinAll(nodeThreads.values());
     joinAll(datagramRoutingThreads);
     if (workerProcessMonitor != null) {
       try {
         workerProcessMonitor.shutdown();
       } catch (InterruptedException e) {
-        metaExceptionHandler(e);
+        handleException(simulationName, logger, e);
       }
     }
 
     // Flush and close loggers.
-    metaLogger.log("Flushing and closing loggers");
+    logger.log("Flushing and closing logger");
     logger.flush();
     logger.close();
-    metaLogger.flush();
-    metaLogger.close();
   }
 
   private boolean hasFinished() {
@@ -237,7 +235,8 @@ public class PacketCourierSimulation {
   public void run() {
     startWorkers();
     while (!hasFinished()) {
-      tick(LocalDateTime.now());
+      tick(clock.now());
+      clock.tick();
     }
     waitForWorkers();
   }
@@ -255,17 +254,8 @@ public class PacketCourierSimulation {
         NodeTopology nodeTopology,
         PostalService postalService,
         Clock clock,
-        Logger logger,
-        ExceptionListener exceptionListener,
         Path crashDumpLocation) {
-      node.doWork(
-          workerScript,
-          clock,
-          nodeTopology,
-          exceptionListener,
-          crashDumpLocation,
-          postalService,
-          logger);
+      node.doWork(workerScript, nodeTopology, crashDumpLocation, postalService);
     }
 
     public Node getNode() {
@@ -285,7 +275,9 @@ public class PacketCourierSimulation {
         int datagramBufferSize,
         Map<InetAddress, DatagramSocket> privateIpAddressToPublicSocketMap,
         boolean processLoggingEnabled,
-        WorkerProcessMonitor workerProcessMonitor);
+        WorkerProcessMonitor workerProcessMonitor,
+        Path crashDumpLocation,
+        Logger logger);
   }
 
   @FunctionalInterface
@@ -301,7 +293,6 @@ public class PacketCourierSimulation {
     private final Map<NodeConnection, PacketPipelineFactory>
         nodeConnectionToPacketPipelineFactoryMap = new HashMap<>();
     private final Collection<Logger> loggers = new LinkedList<>();
-    private final Collection<Logger> metaLoggers = new LinkedList<>();
     private String simulationName = "Packet Courier Simulation";
     private Clock clock = new VirtualClock(ChronoUnit.MILLIS);
     private boolean hasDatagramRoutingLayer = false;
@@ -311,7 +302,6 @@ public class PacketCourierSimulation {
     private boolean processLoggingEnabled = false;
     private boolean processMonitorEnabled = false;
     private Duration processMonitorCheckupInterval = Duration.of(10, ChronoUnit.SECONDS);
-    private int tickDurationSampleSize = 1_000_000;
 
     public Configuration() {}
 
@@ -346,8 +336,7 @@ public class PacketCourierSimulation {
       if (workerScript == null) {
         throw new PacketCourierSimulationConfigurationException("Node script cannot be null.");
       }
-      addNode(
-          name,
+      WorkerScriptFactory workerScriptFactory =
           (address,
               topology,
               port,
@@ -356,7 +345,10 @@ public class PacketCourierSimulation {
               datagramBufferSize,
               privateIpAddressToPublicSocketMap,
               processLoggingEnabled,
-              workerProcessMonitor) -> workerScript);
+              workerProcessMonitor,
+              crashDumpLocation,
+              logger) -> workerScript;
+      addNode(name, workerScriptFactory);
       return this;
     }
 
@@ -367,8 +359,7 @@ public class PacketCourierSimulation {
         throw new PacketCourierSimulationConfigurationException(
             "Node process configuration cannot be null.");
       }
-      addNode(
-          name,
+      WorkerScriptFactory workerScriptFactory =
           (address,
               topology,
               port,
@@ -377,7 +368,9 @@ public class PacketCourierSimulation {
               datagramBufferSize,
               privateIpAddressToPublicSocketMap,
               processLoggingEnabled,
-              workerProcessMonitor) -> {
+              workerProcessMonitor,
+              crashDumpLocation,
+              logger) -> {
             WorkerProcess.Factory workerProcessFactory =
                 workerProcessConfiguration.buildFactory(
                     address,
@@ -386,6 +379,29 @@ public class PacketCourierSimulation {
                     privateIpAddress,
                     workerAddressToPublicIpMap,
                     datagramBufferSize);
+            ExceptionListener exceptionListener =
+                exception -> {
+                  if (crashDumpLocation == null) {
+                    return;
+                  }
+                  LocalDateTime now = LocalDateTime.now();
+                  String crashDumpFileName =
+                      address.getName().replaceAll("\\s+", "-")
+                          + "__"
+                          + CRASH_DUMP_DATE_FORMAT.format(now)
+                          + PacketCourierSimulation.CRASH_DUMP_FILE_EXTENSION;
+                  File crashDumpFile = crashDumpLocation.resolve(crashDumpFileName).toFile();
+                  BufferedFileLogger crashDumpFileLogger;
+                  try {
+                    crashDumpFileLogger = new BufferedFileLogger(crashDumpFile);
+                  } catch (IOException e) {
+                    handleException(address.getName(), logger, e);
+                    return;
+                  }
+                  handleException(address.getName(), crashDumpFileLogger, exception);
+                  crashDumpFileLogger.flush();
+                  crashDumpFileLogger.close();
+                };
             return WorkerDatagramForwardingScript.builder()
                 .withWorkerProcessFactory(workerProcessFactory)
                 .withPort(port)
@@ -394,8 +410,11 @@ public class PacketCourierSimulation {
                 .withPrivateIpAddressToPublicSocketMap(privateIpAddressToPublicSocketMap)
                 .withProcessLoggingEnabled(processLoggingEnabled)
                 .withProcessMonitor(workerProcessMonitor)
+                .withExceptionListener(exceptionListener)
+                .withLogger(logger)
                 .build();
-          });
+          };
+      addNode(name, workerScriptFactory);
       return this;
     }
 
@@ -447,11 +466,6 @@ public class PacketCourierSimulation {
       return this;
     }
 
-    public Configuration addMetaLogger(Logger metaLogger) {
-      metaLoggers.add(metaLogger);
-      return this;
-    }
-
     public Configuration usingWallClock() {
       clock = new WallClock();
       return this;
@@ -487,12 +501,8 @@ public class PacketCourierSimulation {
       return this;
     }
 
-    public Configuration withTickDurationSampleSize(int tickDurationSampleSize) {
-      this.tickDurationSampleSize = tickDurationSampleSize;
-      return this;
-    }
-
     public PacketCourierSimulation configure() {
+      Logger logger = new MultiLogger(loggers);
       // Configure topology logic.
       NodeTopology.Builder nodeTopologyBuilder = NodeTopology.builder();
       nameToNodeMap.keySet().forEach(nodeTopologyBuilder::addNode);
@@ -562,7 +572,9 @@ public class PacketCourierSimulation {
                                 datagramBufferSize,
                                 privateIpAddressToPublicSocketMap,
                                 processLoggingEnabled,
-                                workerProcessMonitor);
+                                workerProcessMonitor,
+                                crashDumpLocation,
+                                logger);
                         return new RunnableNode(node, workerScript);
                       }));
 
@@ -590,13 +602,11 @@ public class PacketCourierSimulation {
           nodeTopology,
           postalService,
           clock,
-          new MultiLogger(loggers),
-          new MultiLogger(metaLoggers),
+          logger,
           processMonitorEnabled ? workerProcessMonitor : null,
           crashDumpLocation,
           port,
           datagramBufferSize,
-          tickDurationSampleSize,
           privateIpAddressToWorkerAddressMap,
           nodeToPublicSocketMap);
     }

@@ -55,6 +55,7 @@ public class WorkerProcess {
   }
 
   public WorkerProcessExitStatus waitFor() throws InterruptedException, IOException {
+    // TODO(#174): replace this thread with a tick-based model
     Thread processLoggingThread =
         new Thread(
             this::logProcessOutput, ThreadNameGenerator.generateThreadName(name + " Logger"));

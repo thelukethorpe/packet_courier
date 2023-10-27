@@ -1,12 +1,9 @@
 package thorpe.luke.network.simulation.node;
 
 import java.nio.file.Path;
-import thorpe.luke.log.Logger;
 import thorpe.luke.network.simulation.mail.Mail;
 import thorpe.luke.network.simulation.mail.PostalService;
 import thorpe.luke.network.simulation.worker.*;
-import thorpe.luke.time.Clock;
-import thorpe.luke.util.error.ExceptionListener;
 
 public class Node {
   private final NodeAddress address;
@@ -25,25 +22,19 @@ public class Node {
 
   public void doWork(
       WorkerScript workerScript,
-      Clock clock,
       NodeTopology nodeTopology,
-      ExceptionListener exceptionListener,
       Path crashDumpLocation,
-      PostalService postalService,
-      Logger logger) {
+      PostalService postalService) {
     WorkerAddress workerAddress = address.asRootWorkerAddress();
     Worker worker =
         workerAddressBook.registerWorker(
             workerScript,
             workerAddress,
-            clock,
             nodeTopology,
-            exceptionListener,
             crashDumpLocation,
             workerAddressGenerator,
             workerAddressBook,
-            postalService,
-            logger);
+            postalService);
     worker.run();
   }
 

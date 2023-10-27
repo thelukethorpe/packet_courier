@@ -44,13 +44,14 @@ public class SimpleExample1 {
                     .tryParse()
                     .ifPresent(
                         message ->
-                            workerManager.log(
-                                workerManager
-                                        .getTopology()
-                                        .getNodeAddress(NODE_B_NAME)
-                                        .asRootWorkerAddress()
-                                    + " has received the following message: "
-                                    + message));
+                            ConsoleLogger.out()
+                                .log(
+                                    workerManager
+                                            .getTopology()
+                                            .getNodeAddress(NODE_B_NAME)
+                                            .asRootWorkerAddress()
+                                        + " has received the following message: "
+                                        + message));
               } while (true);
             });
   }

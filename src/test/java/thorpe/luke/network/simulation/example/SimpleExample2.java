@@ -1,5 +1,6 @@
 package thorpe.luke.network.simulation.example;
 
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoField;
 import java.util.Collection;
 import java.util.Random;
@@ -47,10 +48,10 @@ public class SimpleExample2 {
                                   + " -> "
                                   + workerManager.getAddress()
                                   + ", received at t = "
-                                  + workerManager.getCurrentTime().get(ChronoField.MILLI_OF_SECOND)
+                                  + LocalDateTime.now().get(ChronoField.MILLI_OF_SECOND)
                                   + "ms";
                           Packet newMessageAsPacket = Packet.of(newMessage);
-                          workerManager.log(newMessage);
+                          ConsoleLogger.out().log(newMessage);
                           neighbourAddresses.forEach(
                               neighbour ->
                                   workerManager.sendMail(
@@ -66,7 +67,7 @@ public class SimpleExample2 {
     PacketPipeline.Parameters lossyNetworkParameters =
         PacketPipeline.parameters(NetworkCondition.uniformPacketDrop(1.0 / N, random));
     PacketCourierSimulation.Configuration packetCourierSimulationConfiguration =
-        PacketCourierSimulation.configuration().addLogger(ConsoleLogger.out());
+        PacketCourierSimulation.configuration().addLogger(ConsoleLogger.out()).usingWallClock();
 
     String[] nodeNames = new String[N];
     for (int i = 0; i < N; i++) {

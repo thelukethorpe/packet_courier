@@ -46,12 +46,12 @@ public class SimpleExample5 {
                     .ifPresent(
                         current -> {
                           if (current < previous.get()) {
-                            workerManager.log("OUT OF ORDER: " + current);
+                            ConsoleLogger.out().log("OUT OF ORDER: " + current);
                           } else if (previous.get() + 1 < current) {
-                            workerManager.log("DROPPED DETECTED OR OUT OF ORDER: " + current);
+                            ConsoleLogger.out().log("DROPPED DETECTED OR OUT OF ORDER: " + current);
                             previous.set(current);
                           } else {
-                            workerManager.log(current.toString());
+                            ConsoleLogger.out().log(current.toString());
                             previous.set(current);
                           }
                         });
