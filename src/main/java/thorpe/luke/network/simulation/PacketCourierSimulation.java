@@ -6,6 +6,7 @@ import java.net.*;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -25,9 +26,7 @@ import thorpe.luke.network.simulation.node.NodeAddress;
 import thorpe.luke.network.simulation.node.NodeConnection;
 import thorpe.luke.network.simulation.node.NodeTopology;
 import thorpe.luke.network.simulation.worker.*;
-import thorpe.luke.time.Clock;
-import thorpe.luke.time.VirtualClock;
-import thorpe.luke.time.WallClock;
+import thorpe.luke.time.TickableClock;
 import thorpe.luke.util.ThreadNameGenerator;
 import thorpe.luke.util.UniqueLoopbackIpv4AddressGenerator;
 import thorpe.luke.util.error.ExceptionListener;
@@ -46,7 +45,8 @@ public class PacketCourierSimulation {
 
   private final String simulationName;
   private final PacketCourierPostalService postalService;
-  private final Clock clock;
+  private final boolean wallClockEnabled;
+  private final TickableClock clock;
   private final Logger logger;
   private final WorkerProcessMonitor workerProcessMonitor;
   private final int port;
@@ -58,7 +58,8 @@ public class PacketCourierSimulation {
       Map<String, RunnableNode> nodes,
       NodeTopology nodeTopology,
       PacketCourierPostalService postalService,
-      Clock clock,
+      boolean wallClockEnabled,
+      TickableClock clock,
       Logger logger,
       WorkerProcessMonitor workerProcessMonitor,
       Path crashDumpLocation,
@@ -68,6 +69,7 @@ public class PacketCourierSimulation {
       Map<Node, DatagramSocket> nodeToPublicSocketMap) {
     this.simulationName = simulationName;
     this.postalService = postalService;
+    this.wallClockEnabled = wallClockEnabled;
     this.clock = clock;
     this.logger =
         new TemplateLogger(
@@ -89,9 +91,7 @@ public class PacketCourierSimulation {
                     RunnableNode::getNode,
                     runnableNode ->
                         new Thread(
-                            () ->
-                                runnableNode.run(
-                                    nodeTopology, postalService, clock, crashDumpLocation),
+                            () -> runnableNode.run(nodeTopology, postalService, crashDumpLocation),
                             ThreadNameGenerator.generateThreadName(
                                 runnableNode.getNode().getAddress().getName()))));
     // Configure datagram routing layer logic.
@@ -235,10 +235,15 @@ public class PacketCourierSimulation {
   public void run() {
     startWorkers();
     while (!hasFinished()) {
-      tick(clock.now());
-      clock.tick();
+      LocalDateTime now = clock.now();
+      tick(now);
+      clock.tick(advanceTimeFrom(now));
     }
     waitForWorkers();
+  }
+
+  private LocalDateTime advanceTimeFrom(LocalDateTime now) {
+    return wallClockEnabled ? LocalDateTime.now() : now.plus(1, ChronoUnit.MILLIS);
   }
 
   private static class RunnableNode {
@@ -251,10 +256,7 @@ public class PacketCourierSimulation {
     }
 
     public void run(
-        NodeTopology nodeTopology,
-        PostalService postalService,
-        Clock clock,
-        Path crashDumpLocation) {
+        NodeTopology nodeTopology, PostalService postalService, Path crashDumpLocation) {
       node.doWork(workerScript, nodeTopology, crashDumpLocation, postalService);
     }
 
@@ -294,7 +296,7 @@ public class PacketCourierSimulation {
         nodeConnectionToPacketPipelineFactoryMap = new HashMap<>();
     private final Collection<Logger> loggers = new LinkedList<>();
     private String simulationName = "Packet Courier Simulation";
-    private Clock clock = new VirtualClock(ChronoUnit.MILLIS);
+    private boolean wallClockEnabled = false;
     private boolean hasDatagramRoutingLayer = false;
     private Path crashDumpLocation = null;
     private int port = 0;
@@ -467,7 +469,7 @@ public class PacketCourierSimulation {
     }
 
     public Configuration usingWallClock() {
-      clock = new WallClock();
+      wallClockEnabled = true;
       return this;
     }
 
@@ -579,6 +581,11 @@ public class PacketCourierSimulation {
                       }));
 
       // Configure packet pipeline logic.
+      TickableClock clock =
+          new TickableClock(
+              wallClockEnabled
+                  ? LocalDateTime.now()
+                  : LocalDateTime.of(0, Month.JANUARY, 1, 0, 0, 0, 0));
       LocalDateTime startTime = clock.now();
       Map<NodeConnection, PacketPipeline<Mail>> nodeConnectionToPacketPipelineMap =
           nodeConnectionToPacketPipelineFactoryMap
@@ -601,6 +608,7 @@ public class PacketCourierSimulation {
           nameToRunnableNodeMap,
           nodeTopology,
           postalService,
+          wallClockEnabled,
           clock,
           logger,
           processMonitorEnabled ? workerProcessMonitor : null,
