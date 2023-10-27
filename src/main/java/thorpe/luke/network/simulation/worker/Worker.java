@@ -1,14 +1,12 @@
 package thorpe.luke.network.simulation.worker;
 
 import java.nio.file.Path;
-import thorpe.luke.log.Logger;
 import thorpe.luke.network.packet.Packet;
 import thorpe.luke.network.simulation.mail.Mailbox;
 import thorpe.luke.network.simulation.mail.PostalService;
 import thorpe.luke.network.simulation.node.NodeTopology;
 import thorpe.luke.time.Clock;
 import thorpe.luke.util.ThreadNameGenerator;
-import thorpe.luke.util.error.ExceptionListener;
 
 public class Worker {
 
@@ -22,8 +20,6 @@ public class Worker {
       WorkerAddress address,
       Clock clock,
       NodeTopology nodeTopology,
-      Logger logger,
-      ExceptionListener exceptionListener,
       Path crashDumpLocation,
       WorkerAddressGenerator workerAddressGenerator,
       WorkerAddressBook workerAddressBook,
@@ -39,8 +35,6 @@ public class Worker {
                         nodeTopology,
                         mailbox,
                         postalService,
-                        logger,
-                        exceptionListener,
                         crashDumpLocation,
                         workerAddressGenerator,
                         workerAddressBook)),

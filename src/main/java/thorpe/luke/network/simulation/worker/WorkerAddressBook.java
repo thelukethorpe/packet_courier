@@ -4,14 +4,12 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import thorpe.luke.log.Logger;
 import thorpe.luke.network.simulation.mail.Mailbox;
 import thorpe.luke.network.simulation.mail.PostalService;
 import thorpe.luke.network.simulation.node.NodeTopology;
 import thorpe.luke.time.Clock;
 import thorpe.luke.util.GarbageCollector;
 import thorpe.luke.util.Prunable;
-import thorpe.luke.util.error.ExceptionListener;
 
 public class WorkerAddressBook implements Prunable {
 
@@ -35,20 +33,16 @@ public class WorkerAddressBook implements Prunable {
       WorkerAddress workerAddress,
       Clock clock,
       NodeTopology nodeTopology,
-      ExceptionListener exceptionListener,
       Path crashDumpLocation,
       WorkerAddressGenerator workerAddressGenerator,
       WorkerAddressBook workerAddressBook,
-      PostalService postalService,
-      Logger logger) {
+      PostalService postalService) {
     Worker worker =
         new Worker(
             workerScript,
             workerAddress,
             clock,
             nodeTopology,
-            logger,
-            exceptionListener,
             crashDumpLocation,
             workerAddressGenerator,
             workerAddressBook,

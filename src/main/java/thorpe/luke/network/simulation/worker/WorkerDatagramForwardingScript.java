@@ -4,13 +4,12 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import thorpe.luke.log.SimpleLogger;
+import thorpe.luke.log.Logger;
 import thorpe.luke.network.packet.Packet;
 import thorpe.luke.util.ThreadNameGenerator;
+import thorpe.luke.util.error.ExceptionListener;
 
 public class WorkerDatagramForwardingScript implements WorkerScript {
 
@@ -21,6 +20,8 @@ public class WorkerDatagramForwardingScript implements WorkerScript {
   private final Map<InetAddress, DatagramSocket> privateIpAddressToPublicSocketMap;
   private final boolean processLoggingEnabled;
   private final WorkerProcessMonitor workerProcessMonitor;
+  private final ExceptionListener exceptionListener;
+  private final Logger logger;
 
   private WorkerDatagramForwardingScript(
       WorkerProcess.Factory workerProcessFactory,
@@ -29,7 +30,9 @@ public class WorkerDatagramForwardingScript implements WorkerScript {
       int datagramBufferSize,
       Map<InetAddress, DatagramSocket> privateIpAddressToPublicSocketMap,
       boolean processLoggingEnabled,
-      WorkerProcessMonitor workerProcessMonitor) {
+      WorkerProcessMonitor workerProcessMonitor,
+      ExceptionListener exceptionListener,
+      Logger logger) {
     this.workerProcessFactory = workerProcessFactory;
     this.port = port;
     this.privateIpAddress = privateIpAddress;
@@ -37,17 +40,12 @@ public class WorkerDatagramForwardingScript implements WorkerScript {
     this.privateIpAddressToPublicSocketMap = privateIpAddressToPublicSocketMap;
     this.processLoggingEnabled = processLoggingEnabled;
     this.workerProcessMonitor = workerProcessMonitor;
+    this.exceptionListener = exceptionListener;
+    this.logger = logger;
   }
 
   public static Builder builder() {
     return new Builder();
-  }
-
-  private void tryGenerateCrashDump(WorkerManager workerManager, List<String> crashDumpContents) {
-    boolean wasCrashDumpSuccessful = workerManager.generateCrashDump(crashDumpContents);
-    if (!wasCrashDumpSuccessful && processLoggingEnabled) {
-      crashDumpContents.forEach(workerManager::log);
-    }
   }
 
   private void waitForAndForwardPackets(WorkerManager workerManager) {
@@ -57,6 +55,7 @@ public class WorkerDatagramForwardingScript implements WorkerScript {
       try {
         packet = workerManager.waitForMail();
       } catch (WorkerException e) {
+        exceptionListener.invoke(e);
         return;
       }
       List<Byte> data = packet.getData();
@@ -76,11 +75,7 @@ public class WorkerDatagramForwardingScript implements WorkerScript {
           publicSocket.send(forwardingDatagramPacket);
         }
       } catch (IOException e) {
-        List<String> stackTraceErrors =
-            Arrays.stream(e.getStackTrace())
-                .map(StackTraceElement::toString)
-                .collect(Collectors.toList());
-        tryGenerateCrashDump(workerManager, stackTraceErrors);
+        exceptionListener.invoke(e);
         return;
       }
     } while (true);
@@ -98,7 +93,7 @@ public class WorkerDatagramForwardingScript implements WorkerScript {
       String workerProcessName = workerManager.getAddress().getHostingNodeAddress().getName();
       WorkerProcess workerProcess;
       if (processLoggingEnabled) {
-        workerProcess = workerProcessFactory.start(new SimpleLogger(workerManager::log));
+        workerProcess = workerProcessFactory.start(logger);
       } else {
         workerProcess = workerProcessFactory.start();
       }
@@ -107,7 +102,7 @@ public class WorkerDatagramForwardingScript implements WorkerScript {
       forwardingThread.interrupt();
       forwardingThread.join();
       if (!workerProcessExitStatus.isSuccess()) {
-        tryGenerateCrashDump(workerManager, workerProcessExitStatus.getErrors());
+        throw new WorkerException(String.join("\n", workerProcessExitStatus.getErrors()));
       }
     } catch (IOException | InterruptedException e) {
       throw new WorkerException(e);
@@ -122,6 +117,8 @@ public class WorkerDatagramForwardingScript implements WorkerScript {
     private Map<InetAddress, DatagramSocket> privateIpAddressToPublicSocketMap;
     private boolean processLoggingEnabled;
     private WorkerProcessMonitor workerProcessMonitor;
+    private ExceptionListener exceptionListener;
+    private Logger logger;
 
     private Builder() {}
 
@@ -161,6 +158,16 @@ public class WorkerDatagramForwardingScript implements WorkerScript {
       return this;
     }
 
+    public Builder withExceptionListener(ExceptionListener exceptionListener) {
+      this.exceptionListener = exceptionListener;
+      return this;
+    }
+
+    public Builder withLogger(Logger logger) {
+      this.logger = logger;
+      return this;
+    }
+
     public WorkerDatagramForwardingScript build() {
       return new WorkerDatagramForwardingScript(
           workerProcessFactory,
@@ -169,7 +176,9 @@ public class WorkerDatagramForwardingScript implements WorkerScript {
           datagramBufferSize,
           privateIpAddressToPublicSocketMap,
           processLoggingEnabled,
-          workerProcessMonitor);
+          workerProcessMonitor,
+          exceptionListener,
+          logger);
     }
   }
 }
