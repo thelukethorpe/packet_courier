@@ -5,7 +5,6 @@ import thorpe.luke.network.packet.Packet;
 import thorpe.luke.network.simulation.mail.Mailbox;
 import thorpe.luke.network.simulation.mail.PostalService;
 import thorpe.luke.network.simulation.node.NodeTopology;
-import thorpe.luke.time.Clock;
 import thorpe.luke.util.ThreadNameGenerator;
 
 public class Worker {
@@ -18,7 +17,6 @@ public class Worker {
   public Worker(
       WorkerScript workerScript,
       WorkerAddress address,
-      Clock clock,
       NodeTopology nodeTopology,
       Path crashDumpLocation,
       WorkerAddressGenerator workerAddressGenerator,
@@ -31,7 +29,6 @@ public class Worker {
                 workerScript.run(
                     new WorkerManager(
                         address,
-                        clock,
                         nodeTopology,
                         mailbox,
                         postalService,

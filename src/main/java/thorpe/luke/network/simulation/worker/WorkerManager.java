@@ -1,17 +1,14 @@
 package thorpe.luke.network.simulation.worker;
 
 import java.nio.file.Path;
-import java.time.LocalDateTime;
 import thorpe.luke.network.packet.Packet;
 import thorpe.luke.network.simulation.mail.Mailbox;
 import thorpe.luke.network.simulation.mail.PostalService;
 import thorpe.luke.network.simulation.node.NodeTopology;
-import thorpe.luke.time.Clock;
 
 public class WorkerManager {
 
   private final WorkerAddress address;
-  private final Clock clock;
   private final NodeTopology nodeTopology;
   private final Mailbox mailbox;
   private final PostalService postalService;
@@ -21,7 +18,6 @@ public class WorkerManager {
 
   public WorkerManager(
       WorkerAddress address,
-      Clock clock,
       NodeTopology nodeTopology,
       Mailbox mailbox,
       PostalService postalService,
@@ -29,7 +25,6 @@ public class WorkerManager {
       WorkerAddressGenerator workerAddressGenerator,
       WorkerAddressBook workerAddressBook) {
     this.address = address;
-    this.clock = clock;
     this.nodeTopology = nodeTopology;
     this.mailbox = mailbox;
     this.postalService = postalService;
@@ -40,10 +35,6 @@ public class WorkerManager {
 
   public WorkerAddress getAddress() {
     return address;
-  }
-
-  public LocalDateTime getCurrentTime() {
-    return clock.now();
   }
 
   public NodeTopology getTopology() {
@@ -68,7 +59,6 @@ public class WorkerManager {
     return workerAddressBook.registerWorker(
         workerScript,
         childWorkerAddress,
-        clock,
         nodeTopology,
         crashDumpLocation,
         workerAddressGenerator,

@@ -35,14 +35,16 @@ public class SimpleExample4 {
                 Packet packet = workerManager.waitForMail();
                 Optional<String> parsedPacket = packet.tryParse();
                 if (parsedPacket.isPresent()) {
-                  workerManager.log(
-                      workerManager.getAddress()
-                          + " has received the following message: "
-                          + parsedPacket.get());
+                  ConsoleLogger.out()
+                      .log(
+                          workerManager.getAddress()
+                              + " has received the following message: "
+                              + parsedPacket.get());
                 } else {
-                  workerManager.log(
-                      workerManager.getAddress()
-                          + " has received a packet that could not be parsed!");
+                  ConsoleLogger.out()
+                      .log(
+                          workerManager.getAddress()
+                              + " has received a packet that could not be parsed!");
                 }
               } while (true);
             });
@@ -60,6 +62,7 @@ public class SimpleExample4 {
                 NODE_B_NAME,
                 PacketPipeline.parameters(NetworkCondition.uniformPacketCorruption(0.75, random)))
             .addLogger(ConsoleLogger.out())
+            .usingWallClock()
             .configure();
     packetCourierSimulation.run();
     System.out.println("Simulation complete. Exiting elegantly...");

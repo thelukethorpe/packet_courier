@@ -4,7 +4,6 @@ import java.nio.file.Path;
 import thorpe.luke.network.simulation.mail.Mail;
 import thorpe.luke.network.simulation.mail.PostalService;
 import thorpe.luke.network.simulation.worker.*;
-import thorpe.luke.time.Clock;
 
 public class Node {
   private final NodeAddress address;
@@ -23,7 +22,6 @@ public class Node {
 
   public void doWork(
       WorkerScript workerScript,
-      Clock clock,
       NodeTopology nodeTopology,
       Path crashDumpLocation,
       PostalService postalService) {
@@ -32,7 +30,6 @@ public class Node {
         workerAddressBook.registerWorker(
             workerScript,
             workerAddress,
-            clock,
             nodeTopology,
             crashDumpLocation,
             workerAddressGenerator,

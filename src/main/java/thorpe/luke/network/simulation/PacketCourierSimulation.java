@@ -46,6 +46,7 @@ public class PacketCourierSimulation {
 
   private final String simulationName;
   private final PacketCourierPostalService postalService;
+  private final Clock clock;
   private final Logger logger;
   private final WorkerProcessMonitor workerProcessMonitor;
   private final int port;
@@ -67,6 +68,7 @@ public class PacketCourierSimulation {
       Map<Node, DatagramSocket> nodeToPublicSocketMap) {
     this.simulationName = simulationName;
     this.postalService = postalService;
+    this.clock = clock;
     this.logger =
         new TemplateLogger(
             message -> {
@@ -233,7 +235,8 @@ public class PacketCourierSimulation {
   public void run() {
     startWorkers();
     while (!hasFinished()) {
-      tick(LocalDateTime.now());
+      tick(clock.now());
+      clock.tick();
     }
     waitForWorkers();
   }
@@ -252,7 +255,7 @@ public class PacketCourierSimulation {
         PostalService postalService,
         Clock clock,
         Path crashDumpLocation) {
-      node.doWork(workerScript, clock, nodeTopology, crashDumpLocation, postalService);
+      node.doWork(workerScript, nodeTopology, crashDumpLocation, postalService);
     }
 
     public Node getNode() {

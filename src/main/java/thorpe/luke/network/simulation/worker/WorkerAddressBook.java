@@ -7,7 +7,6 @@ import java.util.concurrent.ConcurrentMap;
 import thorpe.luke.network.simulation.mail.Mailbox;
 import thorpe.luke.network.simulation.mail.PostalService;
 import thorpe.luke.network.simulation.node.NodeTopology;
-import thorpe.luke.time.Clock;
 import thorpe.luke.util.GarbageCollector;
 import thorpe.luke.util.Prunable;
 
@@ -31,7 +30,6 @@ public class WorkerAddressBook implements Prunable {
   public Worker registerWorker(
       WorkerScript workerScript,
       WorkerAddress workerAddress,
-      Clock clock,
       NodeTopology nodeTopology,
       Path crashDumpLocation,
       WorkerAddressGenerator workerAddressGenerator,
@@ -41,7 +39,6 @@ public class WorkerAddressBook implements Prunable {
         new Worker(
             workerScript,
             workerAddress,
-            clock,
             nodeTopology,
             crashDumpLocation,
             workerAddressGenerator,
