@@ -53,7 +53,7 @@ public class WorkerTask {
     }
 
     public WorkerScript asWorkerScript(WorkerScript workerScript) {
-      return workerManager -> this.execute(() -> workerScript.run(workerManager));
+      return workerManager -> this.execute(() -> workerScript.tick(workerManager));
     }
   }
 }

@@ -1,36 +1,38 @@
 package thorpe.luke.network.simulation.worker;
 
 import java.nio.file.Path;
+import java.time.LocalDateTime;
+
 import thorpe.luke.network.packet.Packet;
 import thorpe.luke.network.simulation.mail.Mailbox;
 import thorpe.luke.network.simulation.mail.PostalService;
+import thorpe.luke.network.simulation.node.Node;
 import thorpe.luke.network.simulation.node.NodeTopology;
+import thorpe.luke.time.Clock;
 
 public class WorkerManager {
 
   private final WorkerAddress address;
+  private final Node parentNode;
   private final NodeTopology nodeTopology;
   private final Mailbox mailbox;
   private final PostalService postalService;
   private final Path crashDumpLocation;
   private final WorkerAddressGenerator workerAddressGenerator;
-  private final WorkerAddressBook workerAddressBook;
+  private final Clock clock;
+  private boolean isAlive = true;
 
   public WorkerManager(
-      WorkerAddress address,
-      NodeTopology nodeTopology,
-      Mailbox mailbox,
-      PostalService postalService,
-      Path crashDumpLocation,
-      WorkerAddressGenerator workerAddressGenerator,
-      WorkerAddressBook workerAddressBook) {
+          WorkerAddress address,
+          Node parentNode, Mailbox mailbox, PostalService postalService, Path crashDumpLocation, WorkerAddressGenerator workerAddressGenerator, Clock clock, NodeTopology nodeTopology) {
     this.address = address;
+    this.parentNode =parentNode;
     this.nodeTopology = nodeTopology;
     this.mailbox = mailbox;
     this.postalService = postalService;
     this.crashDumpLocation = crashDumpLocation;
     this.workerAddressGenerator = workerAddressGenerator;
-    this.workerAddressBook = workerAddressBook;
+    this.clock = clock;
   }
 
   public WorkerAddress getAddress() {
@@ -56,13 +58,25 @@ public class WorkerManager {
   public Worker spawnChildWorker(WorkerScript workerScript) {
     WorkerAddress childWorkerAddress =
         workerAddressGenerator.generateUniqueChildWorkerAddress(address);
-    return workerAddressBook.registerWorker(
+    return parentNode.registerWorker(
         workerScript,
         childWorkerAddress,
         nodeTopology,
         crashDumpLocation,
         workerAddressGenerator,
-        workerAddressBook,
         postalService);
+  }
+
+
+  public LocalDateTime now() {
+return clock.now();
+  }
+
+  public boolean isAlive() {
+    return isAlive;
+  }
+
+  public void kill() {
+    isAlive = false;
   }
 }

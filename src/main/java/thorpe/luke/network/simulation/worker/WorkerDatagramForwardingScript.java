@@ -82,7 +82,7 @@ public class WorkerDatagramForwardingScript implements WorkerScript {
   }
 
   @Override
-  public void run(WorkerManager workerManager) {
+  public void tick(WorkerManager workerManager) {
     Thread forwardingThread =
         new Thread(
             () -> waitForAndForwardPackets(workerManager),

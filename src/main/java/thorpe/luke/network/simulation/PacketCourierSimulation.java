@@ -257,7 +257,7 @@ public class PacketCourierSimulation {
 
     public void run(
         NodeTopology nodeTopology, PostalService postalService, Path crashDumpLocation) {
-      node.doWork(workerScript, nodeTopology, crashDumpLocation, postalService);
+      node.registerWorker(workerScript, nodeTopology, crashDumpLocation, postalService);
     }
 
     public Node getNode() {
