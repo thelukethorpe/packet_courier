@@ -12,8 +12,8 @@ import thorpe.luke.time.Tickable;
 
 public class Node implements Tickable {
   private final NodeAddress address;
-  private final WorkerAddressGenerator workerAddressGenerator;
-  private final Map<WorkerAddress, Worker> addressToWorkerMap = new HashMap<>();
+  private final WorkerAddressBook workerAddressBook = new WorkerAddressBook();
+  private final WorkerAddressGenerator workerAddressGenerator = new WorkerAddressGenerator();
 
   public Node(String name) {
     this(new NodeAddress(name));
@@ -21,43 +21,33 @@ public class Node implements Tickable {
 
   private Node(NodeAddress address) {
     this.address = address;
-    this.workerAddressGenerator = new WorkerAddressGenerator();
   }
 
   public void registerWorker(
-      WorkerScript workerScript,
-      NodeTopology nodeTopology,
-      Path crashDumpLocation,
-      PostalService postalService) {
-    WorkerAddress workerAddress = address.asRootWorkerAddress();
-    Worker worker =
-            new Worker(
-                    workerScript,
-                    workerAddress,
-                    nodeTopology,
-                    crashDumpLocation,
-                    workerAddressGenerator,
-                    new Mailbox(),
-                    postalService);
-    addressToWorkerMap.put(workerAddress, worker);
+          WorkerScript workerScript,
+          NodeTopology nodeTopology,
+          Path crashDumpLocation,
+          PostalService postalService) {
+    WorkerAddress workerAddress = workerAddressGenerator.generateUniqueChildWorkerAddress(address.asRootWorkerAddress());
+    workerAddressBook.registerWorker(workerScript, workerAddress, nodeTopology, crashDumpLocation, workerAddressGenerator, postalService);
   }
+
+public boolean hasActiveWorkers() {
+    return workerAddressBook.hasActiveWorkers();
+}
 
   @Override
   public void tick(LocalDateTime now) {
-    addressToWorkerMap.values().forEach(worker -> worker.tick(now));
-    addressToWorkerMap.values().removeIf(worker -> !worker.isAlive());
+    workerAddressBook.forEachWorker(worker -> worker.tick(now));
+    workerAddressBook.removeDeadWorkers();
   }
 
   public NodeAddress getAddress() {
     return address;
   }
 
-  private Optional<Worker> lookup(WorkerAddress address) {
-    return Optional.ofNullable(addressToWorkerMap.get(address));
-  }
-
   public void deliver(Mail mail) {
-    lookup(mail.getDestinationAddress())
+    workerAddressBook.lookup(mail.getDestinationAddress())
         .ifPresent(worker -> worker.post(mail.getPacket()));
   }
 

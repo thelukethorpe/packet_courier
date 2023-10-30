@@ -10,6 +10,8 @@ import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import thorpe.luke.log.BufferedFileLogger;
 import thorpe.luke.log.Logger;
@@ -26,12 +28,13 @@ import thorpe.luke.network.simulation.node.NodeAddress;
 import thorpe.luke.network.simulation.node.NodeConnection;
 import thorpe.luke.network.simulation.node.NodeTopology;
 import thorpe.luke.network.simulation.worker.*;
+import thorpe.luke.time.Tickable;
 import thorpe.luke.time.TickableClock;
 import thorpe.luke.util.ThreadNameGenerator;
 import thorpe.luke.util.UniqueLoopbackIpv4AddressGenerator;
 import thorpe.luke.util.error.ExceptionListener;
 
-public class PacketCourierSimulation {
+public class PacketCourierSimulation implements Simulation {
 
   public static final String LOG_FILE_EXTENSION = ".courierlog";
   public static final String CONFIGURATION_FILE_EXTENSION = ".courierconfig";
@@ -44,18 +47,15 @@ public class PacketCourierSimulation {
       DateTimeFormatter.ofPattern("yyyy_MM_dd_hh_mm_ss");
 
   private final String simulationName;
+  private final List<Node> nodes;
   private final PacketCourierPostalService postalService;
-  private final boolean wallClockEnabled;
-  private final TickableClock clock;
   private final Logger logger;
   private final WorkerProcessMonitor workerProcessMonitor;
   private final int port;
-  private final Map<Node, Thread> nodeThreads;
-  private final Collection<Thread> datagramRoutingThreads;
 
   private PacketCourierSimulation(
       String simulationName,
-      Map<String, RunnableNode> nodes,
+      List<Node> nodes,
       NodeTopology nodeTopology,
       PacketCourierPostalService postalService,
       boolean wallClockEnabled,
@@ -68,9 +68,8 @@ public class PacketCourierSimulation {
       Map<InetAddress, WorkerAddress> privateIpAddressToWorkerAddressMap,
       Map<Node, DatagramSocket> nodeToPublicSocketMap) {
     this.simulationName = simulationName;
+    this.nodes = nodes;
     this.postalService = postalService;
-    this.wallClockEnabled = wallClockEnabled;
-    this.clock = clock;
     this.logger =
         new TemplateLogger(
             message -> {
@@ -82,18 +81,6 @@ public class PacketCourierSimulation {
     this.workerProcessMonitor = workerProcessMonitor;
     this.port = port;
     this.logger.log("Preprocessing simulation");
-    this.nodeThreads =
-        nodes
-            .values()
-            .stream()
-            .collect(
-                Collectors.toMap(
-                    RunnableNode::getNode,
-                    runnableNode ->
-                        new Thread(
-                            () -> runnableNode.run(nodeTopology, postalService, crashDumpLocation),
-                            ThreadNameGenerator.generateThreadName(
-                                runnableNode.getNode().getAddress().getName()))));
     // Configure datagram routing layer logic.
     Map<InetAddress, WorkerAddress> publicIpAddressToWorkerAddressMap =
         nodeToPublicSocketMap
@@ -224,45 +211,15 @@ public class PacketCourierSimulation {
     logger.close();
   }
 
-  private boolean hasFinished() {
-    return nodeThreads.values().stream().noneMatch(Thread::isAlive);
+  @Override
+  public boolean isComplete() {
+    return nodes.stream().noneMatch(Node::hasActiveWorkers);
   }
 
-  private void tick(LocalDateTime now) {
+  @Override
+  public void tick(LocalDateTime now) {
+    nodes.forEach(node -> node.tick(now));
     postalService.tick(now);
-  }
-
-  public void run() {
-    startWorkers();
-    while (!hasFinished()) {
-      LocalDateTime now = clock.now();
-      tick(now);
-      clock.tick(advanceTimeFrom(now));
-    }
-    waitForWorkers();
-  }
-
-  private LocalDateTime advanceTimeFrom(LocalDateTime now) {
-    return wallClockEnabled ? LocalDateTime.now() : now.plus(1, ChronoUnit.MILLIS);
-  }
-
-  private static class RunnableNode {
-    private final Node node;
-    private final WorkerScript workerScript;
-
-    private RunnableNode(Node node, WorkerScript workerScript) {
-      this.node = node;
-      this.workerScript = workerScript;
-    }
-
-    public void run(
-        NodeTopology nodeTopology, PostalService postalService, Path crashDumpLocation) {
-      node.registerWorker(workerScript, nodeTopology, crashDumpLocation, postalService);
-    }
-
-    public Node getNode() {
-      return node;
-    }
   }
 
   @FunctionalInterface
@@ -547,38 +504,6 @@ public class PacketCourierSimulation {
               processMonitorCheckupInterval, simulationName + " Process Monitor");
       Map<InetAddress, DatagramSocket> privateIpAddressToPublicSocketMap = new HashMap<>();
       Map<InetAddress, WorkerAddress> privateIpAddressToWorkerAddressMap = new HashMap<>();
-      Map<String, RunnableNode> nameToRunnableNodeMap =
-          nameToNodeMap
-              .entrySet()
-              .stream()
-              .collect(
-                  Collectors.toMap(
-                      Map.Entry::getKey,
-                      nameToNodeEntry -> {
-                        Node node = nameToNodeEntry.getValue();
-                        InetAddress privateIpAddress =
-                            uniqueIpAddressGenerator.generateUniqueIpv4Address();
-                        DatagramSocket publicSocket = nodeToPublicSocketMap.get(node);
-                        privateIpAddressToPublicSocketMap.put(privateIpAddress, publicSocket);
-                        privateIpAddressToWorkerAddressMap.put(
-                            privateIpAddress, node.getAddress().asRootWorkerAddress());
-                        WorkerScriptFactory workerScriptFactory =
-                            nodeToWorkerScriptFactoryMap.get(node);
-                        WorkerScript workerScript =
-                            workerScriptFactory.getWorkerScript(
-                                node.getAddress(),
-                                nodeTopology,
-                                port,
-                                privateIpAddress,
-                                workerAddressToPublicIpMap,
-                                datagramBufferSize,
-                                privateIpAddressToPublicSocketMap,
-                                processLoggingEnabled,
-                                workerProcessMonitor,
-                                crashDumpLocation,
-                                logger);
-                        return new RunnableNode(node, workerScript);
-                      }));
 
       // Configure packet pipeline logic.
       TickableClock clock =
@@ -603,9 +528,37 @@ public class PacketCourierSimulation {
       PacketCourierPostalService postalService =
           new PacketCourierPostalService(nameToNodeMap.values(), nodeConnectionToPacketPipelineMap);
 
+      // Register workers.
+      nameToNodeMap
+              .values().forEach(
+                      node -> {
+                        InetAddress privateIpAddress =
+                                uniqueIpAddressGenerator.generateUniqueIpv4Address();
+                        DatagramSocket publicSocket = nodeToPublicSocketMap.get(node);
+                        privateIpAddressToPublicSocketMap.put(privateIpAddress, publicSocket);
+                        privateIpAddressToWorkerAddressMap.put(
+                                privateIpAddress, node.getAddress().asRootWorkerAddress());
+                        WorkerScriptFactory workerScriptFactory =
+                                nodeToWorkerScriptFactoryMap.get(node);
+                        WorkerScript workerScript =
+                                workerScriptFactory.getWorkerScript(
+                                        node.getAddress(),
+                                        nodeTopology,
+                                        port,
+                                        privateIpAddress,
+                                        workerAddressToPublicIpMap,
+                                        datagramBufferSize,
+                                        privateIpAddressToPublicSocketMap,
+                                        processLoggingEnabled,
+                                        workerProcessMonitor,
+                                        crashDumpLocation,
+                                        logger);
+                        node.registerWorker(workerScript, nodeTopology, crashDumpLocation, postalService);
+                      });
+
       return new PacketCourierSimulation(
           simulationName,
-          nameToRunnableNodeMap,
+          new ArrayList<>(nameToNodeMap.values()),
           nodeTopology,
           postalService,
           wallClockEnabled,

@@ -6,14 +6,13 @@ import java.time.LocalDateTime;
 import thorpe.luke.network.packet.Packet;
 import thorpe.luke.network.simulation.mail.Mailbox;
 import thorpe.luke.network.simulation.mail.PostalService;
-import thorpe.luke.network.simulation.node.Node;
 import thorpe.luke.network.simulation.node.NodeTopology;
 import thorpe.luke.time.Clock;
 
 public class WorkerManager {
 
   private final WorkerAddress address;
-  private final Node parentNode;
+  private final WorkerAddressBook workerAddressBook;
   private final NodeTopology nodeTopology;
   private final Mailbox mailbox;
   private final PostalService postalService;
@@ -23,10 +22,9 @@ public class WorkerManager {
   private boolean isAlive = true;
 
   public WorkerManager(
-          WorkerAddress address,
-          Node parentNode, Mailbox mailbox, PostalService postalService, Path crashDumpLocation, WorkerAddressGenerator workerAddressGenerator, Clock clock, NodeTopology nodeTopology) {
+          WorkerAddress address, WorkerAddressBook workerAddressBook, Mailbox mailbox, PostalService postalService, Path crashDumpLocation, WorkerAddressGenerator workerAddressGenerator, Clock clock, NodeTopology nodeTopology) {
     this.address = address;
-    this.parentNode =parentNode;
+    this.workerAddressBook = workerAddressBook;
     this.nodeTopology = nodeTopology;
     this.mailbox = mailbox;
     this.postalService = postalService;
@@ -58,7 +56,7 @@ public class WorkerManager {
   public Worker spawnChildWorker(WorkerScript workerScript) {
     WorkerAddress childWorkerAddress =
         workerAddressGenerator.generateUniqueChildWorkerAddress(address);
-    return parentNode.registerWorker(
+    return workerAddressBook.registerWorker(
         workerScript,
         childWorkerAddress,
         nodeTopology,

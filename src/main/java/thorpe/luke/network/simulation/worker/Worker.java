@@ -24,7 +24,7 @@ public class Worker implements Tickable {
           NodeTopology nodeTopology,
           Path crashDumpLocation,
           WorkerAddressGenerator workerAddressGenerator,
-          Mailbox mailbox,
+          WorkerAddressBook workerAddressBook, Mailbox mailbox,
           PostalService postalService) {
     this.workerScript = workerScript;
     this.address = address;
@@ -32,7 +32,7 @@ public class Worker implements Tickable {
     this.clock = new TickableClock(null);
     this.workerManager = new WorkerManager(
             address,
-            this, mailbox, postalService, crashDumpLocation, workerAddressGenerator, clock, nodeTopology
+            workerAddressBook, mailbox, postalService, crashDumpLocation, workerAddressGenerator, clock, nodeTopology
     );
   }
 
