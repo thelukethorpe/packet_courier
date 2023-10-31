@@ -4,42 +4,42 @@ import thorpe.luke.log.BufferedFileLogger;
 import thorpe.luke.log.Logger;
 import thorpe.luke.network.packet.PacketPipeline;
 import thorpe.luke.network.simulation.node.Node;
-import thorpe.luke.network.simulation.node.NodeAddress;
-import thorpe.luke.network.simulation.node.NodeTopology;
 import thorpe.luke.network.simulation.worker.*;
 import thorpe.luke.network.socket.Socket;
+import thorpe.luke.network.socket.SocketFactory;
+import thorpe.luke.network.socket.UniqueLoopbackIpv4AddressGenerator;
 import thorpe.luke.util.error.ExceptionListener;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.nio.file.Path;
+import java.net.UnknownHostException;
 import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.Collection;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 public class NetworkedPacketCourierSimulation implements Simulation {
-  private final PacketCourierSimulation packetCourierSimulation;
+  private final PacketCourierSimulation baseSimulation;
 
-  private NetworkedPacketCourierSimulation(PacketCourierSimulation packetCourierSimulation) {
-    this.packetCourierSimulation = packetCourierSimulation;
+  private NetworkedPacketCourierSimulation(PacketCourierSimulation baseSimulation) {
+    this.baseSimulation = baseSimulation;
   }
 
-  public static Builder builder() {
-    return new Builder();
+  public static Builder builderWithSocketFactory(SocketFactory socketFactory) {
+    return new Builder(socketFactory);
   }
 
   @Override
   public boolean isComplete() {
-    return packetCourierSimulation.isComplete();
+    return baseSimulation.isComplete();
   }
 
   @Override
   public void tick(LocalDateTime now) {
-    packetCourierSimulation.tick(now);
+    baseSimulation.tick(now);
   }
 
     private static void handleException(String name, Logger logger, Exception exception) {
@@ -52,48 +52,40 @@ public class NetworkedPacketCourierSimulation implements Simulation {
                         "%s encountered an exception: %s\n%s", name, exception.getMessage(), stackTrace));
     }
 
-    @FunctionalInterface
-    private interface WorkerScriptFactory {
-
-        WorkerScript getWorkerScript(
-                NodeAddress address,
-                NodeTopology nodeTopology,
-                int port,
-                InetAddress privateIpAddress,
-                Map<WorkerAddress, InetAddress> workerAddressToPublicIpMap,
-                int datagramBufferSize,
-                Map<InetAddress, Socket> privateIpAddressToPublicSocketMap,
-                boolean processLoggingEnabled,
-                WorkerProcessMonitor workerProcessMonitor,
-                Path crashDumpLocation,
-                Logger logger);
-    }
-
 
   public static class Builder {
       private static class State {
+
           int port;
-          InetAddress privateIpAddress;
           Map<WorkerAddress, InetAddress> workerAddressToPublicIpMap;
           int bufferSize;
           Map<InetAddress, Socket> privateIpAddressToPublicSocketMap;
+          Logger logger;
       }
-    PacketCourierSimulation.Configuration configuration = PacketCourierSimulation.configuration();
-      State state = new State();
 
-      public Builder addNode(String name, WorkerScript workerScript) {
-          if (workerScript == null) {
-              throw new PacketCourierSimulationConfigurationException("Node script cannot be null.");
-          }
-      PacketCourierSimulation.WorkerScriptFactory workerScriptFactory =
-          (address, topology, crashDumpLocation, logger) -> new WorkerScript() {
-              @Override
-              public void tick(WorkerManager workerManager) {
+      private final State state = new State();
+      private final PacketCourierSimulation.Configuration configuration = PacketCourierSimulation.configuration();
+    private final Collection<WorkerProcessConfiguration> workerProcessConfigurations =
+        new LinkedList<>();
+      private final UniqueLoopbackIpv4AddressGenerator uniqueLoopbackIpv4AddressGenerator =
+              new UniqueLoopbackIpv4AddressGenerator();
+      private final SocketFactory socketFactory;
 
+      public Builder(SocketFactory socketFactory) {
+          this.socketFactory = socketFactory;
+      }
+
+      private InetAddress generateUniqueIpAddress() {
+          try {
+              InetAddress ipAddress = uniqueLoopbackIpv4AddressGenerator.generateUniqueIpv4Address();
+              if (ipAddress == null) {
+                  throw new PacketCourierSimulationConfigurationException(
+                          "The Kernel has run out of fresh ip addresses.");
               }
-          };
-          configuration.addNode(name, workerScriptFactory);
-          return this;
+              return ipAddress;
+          } catch (UnknownHostException e) {
+              throw new PacketCourierSimulationConfigurationException(e);
+          }
       }
 
     public Builder addNode(
@@ -102,18 +94,22 @@ public class NetworkedPacketCourierSimulation implements Simulation {
         throw new PacketCourierSimulationConfigurationException(
                 "Node process configuration cannot be null.");
       }
+//        workerProcessConfigurations.add(workerProcessConfiguration);
+//
+        InetAddress privateIpAddress = generateUniqueIpAddress();
+        InetAddress publicIpAddress = generateUniqueIpAddress();
         PacketCourierSimulation.WorkerScriptFactory workerScriptFactory =
               (address,
                topology,
                crashDumpLocation,
                logger) -> {
-          // TODO
+
                 WorkerProcess.Factory workerProcessFactory =
                         workerProcessConfiguration.buildFactory(
                                 address,
                                 topology,
                                 state.port,
-                                state.privateIpAddress,
+                                privateIpAddress,
                                 state.workerAddressToPublicIpMap,
                                 state.bufferSize);
                 ExceptionListener exceptionListener =
@@ -139,15 +135,31 @@ public class NetworkedPacketCourierSimulation implements Simulation {
                           crashDumpFileLogger.flush();
                           crashDumpFileLogger.close();
                         };
-                return WorkerPacketForwardingScript.builder()
+                  WorkerPacketForwardingScript packetForwardingScript = WorkerPacketForwardingScript.builder()
                         .withPort(state.port)
-                        .withPrivateIpAddress(state.privateIpAddress)
+                        .withPrivateIpAddress(privateIpAddress)
                         .withBufferSize(state.bufferSize)
                         .withPrivateIpAddressToPublicSocketMap(state.privateIpAddressToPublicSocketMap)
                         .withExceptionListener(exceptionListener)
                         .build();
+                  WorkerProcess workerProcess = workerProcessFactory.start();
+                                return new WorkerScript() {
+              @Override
+              public void tick(WorkerManager workerManager) {
+                  if (!workerProcess.isAlive()) {
+                      workerProcess.logProcessOutput(state.logger, Integer.MAX_VALUE);
+                      workerProcess.waitFor();
+                      workerManager.destroy();
+                      return;
+                  }
+                  packetForwardingScript.tick(workerManager);
+                  // TODO
+                  workerProcess.logProcessOutput(state.logger, 100);
+              }};
               };
-        configuration.addNode(name, workerScriptFactory);
+        Node node = configuration.addNode(name, workerScriptFactory);
+        state.privateIpAddressToPublicSocketMap.put(privateIpAddress, socketFactory.getSocket(publicIpAddress));
+        state.workerAddressToPublicIpMap.put(node.getAddress().asRootWorkerAddress(), publicIpAddress);
       return this;
     }
 
@@ -164,7 +176,7 @@ public class NetworkedPacketCourierSimulation implements Simulation {
           return this;
       }
 
-      public Builder withDatagramBufferSize(int bufferSize) {
+      public Builder withBufferSize(int bufferSize) {
           state.bufferSize = bufferSize;
           return this;
       }

@@ -36,6 +36,7 @@ public class WorkerPacketForwardingScript implements WorkerScript {
     return new Builder();
   }
 
+  // Forwards packets received at this worker's public socket to their private IP address.
   private void forwardPacket(Packet packet) {
     List<Byte> data = packet.getData();
     byte[] sourceIpAddress = new byte[data.size() - bufferSize];
@@ -46,7 +47,7 @@ public class WorkerPacketForwardingScript implements WorkerScript {
     Socket publicSocket =
             privateIpAddressToPublicSocketMap.get(InetAddress.getByAddress(sourceIpAddress));
       if (publicSocket != null) {
-        publicSocket.write(new SocketPacket(privateIpAddress, packet));
+        publicSocket.send(new SocketPacket(privateIpAddress, packet));
       }
     } catch (IOException e) {
       exceptionListener.invoke(e);

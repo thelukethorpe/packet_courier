@@ -79,7 +79,7 @@ return clock.now();
     return isAlive;
   }
 
-  public void kill() {
+  public void destroy() {
     isAlive = false;
   }
 }

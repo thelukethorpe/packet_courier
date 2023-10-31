@@ -1,4 +1,4 @@
-package thorpe.luke.util;
+package thorpe.luke.network.socket;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;

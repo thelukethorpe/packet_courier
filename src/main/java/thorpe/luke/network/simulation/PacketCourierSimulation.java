@@ -1,6 +1,5 @@
 package thorpe.luke.network.simulation;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.*;
 import java.nio.file.Path;
@@ -12,7 +11,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
-import thorpe.luke.log.BufferedFileLogger;
+
 import thorpe.luke.log.Logger;
 import thorpe.luke.log.MultiLogger;
 import thorpe.luke.log.TemplateLogger;
@@ -30,8 +29,7 @@ import thorpe.luke.network.simulation.worker.*;
 import thorpe.luke.time.AsyncTickable;
 import thorpe.luke.time.TickableClock;
 import thorpe.luke.util.ThreadNameGenerator;
-import thorpe.luke.util.UniqueLoopbackIpv4AddressGenerator;
-import thorpe.luke.util.error.ExceptionListener;
+import thorpe.luke.network.socket.UniqueLoopbackIpv4AddressGenerator;
 
 public class PacketCourierSimulation implements Simulation {
 
@@ -76,36 +74,6 @@ public class PacketCourierSimulation implements Simulation {
                   "%s-%s: %s.", LOG_DATE_FORMAT.format(now), simulationName, message);
             },
             logger);
-    this.workerProcessMonitor = workerProcessMonitor;
-    this.port = port;
-    this.logger.log("Preprocessing simulation");
-    // Configure datagram routing layer logic.
-    Map<InetAddress, WorkerAddress> publicIpAddressToWorkerAddressMap =
-        nodeToPublicSocketMap
-            .entrySet()
-            .stream()
-            .collect(
-                Collectors.toMap(
-                    nodeToPublicSocketEntry -> nodeToPublicSocketEntry.getValue().getLocalAddress(),
-                    nodeToPublicSocketEntry ->
-                        nodeToPublicSocketEntry.getKey().getAddress().asRootWorkerAddress()));
-    this.datagramRoutingThreads =
-        nodeToPublicSocketMap
-            .values()
-            .stream()
-            .map(
-                publicSocket ->
-                    new Thread(
-                        () ->
-                            listenForAndRouteDatagramPackets(
-                                datagramBufferSize,
-                                publicSocket,
-                                privateIpAddressToWorkerAddressMap,
-                                publicIpAddressToWorkerAddressMap,
-                                postalService),
-                        ThreadNameGenerator.generateThreadName(
-                            "Datagram Router at " + publicSocket.getLocalAddress())))
-            .collect(Collectors.toList());
   }
 
   public static Configuration configuration() {
@@ -124,16 +92,6 @@ public class PacketCourierSimulation implements Simulation {
     logger.log(
         String.format(
             "%s encountered an exception: %s\n%s", name, exception.getMessage(), stackTrace));
-  }
-
-  private void joinAll(Collection<Thread> threads) {
-    for (Thread thread : threads) {
-      try {
-        thread.join();
-      } catch (InterruptedException e) {
-        handleException(simulationName, logger, e);
-      }
-    }
   }
 
   private void listenForAndRouteDatagramPackets(
@@ -169,44 +127,6 @@ public class PacketCourierSimulation implements Simulation {
         postalService.mail(sourceAddress, destinationAddress, Packet.fromBytes(buffer));
       }
     } while (true);
-  }
-
-  public void startWorkers() {
-    if (workerProcessMonitor != null) {
-      workerProcessMonitor.addLogger(logger);
-      workerProcessMonitor.start();
-    }
-    if (!datagramRoutingThreads.isEmpty()) {
-      datagramRoutingThreads.forEach(Thread::start);
-      logger.log("Now listening on port " + port);
-    }
-
-    for (Map.Entry<Node, Thread> nodeThreadEntry : nodeThreads.entrySet()) {
-      Node node = nodeThreadEntry.getKey();
-      Thread nodeThread = nodeThreadEntry.getValue();
-      nodeThread.start();
-      logger.log("Node \"" + node.getAddress().getName() + "\" has been set to work");
-    }
-
-    logger.log("Simulation is now fully operational");
-  }
-
-  private void waitForWorkers() {
-    logger.log("All nodes have completed their work; simulation is now cleaning up resources");
-    joinAll(nodeThreads.values());
-    joinAll(datagramRoutingThreads);
-    if (workerProcessMonitor != null) {
-      try {
-        workerProcessMonitor.shutdown();
-      } catch (InterruptedException e) {
-        handleException(simulationName, logger, e);
-      }
-    }
-
-    // Flush and close loggers.
-    logger.log("Flushing and closing logger");
-    logger.flush();
-    logger.close();
   }
 
   @Override
@@ -268,8 +188,6 @@ public class PacketCourierSimulation implements Simulation {
   }
 
   public static class Configuration {
-    private final UniqueIpAddressGeneratorAdaptor uniqueIpAddressGenerator =
-        new UniqueIpAddressGeneratorAdaptor();
     private final Map<String, Node> nameToNodeMap = new HashMap<>();
     private final Map<Node, WorkerScriptFactory> nodeToWorkerScriptFactoryMap = new HashMap<>();
     private final Map<NodeConnection, PacketPipelineFactory>
@@ -293,7 +211,7 @@ public class PacketCourierSimulation implements Simulation {
       return string.trim().isEmpty();
     }
 
-    void addNode(String name, WorkerScriptFactory workerScriptFactory) {
+    Node addNode(String name, WorkerScriptFactory workerScriptFactory) {
       if (name == null) {
         throw new PacketCourierSimulationConfigurationException("Node name cannot be null.");
       } else if (isBlank(name)) {
@@ -310,6 +228,7 @@ public class PacketCourierSimulation implements Simulation {
       nodeConnectionToPacketPipelineFactoryMap.put(
           nodeConnection,
           startTime -> new PacketPipeline<>(PacketPipeline.perfectParameters(), startTime));
+      return node;
     }
 
     public Configuration addNode(String name, WorkerScript workerScript) {
@@ -372,23 +291,6 @@ public class PacketCourierSimulation implements Simulation {
 
     public Configuration withCrashDumpLocation(Path crashDumpLocation) {
       this.crashDumpLocation = crashDumpLocation;
-      return this;
-    }
-
-
-
-    public Configuration withProcessLoggingEnabled() {
-      this.processLoggingEnabled = true;
-      return this;
-    }
-
-    public Configuration withProcessMonitorEnabled() {
-      this.processMonitorEnabled = true;
-      return this;
-    }
-
-    public Configuration withProcessMonitorCheckupInterval(Duration processMonitorCheckupInterval) {
-      this.processMonitorCheckupInterval = processMonitorCheckupInterval;
       return this;
     }
 
@@ -493,33 +395,9 @@ public class PacketCourierSimulation implements Simulation {
           new ArrayList<>(nameToNodeMap.values()),
           nodeTopology,
           postalService,
-          wallClockEnabled,
-          clock,
-          logger,
-          processMonitorEnabled ? workerProcessMonitor : null,
           crashDumpLocation,
-          port,
-          datagramBufferSize,
           privateIpAddressToWorkerAddressMap,
           nodeToPublicSocketMap);
-    }
-  }
-
-  private static class UniqueIpAddressGeneratorAdaptor {
-    private final UniqueLoopbackIpv4AddressGenerator uniqueLoopbackIpv4AddressGenerator =
-        new UniqueLoopbackIpv4AddressGenerator();
-
-    public InetAddress generateUniqueIpv4Address() {
-      try {
-        InetAddress ipAddress = uniqueLoopbackIpv4AddressGenerator.generateUniqueIpv4Address();
-        if (ipAddress == null) {
-          throw new PacketCourierSimulationConfigurationException(
-              "The Kernel has run out of fresh ip addresses.");
-        }
-        return ipAddress;
-      } catch (UnknownHostException e) {
-        throw new PacketCourierSimulationConfigurationException(e);
-      }
     }
   }
 }

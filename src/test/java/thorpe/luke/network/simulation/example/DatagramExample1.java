@@ -10,7 +10,6 @@ import thorpe.luke.log.ConsoleLogger;
 import thorpe.luke.network.packet.NetworkCondition;
 import thorpe.luke.network.packet.PacketPipeline;
 import thorpe.luke.network.simulation.NetworkedPacketCourierSimulation;
-import thorpe.luke.network.simulation.PacketCourierSimulation;
 import thorpe.luke.network.simulation.worker.WorkerProcessConfiguration;
 
 public class DatagramExample1 {
@@ -29,7 +28,7 @@ public class DatagramExample1 {
     // Packet pipeline drops half of the packets that travel through it.
     Random random = new Random();
     NetworkedPacketCourierSimulation simulation =
-            NetworkedPacketCourierSimulation.builder()
+            NetworkedPacketCourierSimulation.builderWithSocketFactory()
             .addNode(
                 NODE_A_NAME,
                 WorkerProcessConfiguration.fromCommand(
