@@ -33,6 +33,7 @@ public class Node implements Tickable {
   }
 
 public boolean hasActiveWorkers() {
+    // TODO: thread safe?
     return workerAddressBook.hasActiveWorkers();
 }
 

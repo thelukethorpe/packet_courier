@@ -1,5 +1,6 @@
 package thorpe.luke.network.simulation.mail;
 
+import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import thorpe.luke.network.packet.Packet;
@@ -18,5 +19,9 @@ public class Mailbox {
 
   public Packet waitForMail() throws InterruptedException {
     return packets.take();
+  }
+
+  public Optional<Packet> getMail() {
+    return Optional.ofNullable(packets.poll());
   }
 }

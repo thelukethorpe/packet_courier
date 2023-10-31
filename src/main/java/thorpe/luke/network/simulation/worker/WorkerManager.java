@@ -2,6 +2,7 @@ package thorpe.luke.network.simulation.worker;
 
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import thorpe.luke.network.packet.Packet;
 import thorpe.luke.network.simulation.mail.Mailbox;
@@ -51,6 +52,10 @@ public class WorkerManager {
     } catch (InterruptedException e) {
       throw new WorkerException(e);
     }
+  }
+
+  public Optional<Packet> getMail() {
+    return mailbox.getMail();
   }
 
   public Worker spawnChildWorker(WorkerScript workerScript) {

@@ -3,11 +3,13 @@ package thorpe.luke.network.simulation.example;
 import java.io.File;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Random;
 import thorpe.luke.log.ConsoleLogger;
 import thorpe.luke.network.packet.NetworkCondition;
 import thorpe.luke.network.packet.PacketPipeline;
+import thorpe.luke.network.simulation.NetworkedPacketCourierSimulation;
 import thorpe.luke.network.simulation.PacketCourierSimulation;
 import thorpe.luke.network.simulation.worker.WorkerProcessConfiguration;
 
@@ -26,8 +28,8 @@ public class DatagramExample1 {
         Paths.get(ProtoExample1.class.getResource("simple_server.py").toURI()).toFile();
     // Packet pipeline drops half of the packets that travel through it.
     Random random = new Random();
-    PacketCourierSimulation simulation =
-        PacketCourierSimulation.configuration()
+    NetworkedPacketCourierSimulation simulation =
+            NetworkedPacketCourierSimulation.builder()
             .addNode(
                 NODE_A_NAME,
                 WorkerProcessConfiguration.fromCommand(
@@ -48,13 +50,13 @@ public class DatagramExample1 {
                     NetworkCondition.uniformPacketLatency(
                         250.0, 1000.0, ChronoUnit.MILLIS, random)))
             .addLogger(ConsoleLogger.out())
-            .usingWallClock()
             .withPort(PORT)
-            .withDatagramBufferSize(DATAGRAM_BUFFER_SIZE)
+            .withBufferSize(DATAGRAM_BUFFER_SIZE)
             .withCrashDumpLocation(Paths.get("."))
-            .withProcessLoggingEnabled()
-            .configure();
-    simulation.run();
+            .start();
+    while (!simulation.isComplete()) {
+      simulation.tick(LocalDateTime.now());
+    }
     System.out.println("Simulation complete. Exiting elegantly...");
   }
 }

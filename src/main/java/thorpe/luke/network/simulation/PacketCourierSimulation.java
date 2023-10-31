@@ -10,7 +10,6 @@ import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import thorpe.luke.log.BufferedFileLogger;
@@ -28,7 +27,7 @@ import thorpe.luke.network.simulation.node.NodeAddress;
 import thorpe.luke.network.simulation.node.NodeConnection;
 import thorpe.luke.network.simulation.node.NodeTopology;
 import thorpe.luke.network.simulation.worker.*;
-import thorpe.luke.time.Tickable;
+import thorpe.luke.time.AsyncTickable;
 import thorpe.luke.time.TickableClock;
 import thorpe.luke.util.ThreadNameGenerator;
 import thorpe.luke.util.UniqueLoopbackIpv4AddressGenerator;
@@ -40,22 +39,21 @@ public class PacketCourierSimulation implements Simulation {
   public static final String CONFIGURATION_FILE_EXTENSION = ".courierconfig";
   public static final String CRASH_DUMP_FILE_EXTENSION = ".couriercrashdump";
 
-  private static final DateTimeFormatter LOG_DATE_FORMAT =
+  static final DateTimeFormatter LOG_DATE_FORMAT =
       DateTimeFormatter.ofPattern("dd/MM/yyyy-hh:mm:ss");
 
-  private static final DateTimeFormatter CRASH_DUMP_DATE_FORMAT =
+  static final DateTimeFormatter CRASH_DUMP_DATE_FORMAT =
       DateTimeFormatter.ofPattern("yyyy_MM_dd_hh_mm_ss");
 
   private final String simulationName;
-  private final List<Node> nodes;
+  private final List<NodeSimulation> nodes;
   private final PacketCourierPostalService postalService;
-  private final Logger logger;
   private final WorkerProcessMonitor workerProcessMonitor;
   private final int port;
 
   private PacketCourierSimulation(
       String simulationName,
-      List<Node> nodes,
+      List<NodeSimulation> nodes,
       NodeTopology nodeTopology,
       PacketCourierPostalService postalService,
       boolean wallClockEnabled,
@@ -213,7 +211,7 @@ public class PacketCourierSimulation implements Simulation {
 
   @Override
   public boolean isComplete() {
-    return nodes.stream().noneMatch(Node::hasActiveWorkers);
+    return nodes.stream().allMatch(NodeSimulation::isComplete);
   }
 
   @Override
@@ -222,19 +220,44 @@ public class PacketCourierSimulation implements Simulation {
     postalService.tick(now);
   }
 
+  private static class NodeSimulation implements Simulation {
+    private final Node node;
+
+    private NodeSimulation(Node node) {
+      this.node = node;
+    }
+
+    @Override
+    public boolean isComplete() {
+      return !node.hasActiveWorkers();
+    }
+
+    @Override
+    public void tick(LocalDateTime now) {
+      node.tick(now);
+    }
+  }
+
+  private static class AsyncNodeSimulation extends NodeSimulation {
+    private final AsyncTickable asyncTicker;
+
+    private AsyncNodeSimulation(Node node, ExecutorService executorService) {
+      super(node);
+      this.asyncTicker = new AsyncTickable(executorService, node);
+    }
+
+    @Override
+    public void tick(LocalDateTime now) {
+      asyncTicker.tick(now);
+    }
+  }
+
   @FunctionalInterface
-  private interface WorkerScriptFactory {
+  interface WorkerScriptFactory {
 
     WorkerScript getWorkerScript(
         NodeAddress address,
         NodeTopology nodeTopology,
-        int port,
-        InetAddress privateIpAddress,
-        Map<WorkerAddress, InetAddress> workerAddressToPublicIpMap,
-        int datagramBufferSize,
-        Map<InetAddress, DatagramSocket> privateIpAddressToPublicSocketMap,
-        boolean processLoggingEnabled,
-        WorkerProcessMonitor workerProcessMonitor,
         Path crashDumpLocation,
         Logger logger);
   }
@@ -253,8 +276,6 @@ public class PacketCourierSimulation implements Simulation {
         nodeConnectionToPacketPipelineFactoryMap = new HashMap<>();
     private final Collection<Logger> loggers = new LinkedList<>();
     private String simulationName = "Packet Courier Simulation";
-    private boolean wallClockEnabled = false;
-    private boolean hasDatagramRoutingLayer = false;
     private Path crashDumpLocation = null;
     private int port = 0;
     private int datagramBufferSize = 1024;
@@ -272,7 +293,7 @@ public class PacketCourierSimulation implements Simulation {
       return string.trim().isEmpty();
     }
 
-    private void addNode(String name, WorkerScriptFactory workerScriptFactory) {
+    void addNode(String name, WorkerScriptFactory workerScriptFactory) {
       if (name == null) {
         throw new PacketCourierSimulationConfigurationException("Node name cannot be null.");
       } else if (isBlank(name)) {
@@ -298,84 +319,13 @@ public class PacketCourierSimulation implements Simulation {
       WorkerScriptFactory workerScriptFactory =
           (address,
               topology,
-              port,
-              privateIpAddress,
-              workerAddressToPublicIpMap,
-              datagramBufferSize,
-              privateIpAddressToPublicSocketMap,
-              processLoggingEnabled,
-              workerProcessMonitor,
               crashDumpLocation,
               logger) -> workerScript;
       addNode(name, workerScriptFactory);
       return this;
     }
 
-    public Configuration addNode(
-        String name, WorkerProcessConfiguration workerProcessConfiguration) {
-      hasDatagramRoutingLayer = true;
-      if (workerProcessConfiguration == null) {
-        throw new PacketCourierSimulationConfigurationException(
-            "Node process configuration cannot be null.");
-      }
-      WorkerScriptFactory workerScriptFactory =
-          (address,
-              topology,
-              port,
-              privateIpAddress,
-              workerAddressToPublicIpMap,
-              datagramBufferSize,
-              privateIpAddressToPublicSocketMap,
-              processLoggingEnabled,
-              workerProcessMonitor,
-              crashDumpLocation,
-              logger) -> {
-            WorkerProcess.Factory workerProcessFactory =
-                workerProcessConfiguration.buildFactory(
-                    address,
-                    topology,
-                    port,
-                    privateIpAddress,
-                    workerAddressToPublicIpMap,
-                    datagramBufferSize);
-            ExceptionListener exceptionListener =
-                exception -> {
-                  if (crashDumpLocation == null) {
-                    return;
-                  }
-                  LocalDateTime now = LocalDateTime.now();
-                  String crashDumpFileName =
-                      address.getName().replaceAll("\\s+", "-")
-                          + "__"
-                          + CRASH_DUMP_DATE_FORMAT.format(now)
-                          + PacketCourierSimulation.CRASH_DUMP_FILE_EXTENSION;
-                  File crashDumpFile = crashDumpLocation.resolve(crashDumpFileName).toFile();
-                  BufferedFileLogger crashDumpFileLogger;
-                  try {
-                    crashDumpFileLogger = new BufferedFileLogger(crashDumpFile);
-                  } catch (IOException e) {
-                    handleException(address.getName(), logger, e);
-                    return;
-                  }
-                  handleException(address.getName(), crashDumpFileLogger, exception);
-                  crashDumpFileLogger.flush();
-                  crashDumpFileLogger.close();
-                };
-            return WorkerDatagramForwardingScript.builder()
-                .withWorkerProcessFactory(workerProcessFactory)
-                .withPort(port)
-                .withPrivateIpAddress(privateIpAddress)
-                .withDatagramBufferSize(datagramBufferSize)
-                .withPrivateIpAddressToPublicSocketMap(privateIpAddressToPublicSocketMap)
-                .withProcessLoggingEnabled(processLoggingEnabled)
-                .withProcessMonitor(workerProcessMonitor)
-                .withExceptionListener(exceptionListener)
-                .withLogger(logger)
-                .build();
-          };
-      addNode(name, workerScriptFactory);
-      return this;
-    }
+
 
     public Configuration addConnection(
         String sourceName, String destinationName, Parameters packetPipelineParameters) {
@@ -420,30 +370,12 @@ public class PacketCourierSimulation implements Simulation {
       return this;
     }
 
-    public Configuration addLogger(Logger logger) {
-      loggers.add(logger);
-      return this;
-    }
-
-    public Configuration usingWallClock() {
-      wallClockEnabled = true;
-      return this;
-    }
-
     public Configuration withCrashDumpLocation(Path crashDumpLocation) {
       this.crashDumpLocation = crashDumpLocation;
       return this;
     }
 
-    public Configuration withPort(int port) {
-      this.port = port;
-      return this;
-    }
 
-    public Configuration withDatagramBufferSize(int datagramBufferSize) {
-      this.datagramBufferSize = datagramBufferSize;
-      return this;
-    }
 
     public Configuration withProcessLoggingEnabled() {
       this.processLoggingEnabled = true;

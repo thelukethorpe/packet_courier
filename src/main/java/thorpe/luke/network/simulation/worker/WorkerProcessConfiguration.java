@@ -180,7 +180,7 @@ public class WorkerProcessConfiguration {
       }
     }
     String name = address.getName() + " Process";
-    return WorkerProcess.factoryOf(name, new ProcessBuilder().command(command), timeout);
+    return WorkerProcess.factoryOf(new ProcessBuilder().command(command), timeout);
   }
 
   @FunctionalInterface
